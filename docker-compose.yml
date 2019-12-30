@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+  mongo:
+    image: 'mongo'
+  client:
+    build:
+      context: .
+      dockerfile: docker/client/Dockerfile
+  server:
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
