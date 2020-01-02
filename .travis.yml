@@ -30,6 +30,7 @@ jobs:
       - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_server_dev npm test
     - before_script:
       - cd ./client/
+      - npm install
       script:
       - npm run-script lint
       - npm run-script test:ci
