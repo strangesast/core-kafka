@@ -21,14 +21,14 @@ jobs:
     - before_script:
         - docker build -f docker/server/test.Dockerfile -t strangesast/core_server_dev .
       script:
-      - docker run strangesast/core_server_dev npm test
+      - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_server_dev npm test
     - before_script:
         - docker build -f docker/client/test.Dockerfile -t strangesast/core_client_dev .
       script:
-      - docker run strangesast/core_client_dev npm run-script lint
-      - docker run strangesast/core_client_dev npm run-script test:ci
-      - docker run strangesast/core_client_dev npm run-script e2e
-      - docker run strangesast/core_client_dev npm run-script build:ci
+      - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_client_dev npm run-script lint
+      - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_client_dev npm run-script test:ci
+      - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_client_dev npm run-script e2e
+      - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_client_dev npm run-script build:ci
 
 deploy:
   provider: pages
