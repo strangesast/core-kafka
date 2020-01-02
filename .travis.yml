@@ -28,7 +28,9 @@ jobs:
         - docker build -f docker/server/test.Dockerfile -t strangesast/core_server_dev .
       script:
       - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" strangesast/core_server_dev npm test
-    - script:
+    - before_script:
+      - cd ./client/
+      script:
       - npm run-script lint
       - npm run-script test:ci
       - npm run-script e2e
