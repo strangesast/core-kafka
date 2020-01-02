@@ -25,6 +25,15 @@ jobs:
     - before_script:
         - docker build -f docker/client/test.Dockerfile -t strangesast/core_client_dev .
       script:
+      - docker run strangesast/core_client_dev ng lint
       - docker run strangesast/core_client_dev ng test
       - docker run strangesast/core_client_dev ng e2e
+      - docker run strangesast/core_client_dev ng build --prod --base-href https://strangesast.github.io/core/
 
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local_dir: client/dist/core
+  on:
+    branch: beta
