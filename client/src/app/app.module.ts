@@ -12,12 +12,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { TimesheetPageComponent } from './timesheet-page/timesheet-page.component';
+import { UserPageComponent } from './user-page/user-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     DataTableComponent,
-    TimesheetPageComponent
+    TimesheetPageComponent,
+    UserPageComponent
   ],
   imports: [
     BrowserModule,

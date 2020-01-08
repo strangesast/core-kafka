@@ -4,18 +4,20 @@ import { Component } from '@angular/core';
   selector: 'app-root',
   template: `
   <header>
-    <span class="brand">CORE</span>
+    <a routerLink="/" class="brand">
+      <span>CORE</span>
+    </a>
     <div>
       <ul class="links">
         <li class="link"><a routerLink="/timesheet">Timesheet</a></li>
       </ul>
-      <div class="user-card">
+      <a class="user-card" routerLink="/user">
         <span class="user-card_icon">
           <span>S</span><span>H</span>
         </span>
         <span class="user-card_name">Steve H.</span>
         <div class="background"></div>
-      </div>
+      </a>
     </div>
   </header>
   <div class="container">

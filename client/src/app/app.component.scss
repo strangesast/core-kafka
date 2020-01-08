@@ -14,8 +14,10 @@
 }
 
 :host > header .brand {
-  padding: 12px 8px;
+  padding: 8px 12px;
   font-size: 20px;
+  color: inherit;
+  text-decoration: none;
 }
 
 :host > header .links {
@@ -31,6 +33,8 @@
   align-items: center;
 }
 :host > header .user-card {
+  text-decoration: none;
+  color: inherit;
   display: grid;
   grid-template-columns: min-content auto;
   grid-template-rows: auto;
