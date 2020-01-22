@@ -7,28 +7,28 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
 @Component({
   selector: 'app-timesheet-page',
   template: `
-  <div class="forehead"></div>
-  <header>
-    <h1>Timesheet</h1>
-  </header>
   <div class="table">
-    <ng-container *ngFor="let week of data">
-      <div
-        class="divider">
-        Week of&nbsp;<span class="week">{{week.startDate | date:'shortDate'}}</span>
+    <a *ngFor="let week of data" class="row" tabindex="0" [routerLink]="['/timesheet', 'week', week.startDate.toISOString().slice(0,10)]">
+      <div>{{week.startDate | date:'shortDate' }}</div>
+      <div class="svg">
+        <svg>
+          <rect height="100%" width="100%" stroke="black" fill="white"/>
+          <rect height="100%" [attr.width]="computeWidth(week.total)" stroke="black" fill="black"/>
+        </svg>
+        <div *ngIf="week.total > 40">
+          <mat-icon>add</mat-icon>
+        </div>
       </div>
-      <div
-        class="row"
-        *ngFor="let row of week.days">
-        <div class="date">
+      <div class="hours">
+        <span class="hours_left">{{week.total}}</span>
+        <span>/</span>
+        <span class="hours_right">40</span>
+      </div>
+      <!--
           <span class="dow">{{row.date | date:'EEE'}}</span>
           <span class="date">{{row.date | date:'M/d'}}</span>
-        </div>
-        <svg>
-          <rect width="100%" height="20px"></rect>
-        </svg>
-      </div>
-    </ng-container>
+       -->
+    </a>
   </div>
   `,
   styleUrls: ['./timesheet-page.component.scss']
@@ -36,14 +36,17 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
 export class TimesheetPageComponent implements OnInit {
   data = Array.from(Array(7)).map((_, i) => {
     const startDate = addDays(MONDAY, -i * 7);
-    const days = Array.from(Array(7)).map((__, j) => {
+    const days = Array.from(Array(i === 0 ? 3 : 7)).map((__, j) => {
       const date = addDays(startDate, j);
       const enter = addHours(date, 6);
       const leave = addHours(date, 16);
       return { date, enter, leave };
     });
-    return { startDate, days };
+    const total = days.reduce((val, {enter, leave}) => val + +leave - +enter, 0) / 3.6e6;
+    return { startDate, days, total };
   });
+
+  computeWidth = (hours) => Math.min(hours / 40, 1) * 100 + '%';
 
   constructor() {}
 

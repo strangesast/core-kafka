@@ -1,0 +1,21 @@
+:host {
+  height: 100%;
+  display: block;
+  overflow: auto;
+  position: relative;
+}
+
+:host > header {
+  padding: 20px 12px;
+  box-sizing: border-box;
+  height: 80px;
+  align-items: baseline;
+  display: flex;
+}
+
+:host > header h1, h3 {
+  margin: 0;
+}
+:host > header h3 {
+  margin-left: 12px;
+}

@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+:host > header {
+  display: block;
+  align-items: flex-end;
+  display: flex;
+}
+
+:host > header .title {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  & > h3 {
+    font-weight: 400;
+    margin: 0;
+  }
+}

@@ -13,13 +13,19 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { TimesheetPageComponent } from './timesheet-page/timesheet-page.component';
 import { UserPageComponent } from './user-page/user-page.component';
+import { UserCardComponent } from './user-card/user-card.component';
+import { TimesheetWeekPageComponent } from './timesheet-week-page/timesheet-week-page.component';
+import { TimesheetContainerPageComponent } from './timesheet-container-page/timesheet-container-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     DataTableComponent,
     TimesheetPageComponent,
-    UserPageComponent
+    UserPageComponent,
+    UserCardComponent,
+    TimesheetWeekPageComponent,
+    TimesheetContainerPageComponent
   ],
   imports: [
     BrowserModule,
