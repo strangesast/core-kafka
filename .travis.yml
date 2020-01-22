@@ -1,10 +1,17 @@
 dist: trusty
 language: node_js
 node_js:
-  - 12
+  - 13
 
 services:
   - docker
+
+arch:
+  - rpi
+  - amd64
+
+os:
+  linux
 
 addons:
   apt:
@@ -41,6 +48,9 @@ deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
+  allow_failure: true
+  verbose: true
   local_dir: client/dist/core
+  edge: true
   on:
     branch: beta
