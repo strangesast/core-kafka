@@ -10,6 +10,9 @@
 - [ ] Timeclock
   - [ ] Daemon
   - [ ] Interface
+    - [ ] Dashboard
+    - [ ] Each user page (current / historical)
+    - [ ] Shift editor
 - [ ] Users
   - [ ] Login
 - [ ] Work orders
