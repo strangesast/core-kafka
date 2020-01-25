@@ -6,19 +6,25 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 )
+
+type Result struct {
+	Samples []string `xml:"Streams>DeviceStream>ComponentStream>Samples>PathPosition"`
+}
 
 func main() {
 	log.Println("Starting...")
 
-	url := "https://smstestbed.nist.gov/vds/GFAgie01/sample?interval=5000&path=//Components/Path"
+	//url := "https://smstestbed.nist.gov/vds/GFAgie01/sample?interval=5000&path=//Components/Path"
+	u, _ := url.Parse("https://smstestbed.nist.gov/vds/GFAgie01/sample")
+	query := u.Query()
+	query.Set("interval", "1000")
+	query.Set("path", "//Components/Path//*[@name='path_pos']")
+	u.RawQuery = query.Encode()
+	fmt.Println(u)
 
-	req, err := http.NewRequest("GET", url, nil)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	req, _ := http.NewRequest("GET", u.String(), nil)
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -31,7 +37,7 @@ func main() {
 
 	decoder := xml.NewDecoder(resp.Body)
 
-	var el string
+	// var el string
 	for {
 		t, err := decoder.Token()
 		if err == io.EOF {
@@ -45,11 +51,15 @@ func main() {
 		}
 		switch se := t.(type) {
 		case xml.StartElement:
-			el = se.Name.Local
-			fmt.Println(el)
-			// if el == "MTConnectStream" {
-			// 	fmt.Println(se)
-			// }
+			if se.Name.Local == "MTConnectStreams" {
+				fmt.Println(se.Name.Local)
+				var p Result
+				decoder.DecodeElement(&p, &se)
+				for i, val := range p.Samples {
+					fmt.Println(i, val)
+					break
+				}
+			}
 		}
 	}
 }
