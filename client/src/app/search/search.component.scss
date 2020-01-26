@@ -1,0 +1,22 @@
+:host {
+  display: grid;
+}
+:host > input {
+  border:none;
+  background-image:none;
+  background-color:transparent;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  outline: none;
+  font-size: 1.2rem;
+}
+:host {
+  border: 2px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: border 0.1s ease, box-shadow 0.1s ease;
+  &.active {
+    border-color: transparent;
+  }
+}

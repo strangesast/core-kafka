@@ -1,0 +1,35 @@
+:host, :host > ul {
+  display: flex;
+  flex-direction: column;
+}
+:host, :host > ul, :host > ul > li > a {
+  display: flex;
+  flex-direction: column;
+}
+:host > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+:host > ul > li > a {
+  color: inherit;
+  text-decoration: none;
+  align-items: center;
+  padding: 4px 0;
+  margin: 8px;
+  & > .icon {
+    font-size: 40px;
+    height: 40px;
+    width: 40px;
+  }
+  & > span {
+    padding: 8px 0;
+  }
+  border-radius: 8px;
+  border-width: 2px;
+  border-color: transparent;
+  border-style: solid;
+  &:hover {
+    border-color: #eee;
+  }
+}

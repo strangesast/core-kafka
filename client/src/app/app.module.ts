@@ -16,6 +16,11 @@ import { UserPageComponent } from './user-page/user-page.component';
 import { UserCardComponent } from './user-card/user-card.component';
 import { TimesheetWeekPageComponent } from './timesheet-week-page/timesheet-week-page.component';
 import { TimesheetContainerPageComponent } from './timesheet-container-page/timesheet-container-page.component';
+import { HomePageComponent } from './home-page/home-page.component';
+import { LoginPageContainerComponent } from './login-page-container/login-page-container.component';
+import { LoginPageComponent } from './login-page/login-page.component';
+import { SideBarComponent } from './side-bar/side-bar.component';
+import { SearchComponent } from './search/search.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +30,12 @@ import { TimesheetContainerPageComponent } from './timesheet-container-page/time
     UserPageComponent,
     UserCardComponent,
     TimesheetWeekPageComponent,
-    TimesheetContainerPageComponent
+    TimesheetContainerPageComponent,
+    HomePageComponent,
+    LoginPageContainerComponent,
+    LoginPageComponent,
+    SideBarComponent,
+    SearchComponent
   ],
   imports: [
     BrowserModule,

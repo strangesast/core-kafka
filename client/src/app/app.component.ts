@@ -7,6 +7,7 @@ import { Component } from '@angular/core';
     <a routerLink="/" class="brand">
       <span>CORE</span>
     </a>
+    <app-search></app-search>
     <div>
       <ul class="links">
         <li class="link"><a routerLink="/timesheet">Timesheet</a></li>
@@ -14,6 +15,7 @@ import { Component } from '@angular/core';
       <a mat-flat-button color="primary" routerLink="/login">Login</a>
     </div>
   </header>
+  <app-side-bar></app-side-bar>
   <div class="container">
     <router-outlet></router-outlet>
   </div>
