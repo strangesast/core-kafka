@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 type Result struct {
@@ -16,30 +17,35 @@ type Result struct {
 
 type Position struct {
 	Timestamp string `xml:"timestamp,attr"`
-	Sequence int `xml:"sequence,attr"`
-	Value string `xml:",chardata"`
+	Sequence  int    `xml:"sequence,attr"`
+	Value     string `xml:",chardata"`
 }
 
 func main() {
 	log.Println("Starting...")
 
-	//url := "https://smstestbed.nist.gov/vds/GFAgie01/sample?interval=5000&path=//Components/Path"
-	//u, _ := url.Parse("https://smstestbed.nist.gov/vds/GFAgie01/sample")
-	u, _ := url.Parse("http://10.0.0.110:5000/Fanuc-0id-01/sample")
-	query := u.Query()
+	var u *url.URL
+	query := make(url.Values)
+	if os.Getenv("dev") == "true" {
+		u, _ = url.Parse("https://smstestbed.nist.gov/vds/GFAgie01/sample")
+		query.Set("path", "//Components//Path")
+		// query.Set("path", "//Components/Path//*[@name='path_pos']")
+	} else {
+		u, _ = url.Parse("http://10.0.0.110:5000/Fanuc-0id-01/sample")
+		//query.Set("path", "//Components//Path")
+		query.Set("path", "//Components//Linear//*[@name='Xact' or @name='Yact' or @name='Zact']")
+	}
 	// query.Set("interval", "1000")
-	// query.Set("path", "//Components/Path//*[@name='path_pos']")
-        query.Set("path", "//Components//Linear//*[@name='Xact' or @name='Yact' or @name='Zact']")
 	u.RawQuery = query.Encode()
+
+	log.Println(u.String())
 
 	req, _ := http.NewRequest("GET", u.String(), nil)
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
+	} else if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Status code is not OK: %v (%s)", resp.StatusCode, resp.Status)
 	}
 

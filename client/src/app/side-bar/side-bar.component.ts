@@ -4,12 +4,18 @@ import { Component, OnInit } from '@angular/core';
   selector: 'app-side-bar',
   template: `
   <ul>
-    <li *ngFor="let each of [1,2,3]">
-      <a routerLink="/timesheet">
-        <mat-icon class="icon">access_time</mat-icon>
-        <span>Timesheet</span>
-      </a>
-    </li>
+    <li><a routerLink="/timesheet">
+      <mat-icon class="icon">access_time</mat-icon>
+      <span>Timesheet</span>
+    </a></li>
+    <li><a routerLink="/timesheet">
+      <mat-icon class="icon">account_tree</mat-icon>
+      <span>Machines</span>
+    </a></li>
+    <li><a routerLink="/timesheet">
+      <mat-icon class="icon">build</mat-icon>
+      <span>Tools</span>
+    </a></li>
   </ul>
   `,
   styleUrls: ['./side-bar.component.scss']

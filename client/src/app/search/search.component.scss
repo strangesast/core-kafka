@@ -1,6 +1,3 @@
-:host {
-  display: grid;
-}
 :host > input {
   border:none;
   background-image:none;
@@ -12,6 +9,8 @@
   font-size: 1.2rem;
 }
 :host {
+  display: grid;
+  max-width: 500px;
   border: 2px solid #eee;
   border-radius: 8px;
   padding: 8px 12px;

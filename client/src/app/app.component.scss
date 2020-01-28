@@ -24,6 +24,10 @@
   justify-content: center;
 }
 
+:host > header > app-search {
+  // justify-self: center;
+}
+
 :host > header .links {
   padding: 0;
   list-style-type: none;
