@@ -21,6 +21,18 @@ type position struct {
 	Value     string `xml:",chardata"`
 }
 
+// receive xml tokens
+// if start of component, take until end of component
+
+func getXMLAttr(el xml.StartElement, key string) string {
+	for _, val := range el.Attr {
+		if val.Name.Local == key {
+			return val.Value
+		}
+	}
+	return ""
+}
+
 func main() {
 	log.Println("Starting...")
 
@@ -29,7 +41,7 @@ func main() {
 
 	if os.Getenv("dev") == "true" {
 		u, _ = url.Parse("https://smstestbed.nist.gov/vds/GFAgie01/sample")
-		query.Set("path", "//Components//Path")
+		// query.Set("path", "//Components//Path")
 		// query.Set("path", "//Components/Path//*[@name='path_pos']")
 	} else {
 		u, _ = url.Parse("http://10.0.0.101:5000/Fanuc-0id-01/sample")
@@ -65,8 +77,22 @@ func main() {
 		if t == nil {
 			break
 		}
-		switch se := t.(type) {
-		case xml.StartElement:
+		if se, ok := t.(xml.StartElement); ok && se.Name.Local == "ComponentStream" {
+			name := getXMLAttr(se, "name")
+			fmt.Printf("\"%s\"\n", name)
+			t, err := decoder.Token()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			if t == nil {
+				break
+			}
+			if ee, ok := t.(xml.EndElement); ok && ee.Name.Local == "ComponentStream" {
+				break
+			}
 			//if se.Name.Local == "MTConnectStreams" {
 			//	var p Result
 			//	decoder.DecodeElement(&p, &se)
@@ -74,24 +100,25 @@ func main() {
 			//		fmt.Printf("%d - %s\n", i, val)
 			//	}
 			//}
-			if se.Name.Local == "ComponentStream" {
-				for _, val := range se.Attr {
-					if val.Name.Local == "name" {
-						fmt.Printf("name=%s\n", val.Value)
-					}
-				}
+			// for elem in "just ComponentStream"s:
+			//   get elem.Attr["name"]
+			//   for elem in "just ComponentStream>Samples>*":
+			//     get elem.Tag (i.e. "Position"), timestamp, and value
+			if se.Name.Local == "Samples" {
+
 			}
-			if se.Name.Local == "Position" {
-				// fmt.Println(se)
-				var p position
-				decoder.DecodeElement(&p, &se)
-				fmt.Println(p)
-				// for _, val := range se.Attr {
-				// 	if val.Name.Local == "name" {
-				// 		fmt.Printf("name=%s\n", val.Value)
-				// 	}
-				// }
-			}
+
+			// if se.Name.Local == "Position" {
+			// 	// fmt.Println(se)
+			// 	var p position
+			// 	decoder.DecodeElement(&p, &se)
+			// 	fmt.Println(p)
+			// 	// for _, val := range se.Attr {
+			// 	// 	if val.Name.Local == "name" {
+			// 	// 		fmt.Printf("name=%s\n", val.Value)
+			// 	// 	}
+			// 	// }
+			// }
 
 		}
 	}

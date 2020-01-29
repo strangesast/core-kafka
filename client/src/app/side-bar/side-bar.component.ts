@@ -16,6 +16,10 @@ import { Component, OnInit } from '@angular/core';
       <mat-icon class="icon">build</mat-icon>
       <span>Tools</span>
     </a></li>
+    <li><a routerLink="/schedule">
+      <mat-icon class="icon">calendar_today</mat-icon>
+      <span>Schedule</span>
+    </a></li>
   </ul>
   `,
   styleUrls: ['./side-bar.component.scss']

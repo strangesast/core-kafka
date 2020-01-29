@@ -5,6 +5,7 @@
 :host {
   height: 100%;
   display: grid;
+  overflow: hidden;
   grid-template-rows: 80px auto;
 }
 

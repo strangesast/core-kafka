@@ -8,16 +8,10 @@ import { Component } from '@angular/core';
       <span>CORE</span>
     </a>
     <app-search></app-search>
-    <div>
-      <!--
-      <ul class="links">
-        <li class="link"><a routerLink="/timesheet">Timesheet</a></li>
-      </ul>
-      -->
-      <a mat-flat-button color="primary" routerLink="/login">Login</a>
-    </div>
+    <ul class="links">
+      <li><a mat-flat-button color="primary" routerLink="/login">Login</a></li>
+    </ul>
   </header>
-  <app-side-bar></app-side-bar>
   <div class="container">
     <router-outlet></router-outlet>
   </div>

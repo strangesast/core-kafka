@@ -18,6 +18,7 @@
   padding: 4px 0;
   margin: 8px;
   & > .icon {
+    padding: 8px;
     font-size: 40px;
     height: 40px;
     width: 40px;
@@ -31,5 +32,18 @@
   border-style: solid;
   &:hover {
     border-color: #eee;
+  }
+}
+@media(max-width: 480px) {
+  :host > ul > li > a {
+    flex-direction: row;
+    & > .icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+    & > span {
+      visibility: hidden;
+    }
   }
 }

@@ -1,4 +1,10 @@
 :host {
-  display: block;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 100px auto;
   height: 100%;
+  overflow: hidden;
+}
+:host > router-outlet {
+  display: none;
 }
