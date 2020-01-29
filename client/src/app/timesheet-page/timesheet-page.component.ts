@@ -7,6 +7,8 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
 @Component({
   selector: 'app-timesheet-page',
   template: `
+  <app-data-table></app-data-table>
+  <!--
   <div class="table">
     <a *ngFor="let week of data" class="row" tabindex="0" [routerLink]="['/timesheet', 'week', week.startDate.toISOString().slice(0,10)]">
       <div>{{week.startDate | date:'shortDate' }}</div>
@@ -24,12 +26,11 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
         <span>/</span>
         <span class="hours_right">40</span>
       </div>
-      <!--
           <span class="dow">{{row.date | date:'EEE'}}</span>
           <span class="date">{{row.date | date:'M/d'}}</span>
-       -->
     </a>
   </div>
+  -->
   `,
   styleUrls: ['./timesheet-page.component.scss']
 })

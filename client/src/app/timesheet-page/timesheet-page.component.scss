@@ -1,3 +1,17 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 12px 12px 0;
+}
+
+:host > app-data-table {
+  height: 100%;
+  & > div > .container {
+    max-width: 800px;
+  }
+}
+
 :host > .table > .row {
   color: inherit;
   text-decoration: inherit;

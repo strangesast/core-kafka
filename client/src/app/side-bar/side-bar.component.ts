@@ -8,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
       <mat-icon class="icon">access_time</mat-icon>
       <span>Timesheet</span>
     </a></li>
-    <li><a routerLink="/timesheet">
+    <li><a routerLink="/machines">
       <mat-icon class="icon">account_tree</mat-icon>
       <span>Machines</span>
     </a></li>

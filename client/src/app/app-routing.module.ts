@@ -7,6 +7,7 @@ import { TimesheetContainerPageComponent } from './timesheet-container-page/time
 import { LoginPageContainerComponent } from './login-page-container/login-page-container.component';
 import { HomePageComponent } from './home-page/home-page.component';
 import { UserPageComponent } from './user-page/user-page.component';
+import { MachineContainerPageComponent } from './machine-container-page/machine-container-page.component';
 
 
 const routes: Routes = [
@@ -15,6 +16,7 @@ const routes: Routes = [
       {path: '', component: TimesheetPageComponent},
       {path: 'week/:weekId', component: TimesheetWeekPageComponent},
     ]},
+    {path: 'machines', component: MachineContainerPageComponent, children: []},
   ]},
   {path: 'login', component: LoginPageContainerComponent},
 ];

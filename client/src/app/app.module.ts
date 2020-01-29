@@ -21,6 +21,7 @@ import { LoginPageContainerComponent } from './login-page-container/login-page-c
 import { LoginPageComponent } from './login-page/login-page.component';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { SearchComponent } from './search/search.component';
+import { MachineContainerPageComponent } from './machine-container-page/machine-container-page.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { SearchComponent } from './search/search.component';
     LoginPageContainerComponent,
     LoginPageComponent,
     SideBarComponent,
-    SearchComponent
+    SearchComponent,
+    MachineContainerPageComponent
   ],
   imports: [
     BrowserModule,

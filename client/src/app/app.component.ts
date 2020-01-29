@@ -9,9 +9,11 @@ import { Component } from '@angular/core';
     </a>
     <app-search></app-search>
     <div>
+      <!--
       <ul class="links">
         <li class="link"><a routerLink="/timesheet">Timesheet</a></li>
       </ul>
+      -->
       <a mat-flat-button color="primary" routerLink="/login">Login</a>
     </div>
   </header>

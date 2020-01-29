@@ -10,7 +10,10 @@ import { pluck } from 'rxjs/operators';
   </header>
   <router-outlet></router-outlet>
   `,
-  styleUrls: ['./timesheet-container-page.component.scss']
+  styleUrls: [
+    '../container-page-formatting.scss',
+    './timesheet-container-page.component.scss',
+  ]
 })
 export class TimesheetContainerPageComponent implements OnInit {
   week$ = this.route.firstChild.params.pipe(

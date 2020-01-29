@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+:host > div {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto min-content;
+}
+
+:host > div > .container {
+  overflow: auto;
+  position: relative;
+  & > table {
+    width: 100%;
+  }
+}
