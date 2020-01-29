@@ -10,12 +10,12 @@ import (
 	"os"
 )
 
-type Result struct {
+type result struct {
 	// Samples []string `xml:"Streams>DeviceStream>ComponentStream>Samples>PathPosition"`
 	Components []string `xml:"Streams>DeviceStream>ComponentStream>Samples>Position"`
 }
 
-type Position struct {
+type position struct {
 	Timestamp string `xml:"timestamp,attr"`
 	Sequence  int    `xml:"sequence,attr"`
 	Value     string `xml:",chardata"`
@@ -26,15 +26,18 @@ func main() {
 
 	var u *url.URL
 	query := make(url.Values)
+
 	if os.Getenv("dev") == "true" {
 		u, _ = url.Parse("https://smstestbed.nist.gov/vds/GFAgie01/sample")
 		query.Set("path", "//Components//Path")
 		// query.Set("path", "//Components/Path//*[@name='path_pos']")
 	} else {
-		u, _ = url.Parse("http://10.0.0.110:5000/Fanuc-0id-01/sample")
+		u, _ = url.Parse("http://10.0.0.101:5000/Fanuc-0id-01/sample")
 		//query.Set("path", "//Components//Path")
-		query.Set("path", "//Components//Linear//*[@name='Xact' or @name='Yact' or @name='Zact']")
+		// query.Set("path", "//Components//Linear//*[@name='Xact' or @name='Yact' or @name='Zact']")
+		query.Set("path", "//Components//Linear//*[@name='execution']")
 	}
+
 	// query.Set("interval", "1000")
 	u.RawQuery = query.Encode()
 
@@ -80,7 +83,7 @@ func main() {
 			}
 			if se.Name.Local == "Position" {
 				// fmt.Println(se)
-				var p Position
+				var p position
 				decoder.DecodeElement(&p, &se)
 				fmt.Println(p)
 				// for _, val := range se.Attr {
