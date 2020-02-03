@@ -7,6 +7,9 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
 @Component({
   selector: 'app-timesheet-page',
   template: `
+  <header>
+    <h1>Current</h1>
+  </header>
   <app-data-table></app-data-table>
   <!--
   <div class="table">
@@ -32,7 +35,14 @@ MONDAY.setDate(MONDAY.getDate() - MONDAY.getDay() + 1);
   </div>
   -->
   `,
-  styleUrls: ['./timesheet-page.component.scss']
+  styleUrls: ['./timesheet-page.component.scss'],
+  styles: [
+    `
+    header {
+      padding: 0 16px;
+    }
+    `,
+  ],
 })
 export class TimesheetPageComponent implements OnInit {
   data = Array.from(Array(7)).map((_, i) => {

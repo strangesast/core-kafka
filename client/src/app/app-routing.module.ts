@@ -11,14 +11,15 @@ import { MachineContainerPageComponent } from './machine-container-page/machine-
 
 
 const routes: Routes = [
-  {path: '', component: HomePageComponent, children: [
-    {path: 'timesheet', component: TimesheetContainerPageComponent, children: [
-      {path: '', component: TimesheetPageComponent},
-      {path: 'week/:weekId', component: TimesheetWeekPageComponent},
-    ]},
-    {path: 'machines', component: MachineContainerPageComponent, children: []},
+  { path: '', component: HomePageComponent, children: [
+    { path: 'timesheet', component: TimesheetContainerPageComponent, children: [
+      { path: 'current', component: TimesheetPageComponent },
+      { path: '', pathMatch: 'full', redirectTo: 'current' },
+    ] },
+    { path: 'machines', component: MachineContainerPageComponent, children: []},
+    { path: '', pathMatch: 'full', redirectTo: 'timesheet' },
   ]},
-  {path: 'login', component: LoginPageContainerComponent},
+  { path: 'login', component: LoginPageContainerComponent },
 ];
 
 @NgModule({

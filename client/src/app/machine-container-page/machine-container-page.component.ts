@@ -3,8 +3,10 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-machine-container-page',
   template: `
+  <mat-toolbar>
+    <span>Machines</span>
+  </mat-toolbar>
   <header>
-    <h1>Machines</h1>
     <mat-button-toggle-group>
       <mat-button-toggle>
         <mat-icon>view_list</mat-icon>
@@ -18,7 +20,14 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: [
     '../container-page-formatting.scss',
     './machine-container-page.component.scss',
-  ]
+  ],
+  styles: [
+    `
+    mat-toolbar {
+      background: white;
+    }
+    `,
+  ],
 })
 export class MachineContainerPageComponent implements OnInit {
 
