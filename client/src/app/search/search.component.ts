@@ -12,7 +12,7 @@ export class SearchComponent implements OnInit {
   active = false;
 
   @HostBinding('class') get classes() {
-    return this.active ? 'mat-elevation-z3 active' : '';
+    return this.active ? 'mat-elevation-z2 active' : '';
   }
 
   focus() {

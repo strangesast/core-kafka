@@ -5,6 +5,19 @@
   padding: 0 12px 12px 0;
 }
 
+:host > table {
+  width: 100%;
+  max-width: 800px;
+}
+
+table tr:not(.header) {
+  height: 60px;
+  transition: background 0.1s ease;
+  &:hover {
+    background: #eee;
+  }
+}
+
 :host > app-data-table {
   height: 100%;
   & > div > .container {

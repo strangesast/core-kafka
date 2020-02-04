@@ -12,11 +12,14 @@
   display: grid;
   grid-template-columns: auto min-content;
   max-width: 500px;
-  border: 2px solid #eee;
+  min-width: 400px;
+  background: #eee;
+  border: 1px solid transparent;
   border-radius: 8px;
   padding: 8px 12px;
-  transition: border 0.1s ease, box-shadow 0.1s ease;
+  transition: background 0.1s ease, box-shadow 0.1s ease;
   &.active {
-    border-color: transparent;
+    background: white;
+    border-color: #eee;
   }
 }

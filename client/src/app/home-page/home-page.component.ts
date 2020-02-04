@@ -30,7 +30,12 @@ import { transition, animate, trigger, state, style } from '@angular/animations'
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content>
-      <router-outlet></router-outlet>
+      <router-outlet>
+        <mat-toolbar>
+          <app-search></app-search>
+          <a mat-stroked-button routerLink="/login">Login</a>
+        </mat-toolbar>
+      </router-outlet>
     </mat-sidenav-content>
   </mat-sidenav-container>
   `,
@@ -43,6 +48,8 @@ import { transition, animate, trigger, state, style } from '@angular/animations'
     }
     mat-toolbar {
       background: white;
+      display: flex;
+      justify-content: space-between;
     }
     mat-toolbar a {
       text-decoration: none;

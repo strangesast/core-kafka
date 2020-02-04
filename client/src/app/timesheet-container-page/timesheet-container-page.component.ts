@@ -5,9 +5,6 @@ import { pluck } from 'rxjs/operators';
 @Component({
   selector: 'app-timesheet-container-page',
   template: `
-  <mat-toolbar>
-    <span>Timesheets</span>
-  </mat-toolbar>
   <router-outlet></router-outlet>
   `,
   styleUrls: [

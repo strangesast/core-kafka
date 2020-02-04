@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -22,6 +23,10 @@ import { LoginPageComponent } from './login-page/login-page.component';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { SearchComponent } from './search/search.component';
 import { MachineContainerPageComponent } from './machine-container-page/machine-container-page.component';
+import { MiniDateComponent } from './mini-date/mini-date.component';
+import { HoursPipe } from './hours.pipe';
+import { DocumentationContainerPageComponent } from './documentation-container-page/documentation-container-page.component';
+import { DocumentationPageComponent } from './documentation-page/documentation-page.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +42,11 @@ import { MachineContainerPageComponent } from './machine-container-page/machine-
     LoginPageComponent,
     SideBarComponent,
     SearchComponent,
-    MachineContainerPageComponent
+    MachineContainerPageComponent,
+    MiniDateComponent,
+    HoursPipe,
+    DocumentationContainerPageComponent,
+    DocumentationPageComponent
   ],
   imports: [
     BrowserModule,
@@ -49,6 +58,8 @@ import { MachineContainerPageComponent } from './machine-container-page/machine-
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
