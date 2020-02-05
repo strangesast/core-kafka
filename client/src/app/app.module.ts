@@ -27,6 +27,7 @@ import { MiniDateComponent } from './mini-date/mini-date.component';
 import { HoursPipe } from './hours.pipe';
 import { DocumentationContainerPageComponent } from './documentation-container-page/documentation-container-page.component';
 import { DocumentationPageComponent } from './documentation-page/documentation-page.component';
+import { TimesheetSettingsPageComponent } from './timesheet-settings-page/timesheet-settings-page.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { DocumentationPageComponent } from './documentation-page/documentation-p
     MiniDateComponent,
     HoursPipe,
     DocumentationContainerPageComponent,
-    DocumentationPageComponent
+    DocumentationPageComponent,
+    TimesheetSettingsPageComponent
   ],
   imports: [
     BrowserModule,
