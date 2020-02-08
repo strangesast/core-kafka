@@ -10,7 +10,7 @@ const LOCALE = 'en-us';
   styleUrls: ['./mini-date.component.scss']
 })
 export class MiniDateComponent implements OnInit {
-  private dayShortName: string;
+  public dayShortName: string;
   private d: Date;
 
   @Input()

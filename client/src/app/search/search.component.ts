@@ -15,11 +15,13 @@ export class SearchComponent implements OnInit {
     return this.active ? 'mat-elevation-z2 active' : '';
   }
 
-  focus() {
+  focus($event) {
+    console.log($event);
     this.active = true;
   }
 
-  blur() {
+  blur($event) {
+    console.log($event);
     this.active = false;
   }
 
