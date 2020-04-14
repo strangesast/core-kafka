@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <pre></pre>
+  <script>
+    const pre = document.querySelector('pre');
+    const url = new URL('/ws', 'ws:' + window.location.origin.slice(window.location.protocol.length))
+    const socket = new WebSocket(url);
+
+    socket.onopen = (e) => console.log('socket opened');
+
+    const maxLen = 40;
+    let data = Array.from(Array(maxLen));
+    socket.onmessage = (e) => {
+      data = data.concat(e.data.split('\n')).slice(-maxLen);
+      pre.textContent = data.join('\n');
+      console.log(data);
+    };
+  </script>
+</body>
+</html>
