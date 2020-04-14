@@ -6,12 +6,13 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	ptypes "github.com/golang/protobuf/ptypes"
 	"net/http"
+	"os"
 	"time"
 )
 
 // const baseURL = `https://smstestbed.nist.gov/vds`
 
-const baseURL = `http://localhost:5000`
+var baseURL = os.Getenv("BASE_URL")
 
 func main() {
 
@@ -26,9 +27,12 @@ func main() {
 	})
 
 	config := sarama.NewConfig()
+	config.Net.DialTimeout = 5 * time.Minute
 	// config.Producer.Return.Successes = true
 
-	producer, err := sarama.NewAsyncProducer([]string{"localhost:9092"}, config)
+	kafkaHost := os.Getenv("KAFKA_HOST")
+	kafkaConn := fmt.Sprintf("%s:9092", kafkaHost)
+	producer, err := sarama.NewAsyncProducer([]string{kafkaConn}, config)
 	handleErr(err)
 
 	go func() {
