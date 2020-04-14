@@ -19,12 +19,13 @@
 
     socket.onopen = (e) => console.log('socket opened');
 
-    const maxLen = 40;
-    let data = Array.from(Array(maxLen));
+    const cols = [
+      {'title': 'Condition', key: 'CONDITION', cols: ['itemid', 'tag', 'attrs.type', 'timestamp'], id: 'itemid'},
+      {'title': 'Samples',   key: 'SAMPLE',    cols: ['itemid', 'value', 'timestamp'],             id: 'itemid'},
+      {'title': 'Events',    key: 'EVENT',     cols: ['itemid', 'tag', 'value', 'timestamp'],      id: 'sequence'},
+    ]
 
-    const div = d3.select(document.body).append('div');
-    const dSamples = div.append('table');
-    const dEvents = div.append('table');
+    const formatDate = d3.timeFormat('%x %H:%M:%S.%L');
     socket.onmessage = (e) => {
       let data;
       try {
@@ -32,27 +33,51 @@
       } catch (err) {
         return;
       };
-      if (!data.samples) {
+
+      data = data['samples'];
+
+      if (!data) {
         return;
       }
-      const g = d3.group(data.samples, d => d.type);
-      const arr = g.get('SAMPLE');
-      console.log(arr);
-      dSamples.selectAll('tr').data(arr, d => d['itemid']).join(
-        enter => enter.append('tr')
-          .call(s => s.append('td').classed('key', true).text(d => d.itemid))
-          .call(s => s.append('td').classed('value', true).text(d => d.value))
-        , update => update.call(s => s.select('.value').text(d => d.value))
-        , exit => exit
-      );
 
-      const n = dEvents.node();
-      for (const d of g.get('EVENT') || []) {
-        n.insertBefore(d3.create('tr').datum(d).call(s => s.append('pre').text(d => JSON.stringify(d, null, 2))).node(), n.firstChild);
+      for (const sample of data) {
+        sample['timestamp'] = new Date(sample['timestamp']);
       }
-      // data = data.concat(e.data.split('\n')).slice(-maxLen);
-      // pre.textContent = data.join('\n');
-      // console.log(data);
+
+      data = d3.group(data, d => d.type);
+
+      d3.select(document.body).selectAll('section').data(cols, d => d.key)
+        .join(
+          enter => enter.append('section')
+            .call(s => s.append('h1').text(d => d.title))
+            .call(s => s.append('table')
+              .call(s => s.append('thead').append('tr').selectAll('th').data(d => d.cols).join('th').text(d => d))
+              .call(s => s.append('tbody'))
+            )
+        )
+        .each(function (d) {
+          d3.select(this).select('tbody')
+            .selectAll('tr')
+            .data(d =>
+              (data.get(d.key) || [])
+                .sort((a, b) => d3.descending(a.timestamp, b.timestamp))
+                .map(e => [
+                  e[d.id],
+                  d.cols.map(key => [key, key.split('.').reduce((acc, cv) => acc[cv], e)])
+                ])
+              , d => d[0]
+            )
+            .join(
+              enter => enter.append('tr'),
+              update => update,
+              exit => exit,
+            )
+            // .sort((a, b) => d3.descending(a[0], b[0])
+            .selectAll('td')
+            .data(d => d[1])
+            .join('td')
+            .text(d => d[0] == 'timestamp' ? formatDate(d[1]) : d[1])
+        });
     };
   </script>
 </body>
