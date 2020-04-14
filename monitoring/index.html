@@ -3,9 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
+  <style>
+    body {
+    }
+  </style>
 </head>
 <body>
   <pre></pre>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://d3js.org/d3-array.v2.min.js"></script>
   <script>
     const pre = document.querySelector('pre');
     const url = new URL('/ws', 'ws:' + window.location.origin.slice(window.location.protocol.length))
@@ -15,10 +21,38 @@
 
     const maxLen = 40;
     let data = Array.from(Array(maxLen));
+
+    const div = d3.select(document.body).append('div');
+    const dSamples = div.append('table');
+    const dEvents = div.append('table');
     socket.onmessage = (e) => {
-      data = data.concat(e.data.split('\n')).slice(-maxLen);
-      pre.textContent = data.join('\n');
-      console.log(data);
+      let data;
+      try {
+        data = JSON.parse(e.data);
+      } catch (err) {
+        return;
+      };
+      if (!data.samples) {
+        return;
+      }
+      const g = d3.group(data.samples, d => d.type);
+      const arr = g.get('SAMPLE');
+      console.log(arr);
+      dSamples.selectAll('tr').data(arr, d => d['itemid']).join(
+        enter => enter.append('tr')
+          .call(s => s.append('td').classed('key', true).text(d => d.itemid))
+          .call(s => s.append('td').classed('value', true).text(d => d.value))
+        , update => update.call(s => s.select('.value').text(d => d.value))
+        , exit => exit
+      );
+
+      const n = dEvents.node();
+      for (const d of g.get('EVENT') || []) {
+        n.insertBefore(d3.create('tr').datum(d).call(s => s.append('pre').text(d => JSON.stringify(d, null, 2))).node(), n.firstChild);
+      }
+      // data = data.concat(e.data.split('\n')).slice(-maxLen);
+      // pre.textContent = data.join('\n');
+      // console.log(data);
     };
   </script>
 </body>

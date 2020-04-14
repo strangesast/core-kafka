@@ -6,8 +6,8 @@ import (
 	"net/url"
 )
 
-func probe() MTConnectDevices {
-	u, err := url.Parse(baseUrl + "/probe")
+func probe() mMTConnectDevices {
+	u, err := url.Parse(baseURL + "/probe")
 
 	handleErr(err)
 
@@ -17,7 +17,7 @@ func probe() MTConnectDevices {
 	}
 	defer resp.Body.Close()
 
-	var devices MTConnectDevices
+	var devices mMTConnectDevices
 
 	defer resp.Body.Close()
 

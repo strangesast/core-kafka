@@ -6,8 +6,8 @@ import (
 	"net/url"
 )
 
-func current(deviceName string) MTConnectStreams {
-	u, err := url.Parse(baseUrl + "/current")
+func current(deviceName string) mMTConnectStreams {
+	u, err := url.Parse(baseURL + "/current")
 	query := make(url.Values)
 
 	if deviceName != "" {
@@ -25,7 +25,7 @@ func current(deviceName string) MTConnectStreams {
 	defer resp.Body.Close()
 	decoder := xml.NewDecoder(resp.Body)
 
-	var s MTConnectStreams
+	var s mMTConnectStreams
 	for {
 		t, _ := decoder.Token()
 
@@ -40,7 +40,7 @@ func current(deviceName string) MTConnectStreams {
 
 				decoder.DecodeElement(&s, &se)
 			} else if se.Name.Local == "MTConnectError" {
-				var s MTConnectError
+				var s mMTConnectError
 				decoder.DecodeElement(&s, &se)
 				fmt.Println("error")
 				fmt.Printf("%+v\n", s)

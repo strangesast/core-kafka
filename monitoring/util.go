@@ -18,13 +18,13 @@ func pprint(arg interface{}) {
 	fmt.Println(string(b))
 }
 
-type HttpError struct {
-	Url *url.URL
+type mHTTPError struct {
+	URL *url.URL
 	Err error
 }
 
-func (e *HttpError) Error() string {
-	return "http request failed for " + e.Url.String() + ": " + e.Err.Error()
+func (e *mHTTPError) Error() string {
+	return "http request failed for " + e.URL.String() + ": " + e.Err.Error()
 }
 
 func makeRequest(u *url.URL) (*http.Response, error) {
@@ -40,7 +40,7 @@ func makeRequest(u *url.URL) (*http.Response, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println(`bad response`)
-		err = &HttpError{u, nil}
+		err = &mHTTPError{u, nil}
 		return nil, err
 	}
 	return resp, nil

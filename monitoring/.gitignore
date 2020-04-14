@@ -1,1 +1,3 @@
 *.xml
+*.pb.go
+/protoc

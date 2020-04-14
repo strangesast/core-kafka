@@ -7,11 +7,11 @@ import (
 	"strconv"
 )
 
-func sample(deviceName string, from int) chan MTConnectStreams {
-	streams := make(chan MTConnectStreams)
+func sample(deviceName string, from int) chan mMTConnectStreams {
+	streams := make(chan mMTConnectStreams)
 	query := make(url.Values)
 
-	u, err := url.Parse(baseUrl + "/sample")
+	u, err := url.Parse(baseURL + "/sample")
 	handleErr(err)
 
 	if deviceName != "" {
@@ -43,12 +43,11 @@ func sample(deviceName string, from int) chan MTConnectStreams {
 			switch se := t.(type) {
 			case xml.StartElement:
 				if se.Name.Local == "MTConnectStreams" {
-					var s MTConnectStreams
-
+					var s mMTConnectStreams
 					decoder.DecodeElement(&s, &se)
 					streams <- s
 				} else if se.Name.Local == "MTConnectError" {
-					var s MTConnectError
+					var s mMTConnectError
 					decoder.DecodeElement(&s, &se)
 					fmt.Println("error")
 					fmt.Printf("%+v\n", s)

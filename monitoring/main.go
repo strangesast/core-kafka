@@ -2,23 +2,35 @@ package main
 
 import (
 	"fmt"
+	"github.com/Shopify/sarama"
+	"github.com/golang/protobuf/jsonpb"
+	ptypes "github.com/golang/protobuf/ptypes"
 	"net/http"
-	"strings"
+	"time"
 )
 
-const baseUrl = `https://smstestbed.nist.gov/vds`
+// const baseURL = `https://smstestbed.nist.gov/vds`
 
-// cons baseUrl = `http://localhost:5000`
+const baseURL = `http://localhost:5000`
 
 func main() {
 
 	onRegister := make(chan *Client)
+
 	hub := newHub(onRegister)
+
 	go hub.run()
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
+
+	config := sarama.NewConfig()
+	// config.Producer.Return.Successes = true
+
+	producer, err := sarama.NewAsyncProducer([]string{"localhost:9092"}, config)
+	handleErr(err)
+
 	go func() {
 		devices := probe()
 		if len(devices.Devices) == 0 {
@@ -31,10 +43,15 @@ func main() {
 		fmt.Printf("Device %s\n", device.Name)
 		init := current(device.Name)
 
+		message := &sarama.ProducerMessage{Topic: "input", Value: sarama.StringEncoder("testing 123")}
+		producer.Input() <- message
+		marshaller := jsonpb.Marshaler{}
+		// b, _ := json.MarshalIndent(printStreams(init), "", "  ")
+		b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(init)})
+		hub.broadcast <- []byte(b)
+
 		seq := init.Header.NextSequence
 		fmt.Printf("seq: %v\n", seq)
-
-		hub.broadcast <- []byte(strings.Join(printStreams(init), ""))
 
 		// , streams.Header.FirstSequence
 		samples := sample(device.Name, seq)
@@ -42,45 +59,74 @@ func main() {
 		for {
 			select {
 			case s := <-samples:
-				hub.broadcast <- []byte(strings.Join(printStreams(s), ""))
+				fmt.Println("got samples")
+				// message := &sarama.ProducerMessage{Topic: "input", Value: sarama.StringEncoder("testing 123")}
+				// producer.Input() <- message
+				// b, _ := json.MarshalIndent(printStreams(s), "", "  ")
+				b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(s)})
+				hub.broadcast <- []byte(b)
 			case c := <-onRegister:
 				fmt.Println("sending init")
-				c.send <- []byte(strings.Join(printStreams(init), ""))
+				b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(init)})
+				c.send <- []byte(b)
 			}
 		}
 	}()
 
-	err := http.ListenAndServe(*addr, nil)
+	err = http.ListenAndServe(*addr, nil)
 	handleErr(err)
 }
 
-func printStreams(streams MTConnectStreams) []string {
-	var lines []string
+func printStreams(streams mMTConnectStreams) []*Sample {
+	var samples []*Sample
 
 	for _, stream := range streams.Streams {
-		// stream.DeviceName
 		for _, component := range stream.Components {
-			// fmt.Printf("%s > %s\n", stream.DeviceName, component.Component)
-			fmtString := "%s > %s > %s %s (%s): %s\n"
-			if len(component.Samples.Items) > 0 {
-				for _, item := range component.Samples.Items {
-					line := fmt.Sprintf(fmtString, stream.DeviceName, component.Component, item.XMLName.Local, item.Name, "sample", item.Value)
-					lines = append(lines, line)
-				}
+			for _, item := range component.Samples.Items {
+				sample := parseSample(item, stream, component, Sample_SAMPLE)
+				samples = append(samples, &sample)
 			}
-			if len(component.Events.Items) > 0 {
-				for _, item := range component.Events.Items {
-					line := fmt.Sprintf(fmtString, stream.DeviceName, component.Component, item.XMLName.Local, item.Name, "event", item.Value)
-					lines = append(lines, line)
-				}
+			for _, item := range component.Events.Items {
+				sample := parseSample(item, stream, component, Sample_EVENT)
+				samples = append(samples, &sample)
 			}
-			if len(component.Condition.Items) > 0 {
-				for _, item := range component.Condition.Items {
-					line := fmt.Sprintf(fmtString, stream.DeviceName, component.Component, item.XMLName.Local, item.Name, "condition", item.Value)
-					lines = append(lines, line)
-				}
+			for _, item := range component.Condition.Items {
+				sample := parseSample(item, stream, component, Sample_CONDITION)
+				samples = append(samples, &sample)
 			}
 		}
 	}
-	return lines
+	return samples
+}
+
+func parseSample(item mComponentSample, stream mStream, component mComponentStream, stype Sample_SampleType) Sample {
+	attrs := make(map[string]string)
+
+	for _, attr := range item.Attrs {
+		n := attr.Name.Local
+		switch n {
+		case "dataItemId",
+			"timestamp":
+			continue
+		default:
+			attrs[n] = attr.Value
+		}
+	}
+	// yeesh
+	ts, err := time.Parse("2006-01-02T15:04:05.999999Z", item.Timestamp)
+	handleErr(err)
+	t, err := ptypes.TimestampProto(ts)
+	handleErr(err)
+
+	return Sample{
+		Device:    stream.DeviceName,
+		Itemid:    item.DataItemID,
+		Sequence:  int64(item.Sequence),
+		Component: component.ComponentID,
+		Type:      stype,
+		Value:     item.Value,
+		Timestamp: t,
+		Tag:       item.XMLName.Local,
+		Attrs:     attrs,
+	}
 }
