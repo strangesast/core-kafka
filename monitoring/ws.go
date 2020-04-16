@@ -132,6 +132,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
+// Hub handle ws clients, go routines
 type Hub struct {
 	// Registered clients.
 	clients map[*Client]bool

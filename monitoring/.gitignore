@@ -1,3 +1,4 @@
 *.xml
 *.pb.go
 /protoc
+/env/

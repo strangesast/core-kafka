@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Shopify/sarama"
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/jsonpb"
 	ptypes "github.com/golang/protobuf/ptypes"
 	"net/http"
@@ -28,6 +29,11 @@ func main() {
 
 	config := sarama.NewConfig()
 	config.Net.DialTimeout = 5 * time.Minute
+
+	kafkaVersion, err := sarama.ParseKafkaVersion("2.4.1")
+	handleErr(err)
+	config.Version = kafkaVersion
+	config.ClientID = "golang-monitoring-producer"
 	// config.Producer.Return.Successes = true
 
 	kafkaHost := os.Getenv("KAFKA_HOST")
@@ -47,12 +53,22 @@ func main() {
 		fmt.Printf("Device %s\n", device.Name)
 		init := current(device.Name)
 
-		message := &sarama.ProducerMessage{Topic: "input", Value: sarama.StringEncoder("testing 123")}
-		producer.Input() <- message
+		// pprint(init)
+
+		fmt.Println("input messsage")
+
+		msg := &SampleGroup{Samples: printStreams(init), LastSequence: int64(init.Header.LastSequence)}
+
+		b0, err := proto.Marshal(msg)
+		handleErr(err)
+
+		kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(b0)}
+		producer.Input() <- kMessage
+
 		marshaller := jsonpb.Marshaler{}
-		// b, _ := json.MarshalIndent(printStreams(init), "", "  ")
-		b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(init)})
-		hub.broadcast <- []byte(b)
+		b1, err := marshaller.MarshalToString(msg)
+		handleErr(err)
+		hub.broadcast <- []byte(b1)
 
 		seq := init.Header.NextSequence
 		fmt.Printf("seq: %v\n", seq)
@@ -64,14 +80,23 @@ func main() {
 			select {
 			case s := <-samples:
 				fmt.Println("got samples")
-				// message := &sarama.ProducerMessage{Topic: "input", Value: sarama.StringEncoder("testing 123")}
-				// producer.Input() <- message
-				// b, _ := json.MarshalIndent(printStreams(s), "", "  ")
-				b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(s)})
-				hub.broadcast <- []byte(b)
+
+				msg := &SampleGroup{Samples: printStreams(s), LastSequence: int64(s.Header.LastSequence)}
+
+				b0, err := proto.Marshal(msg)
+				handleErr(err)
+
+				b1, err := marshaller.MarshalToString(msg)
+				handleErr(err)
+
+				kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(b0)}
+				producer.Input() <- kMessage
+				hub.broadcast <- []byte(b1)
 			case c := <-onRegister:
 				fmt.Println("sending init")
-				b, _ := marshaller.MarshalToString(&SampleGroup{Samples: printStreams(init)})
+
+				kMessage := &SampleGroup{Samples: printStreams(init)}
+				b, _ := marshaller.MarshalToString(kMessage)
 				c.send <- []byte(b)
 			}
 		}
@@ -117,7 +142,9 @@ func parseSample(item mComponentSample, stream mStream, component mComponentStre
 		}
 	}
 	// yeesh
-	ts, err := time.Parse("2006-01-02T15:04:05.999999Z", item.Timestamp)
+	// format := "2006-01-02T15:04:05.999999Z"
+	format := "2006-01-02T15:04:05.999999"
+	ts, err := time.Parse(format, item.Timestamp)
 	handleErr(err)
 	t, err := ptypes.TimestampProto(ts)
 	handleErr(err)

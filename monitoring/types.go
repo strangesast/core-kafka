@@ -17,7 +17,8 @@ type mMTConnectStreamsHeader struct {
 	Version       string `xml:"version,attr"`
 	BufferSize    int    `xml:"bufferSize,attr"`
 	NextSequence  int    `xml:"nextSequence,attr"`
-	FirstSequence int    `xml:"lastSequence,attr"`
+	FirstSequence int    `xml:"firstSequence,attr"`
+	LastSequence  int    `xml:"lastSequence,attr"`
 }
 
 type mStream struct {

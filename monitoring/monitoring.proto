@@ -35,6 +35,7 @@ message Sample {
 }
 
 message SampleGroup {
+  int64 lastSequence = 1;
   repeated Sample samples = 2;
 }
 
