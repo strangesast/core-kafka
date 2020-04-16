@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package main;
+package proto;
 
-option go_package = ".;main";
+option go_package = ".;proto";
 
 // import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";

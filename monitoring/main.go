@@ -6,6 +6,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/jsonpb"
 	ptypes "github.com/golang/protobuf/ptypes"
+	pb "github.com/strangesast/core/monitoring/proto"
 	"log"
 	"net/http"
 	"os"
@@ -70,7 +71,7 @@ func main() {
 
 		fmt.Println("input messsage")
 
-		msg := &SampleGroup{Samples: printStreams(init), LastSequence: int64(init.Header.LastSequence)}
+		msg := &pb.SampleGroup{Samples: printStreams(init), LastSequence: int64(init.Header.LastSequence)}
 
 		b0, err := proto.Marshal(msg)
 		handleErr(err)
@@ -94,7 +95,7 @@ func main() {
 			case s := <-samples:
 				fmt.Println("got samples")
 
-				msg := &SampleGroup{Samples: printStreams(s), LastSequence: int64(s.Header.LastSequence)}
+				msg := &pb.SampleGroup{Samples: printStreams(s), LastSequence: int64(s.Header.LastSequence)}
 
 				b0, err := proto.Marshal(msg)
 				handleErr(err)
@@ -110,7 +111,7 @@ func main() {
 			case c := <-onRegister:
 				fmt.Println("sending init")
 
-				kMessage := &SampleGroup{Samples: printStreams(init)}
+				kMessage := &pb.SampleGroup{Samples: printStreams(init)}
 				b, _ := marshaller.MarshalToString(kMessage)
 				c.send <- []byte(b)
 			}
@@ -123,21 +124,21 @@ func main() {
 	// kafkaClient.Close()
 }
 
-func printStreams(streams mMTConnectStreams) []*Sample {
-	var samples []*Sample
+func printStreams(streams mMTConnectStreams) []*pb.Sample {
+	var samples []*pb.Sample
 
 	for _, stream := range streams.Streams {
 		for _, component := range stream.Components {
 			for _, item := range component.Samples.Items {
-				sample := parseSample(item, stream, component, Sample_SAMPLE)
+				sample := parseSample(item, stream, component, pb.Sample_SAMPLE)
 				samples = append(samples, &sample)
 			}
 			for _, item := range component.Events.Items {
-				sample := parseSample(item, stream, component, Sample_EVENT)
+				sample := parseSample(item, stream, component, pb.Sample_EVENT)
 				samples = append(samples, &sample)
 			}
 			for _, item := range component.Condition.Items {
-				sample := parseSample(item, stream, component, Sample_CONDITION)
+				sample := parseSample(item, stream, component, pb.Sample_CONDITION)
 				samples = append(samples, &sample)
 			}
 		}
@@ -145,7 +146,7 @@ func printStreams(streams mMTConnectStreams) []*Sample {
 	return samples
 }
 
-func parseSample(item mComponentSample, stream mStream, component mComponentStream, stype Sample_SampleType) Sample {
+func parseSample(item mComponentSample, stream mStream, component mComponentStream, stype pb.Sample_SampleType) pb.Sample {
 	attrs := make(map[string]string)
 
 	for _, attr := range item.Attrs {
@@ -167,7 +168,7 @@ func parseSample(item mComponentSample, stream mStream, component mComponentStre
 	t, err := ptypes.TimestampProto(ts)
 	handleErr(err)
 
-	return Sample{
+	return pb.Sample{
 		Device:    stream.DeviceName,
 		Itemid:    item.DataItemID,
 		Sequence:  int64(item.Sequence),
