@@ -6,19 +6,22 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/jsonpb"
 	ptypes "github.com/golang/protobuf/ptypes"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
 // const baseURL = `https://smstestbed.nist.gov/vds`
 
-var baseURL = os.Getenv("BASE_URL")
+var baseURL string
 
 func main() {
+	baseURL = getEnv("BASE_URL", "http://localhost:5000")
+	log.Printf(`using base url '%s'`, baseURL)
 
 	onRegister := make(chan *Client)
-
 	hub := newHub(onRegister)
 
 	go hub.run()
@@ -30,16 +33,26 @@ func main() {
 	config := sarama.NewConfig()
 	config.Net.DialTimeout = 5 * time.Minute
 
-	kafkaVersion, err := sarama.ParseKafkaVersion("2.4.1")
+	kafkaVersion, err := sarama.ParseKafkaVersion(getEnv("KAFKA_VERSION", "2.4.1"))
 	handleErr(err)
+	kafkaHosts := strings.Split(getEnv("KAFKA_HOSTS", "localhost:9092"), ",")
+	log.Printf(`using kafka host %s (v%s)\n`, strings.Join(kafkaHosts, " and "), kafkaVersion)
+
 	config.Version = kafkaVersion
 	config.ClientID = "golang-monitoring-producer"
 	// config.Producer.Return.Successes = true
 
-	kafkaHost := os.Getenv("KAFKA_HOST")
-	kafkaConn := fmt.Sprintf("%s:9092", kafkaHost)
-	producer, err := sarama.NewAsyncProducer([]string{kafkaConn}, config)
+	kafkaClient, err := sarama.NewClient(kafkaHosts, config)
 	handleErr(err)
+	kafkaClusterAdmin, err := sarama.NewClusterAdminFromClient(kafkaClient)
+	handleErr(err)
+	producer, err := sarama.NewAsyncProducerFromClient(kafkaClient)
+	handleErr(err)
+
+	topics := []string{"input", "output"}
+	for _, topicName := range topics {
+		kafkaClusterAdmin.DeleteTopic(topicName)
+	}
 
 	go func() {
 		devices := probe()
@@ -90,8 +103,10 @@ func main() {
 				handleErr(err)
 
 				kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(b0)}
+
 				producer.Input() <- kMessage
 				hub.broadcast <- []byte(b1)
+
 			case c := <-onRegister:
 				fmt.Println("sending init")
 
@@ -104,6 +119,8 @@ func main() {
 
 	err = http.ListenAndServe(*addr, nil)
 	handleErr(err)
+
+	// kafkaClient.Close()
 }
 
 func printStreams(streams mMTConnectStreams) []*Sample {
@@ -144,6 +161,7 @@ func parseSample(item mComponentSample, stream mStream, component mComponentStre
 	// yeesh
 	// format := "2006-01-02T15:04:05.999999Z"
 	format := "2006-01-02T15:04:05.999999"
+
 	ts, err := time.Parse(format, item.Timestamp)
 	handleErr(err)
 	t, err := ptypes.TimestampProto(ts)
@@ -160,4 +178,11 @@ func parseSample(item mComponentSample, stream mStream, component mComponentStre
 		Tag:       item.XMLName.Local,
 		Attrs:     attrs,
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
