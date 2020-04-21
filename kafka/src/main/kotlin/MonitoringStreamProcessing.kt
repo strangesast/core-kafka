@@ -77,7 +77,8 @@ fun main(args: Array<String>) {
             override fun close() {
             }
         }
-    }, "myValueTransformState")
+    })
+    // }, "myValueTransformState")
 
     val s5 = s4.mapValues { value ->
         "toast $value"

@@ -50,22 +50,26 @@ func main() {
 	producer, err := sarama.NewAsyncProducerFromClient(kafkaClient)
 	handleErr(err)
 
-	topics := []string{"input", "output"}
-	for _, topicName := range topics {
-		kafkaClusterAdmin.DeleteTopic(topicName)
+	topics, err := kafkaClusterAdmin.ListTopics()
+	handleErr(err)
+
+	fmt.Println("topics:")
+	for topicName, topicDetail := range topics {
+		fmt.Printf("%s %v\n", topicName, topicDetail)
+		// kafkaClusterAdmin.DeleteTopic(topicName)
 	}
 
 	go func() {
-		devices := probe()
-		if len(devices.Devices) == 0 {
-			fmt.Println("no devices?")
-			return
-		}
-		device := devices.Devices[0]
+		// devices := probe()
+		// if len(devices.Devices) == 0 {
+		// 	fmt.Println("no devices?")
+		// 	return
+		// }
+		// device := devices.Devices[0]
 
 		// serve()
-		fmt.Printf("Device %s\n", device.Name)
-		init := current(device.Name)
+		//fmt.Printf("Device %s\n", device.Name)
+		init := current("")
 
 		// pprint(init)
 
@@ -88,7 +92,7 @@ func main() {
 		fmt.Printf("seq: %v\n", seq)
 
 		// , streams.Header.FirstSequence
-		samples := sample(device.Name, seq)
+		samples := sample("", seq)
 
 		for {
 			select {
@@ -160,11 +164,17 @@ func parseSample(item mComponentSample, stream mStream, component mComponentStre
 		}
 	}
 	// yeesh
-	// format := "2006-01-02T15:04:05.999999Z"
-	format := "2006-01-02T15:04:05.999999"
+	format1 := "2006-01-02T15:04:05.999999Z"
+	format2 := "2006-01-02T15:04:05.999999"
 
-	ts, err := time.Parse(format, item.Timestamp)
+	var ts time.Time
+	ts, err := time.Parse(format1, item.Timestamp)
+
+	if err != nil {
+		ts, err = time.Parse(format2, item.Timestamp)
+	}
 	handleErr(err)
+
 	t, err := ptypes.TimestampProto(ts)
 	handleErr(err)
 
