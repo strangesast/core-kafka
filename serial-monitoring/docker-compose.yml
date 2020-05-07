@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  connector:
+#    network_mode: 'host'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_HOSTS=kafka:9092
+      - ADAPTER_HOST=localhost:7878
+  mongo:
+    image: 'mongo'
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CREATE_TOPICS: "input:1:1"
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - ./kafka:/kafka
