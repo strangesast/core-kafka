@@ -1,15 +1,19 @@
 version: '3.7'
 services:
   connector:
-#    network_mode: 'host'
     build:
       context: .
       dockerfile: Dockerfile
     environment:
+      - MONGO_URI=mongodb://mongo:27017
       - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=localhost:7878
+      - ADAPTER_HOST=172.17.0.1:7878
   mongo:
     image: 'mongo'
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo:/data/db
   zookeeper:
     image: wurstmeister/zookeeper
     ports:

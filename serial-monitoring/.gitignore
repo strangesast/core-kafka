@@ -1,2 +1,4 @@
 protoc/
 proto/
+mongodb/
+kafka/

@@ -2,3 +2,5 @@ Dockerfile
 docker-compose.yml
 proto/
 protoc/
+mongo/
+kafka/
