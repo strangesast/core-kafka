@@ -18,4 +18,10 @@ message SplitSample {
   uint64 offset = 2;
   string key = 3;
   string value = 4;
+  int64 duration = 5;
+}
+
+message SplitSamplePair {
+  SplitSample first = 1;
+  SplitSample second = 2;
 }

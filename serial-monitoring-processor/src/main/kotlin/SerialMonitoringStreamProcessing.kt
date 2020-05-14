@@ -1,6 +1,10 @@
 package main
 
+import com.google.protobuf.DynamicMessage
+import com.google.protobuf.Message
+import com.google.protobuf.Parser
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.KeyValue
@@ -8,10 +12,13 @@ import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
-import org.apache.kafka.streams.processor.StateStore
-import org.apache.kafka.streams.state.KeyValueStore
 import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
+import com.google.protobuf.Value
+import com.google.protobuf.util.TimeUtil
+import io.netty.handler.address.DynamicAddressConnectHandler
+import org.apache.kafka.common.serialization.Deserializer
+import org.apache.kafka.common.serialization.Serializer
 import proto.SerialMonitoring
 import java.time.Duration
 import java.time.Duration.between
@@ -38,29 +45,35 @@ fun main() {
     logger.info("starting...")
 
     val input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
-        .map { _, value -> KeyValue("", value)}
+        .map { _, value -> KeyValue("", value) }
         .flatTransform(TransformerSupplier {
             // convert List<String> to List<[String, String]> to List<SplitSample>
-            object: Transformer<String, ByteArray, Iterable<KeyValue<String, SerialMonitoring.SplitSample>>> {
+            object : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
                 private lateinit var context: ProcessorContext
 
                 override fun init(context: ProcessorContext) {
                     this.context = context
                 }
 
-                override fun transform(s: String, bytes: ByteArray): Iterable<KeyValue<String, SerialMonitoring.SplitSample>> {
+                override fun transform(
+                    s: String,
+                    bytes: ByteArray
+                ): Iterable<KeyValue<String, ByteArray>> {
                     val value = SerialMonitoring.Sample.parseFrom(bytes)
                     val offset = context.offset()
                     val values = value.valuesList
-                    val stringValues = if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
+                    val stringValues =
+                        if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
                     return stringValues
                         .map {
-                            KeyValue(it[0], SerialMonitoring.SplitSample.newBuilder()
-                                .setTimestamp(value.timestamp)
-                                .setOffset(offset)
-                                .setKey(it[0])
-                                .setValue(it[1])
-                                .build()
+                            KeyValue(
+                                it[0], SerialMonitoring.SplitSample.newBuilder()
+                                    .setTimestamp(value.timestamp)
+                                    .setOffset(offset)
+                                    .setKey(it[0])
+                                    .setValue(it[1])
+                                    .build()
+                                    .toByteArray()
                             )
                         }
                 }
@@ -81,26 +94,49 @@ fun main() {
     // register store
     builder.addStateStore(lastValueStoreSupplier)
 
+    val splitSamplePairSerde = ProtoMessageSerde(SerialMonitoring.SplitSamplePair.parser())
+
     input
         .filter { key, _ -> key == "execution" }
-        .mapValues { value -> Instant.ofEpochSecond(value.timestamp.seconds, value.timestamp.nanos.toLong()) }
-        .groupByKey()
+        .groupByKey(Grouped.with(Serdes.String(), Serdes.ByteArray()))
         .aggregate(
-            { Pair<Instant, Instant>(Instant.MIN, Instant.MIN) },
-            { _, value, aggregate -> Pair(aggregate.second, value) },
-            Materialized.with(Serdes.String(), Serdes.Long())
+            { SerialMonitoring.SplitSamplePair.newBuilder().build() },
+            { _, bytes, aggregate ->
+                val value = SerialMonitoring.SplitSample.parseFrom(bytes)
+                val b = SerialMonitoring.SplitSamplePair.newBuilder()
+                b.first = aggregate.second
+                b.second = value
+                b.build()
+            },
+            Materialized.with(Serdes.String(), splitSamplePairSerde)
         )
-        .mapValues { value ->
-            val diff = between(value.first, value.second)
-            logger.info("delta was ${diff.toMinutes()} minutes")
-            diff
+        .toStream()
+        .flatMapValues { value ->
+            // val value = SerialMonitoring.SplitSamplePair.parseFrom(bytes)
+            var first = value.first
+            val second = value.second
+            if (value.first.isInitialized and value.second.isInitialized) {
+                val firstInstant =
+                    Instant.ofEpochSecond(value.first.timestamp.seconds, value.first.timestamp.nanos.toLong())
+                val secondInstant =
+                    Instant.ofEpochSecond(value.second.timestamp.seconds, value.second.timestamp.nanos.toLong())
+                val duration = between(firstInstant, secondInstant).toMillis()
+                first = first.toBuilder().setDuration(duration).build()
+            }
+            listOf(first, second)
+                .filter { it.isInitialized }
+                .map { it.toByteArray() }
         }
-        // .peek { _, value ->
-        //     val ts = value.timestamp
-        //     val offset = value.offset
-        //     val s = TimeUtil.toString(ts)
-        //     logger.info("$s $offset ${value.key}, value: ${value.value}")
-        // }
+        .peek { _, bytes ->
+            val value = SerialMonitoring.SplitSample.parseFrom(bytes)
+            val duration = Duration.ofMillis(value.duration)
+            val ts = TimeUtil.toString(value.timestamp)
+            if (duration == Duration.ZERO) {
+                logger.info("at $ts value ${value.value} started")
+            } else {
+                logger.info("at $ts value was ${value.value} for ${duration.toMinutes()} minutes")
+            }
+        }
         //.transformValues(ValueTransformerSupplier {
         //    object: ValueTransformer<SerialMonitoring.SplitSample, String> {
         //        private lateinit var state: KeyValueStore<Int, Long>
@@ -128,14 +164,14 @@ fun main() {
         //        }
         //    }
         //}, lastValueStore)
-        .toStream()
         .mapValues { _ -> byteArrayOf() }
         .to("filtered", Produced.with(Serdes.String(), Serdes.ByteArray()))
 
-    input.mapValues { value -> value.toByteArray() }
-        .to("output", Produced.with(Serdes.String(), Serdes.ByteArray()))
+    // input.to("output", Produced.with(Serdes.String(), Serdes.ByteArray()))
 
-    val streams = KafkaStreams(builder.build(), props)
+    val topology = builder.build()
+    logger.info(topology.describe().toString())
+    val streams = KafkaStreams(topology, props)
     val latch = CountDownLatch(1)
 
     Runtime.getRuntime().addShutdownHook(object : Thread() {
@@ -152,4 +188,15 @@ fun main() {
         exitProcess(1)
     }
     exitProcess(0)
+}
+
+class ProtoMessageSerde<T: Message>(private val parser: Parser<T>) : Serde<T> {
+
+    override fun serializer(): Serializer<T> {
+        return Serializer<T> { _, data -> data.toByteArray() }
+    }
+
+    override fun deserializer(): Deserializer<T> {
+        return Deserializer<T> { _, data: ByteArray -> parser.parseFrom(data) }
+    }
 }
