@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = ".;proto";
+
+// import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+
+message Sample {
+  google.protobuf.Timestamp timestamp = 1;
+  repeated string values = 2;
+}
+
+message SplitSample {
+  google.protobuf.Timestamp timestamp = 1;
+  uint64 offset = 2;
+  string key = 3;
+  string value = 4;
+}
