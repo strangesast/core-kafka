@@ -1,0 +1,62 @@
+{
+  "workbook": {
+    "rows": [3],
+    "columns": {
+      "0": {
+        "col": "A",
+        "key": "due_date",
+        "value_type": "date"
+      },
+      "1": {
+        "col": "B",
+        "key": "ship_date",
+        "value_type": "date"
+      },
+      "3": {
+        "col": "D",
+        "key": "qty_order",
+        "value_type": "int"
+      },
+      "4": {
+        "col": "E",
+        "key": "qty_ship",
+        "value_type": "int"
+      },
+      "6": {
+        "col": "G",
+        "key": "customer",
+        "value_type": "string"
+      },
+      "7": {
+        "col": "H",
+        "key": "description",
+        "value_type": "string"
+      },
+      "8": {
+        "col": "I",
+        "key": "part",
+        "value_type": "string"
+      },
+      "9": {
+        "col": "J",
+        "key": "part_customer",
+        "value_type": "string"
+      },
+      "10": {
+        "col": "K",
+        "key": "so",
+        "value_type": "string"
+      },
+      "11": {
+        "col": "L",
+        "key": "po",
+        "value_type": "string"
+      },
+      "13": {
+        "col": "N",
+        "key": "price",
+        "value_type": "float"
+      }
+    }
+  }
+}

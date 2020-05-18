@@ -1,0 +1,72 @@
+{
+  "workbook": {
+    "rows": [1],
+    "sheets": {
+      "Jan": {"rows": [2, 50]},
+      "Feb": {"rows": [2, 47]},
+      "Mar": {"rows": [2, 55]}
+    },
+    "columns": {
+      "0": {
+        "col": "A",
+        "key": "ship_date",
+        "value_type": "date"
+      },
+      "1": {
+        "col": "B",
+        "key": "part",
+        "value_type": "string"
+      },
+      "2": {
+        "col": "C",
+        "key": "qty_order",
+        "value_type": "int"
+      },
+      "3": {
+        "col": "D",
+        "key": "order",
+        "value_type": "string"
+      },
+      "4": {
+        "col": "E",
+        "key": "customer",
+        "value_type": "string"
+      },
+      "5": {
+        "col": "F",
+        "key": "part_customer",
+        "value_type": "string"
+      },
+      "6": {
+        "col": "G",
+        "key": "description",
+        "value_type": "string"
+      },
+      "7": {
+        "col": "H",
+        "key": "po",
+        "value_type": "string"
+      },
+      "8": {
+        "col": "I",
+        "key": "qty_ship",
+        "value_type": "int"
+      },
+      "9": {
+        "col": "J",
+        "key": "rem",
+        "value_type": "int"
+      },
+      "10": {
+        "col": "K",
+        "key": "price",
+        "value_type": "float"
+      },
+      "12": {
+        "col": "M",
+        "key": "vend",
+        "value_type": "string"
+      }
+    }
+  }
+}
