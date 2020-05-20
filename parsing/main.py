@@ -1,5 +1,7 @@
 import json
 from pymongo import MongoClient
+import psycopg2
+from psycopg2.extras import execute_values
 import hashlib
 from pprint import pprint
 from datetime import datetime
@@ -22,17 +24,50 @@ MONTHS = [
     "SEP",
     "OCT",
     "NOV",
-    "DEC"
+    "DEC",
 ]
 
 def main(root_dir):
     db = MongoClient('mongodb://localhost:27017').development
+    conn = psycopg2.connect(
+            host="localhost",
+            port="5432",
+            dbname="postgres",
+            user="postgres",
+            password="password")
+    cur = conn.cursor()
+
     schedules = root_dir.joinpath('SCHEDULES')
     configs = Path('./configs')
     files = schedules.glob('**/*.xls*')
     #files = [schedules.joinpath('Weekly Shipping Plan.xls')]
+
     db.drop_collection('shipping')
+
+    #cur.execute('CREATE DATABASE python_test'
+    cur.execute('DROP TABLE IF EXISTS shipping')
+    cur.execute('''
+        CREATE TABLE shipping (
+          id            int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          ship_date     date,
+          part          text,
+          qty_order     int,
+          order_id      text,
+          customer      text,
+          part_customer text,
+          description   text,
+          po            text,
+          qty_ship      int,
+          rem           int,
+          price         real,
+          vend          text,
+          meta          json
+        );
+    ''');
+    conn.commit()
+
     collection = db.shipping
+
     for filepath in files:
         if not filepath.is_file():
             continue
@@ -126,6 +161,13 @@ def main(root_dir):
                                 datum = {k: v for k, v in [*datum, ('meta', meta)]}
                                 data.append(datum)
                 collection.insert_many(data)
+
+                keys = ["ship_date", "part", "qty_order", "order_id", "customer",
+                        "part_customer", "description", "po", "qty_ship", "rem",
+                        "price", "vend", "meta"]
+
+                execute_values(cur, f'INSERT INTO shipping ({", ".join(keys)}) VALUES %s', [[json.dumps(v) if isinstance((v := datum.get(k)), dict) else v for k in keys] for datum in data])
+                conn.commit()
             """
             elif filepath.name.endswith('.xlsx'):
                 f.write(f'{filepath}\n')

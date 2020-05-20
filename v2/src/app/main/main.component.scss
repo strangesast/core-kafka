@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+mat-toolbar a {
+  color: inherit;
+  text-decoration: none;
+}
+
+mat-sidenav-container {
+  height: 100%;
+}
+
+mat-sidenav {
+  width: 268px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  & > svg {
+    width: 200px;
+    height: 21px;
+  }
+}
+
+.bottom {
+  padding-bottom: 16px;
+}
+.bottomStick {
+  position:absolute;
+  bottom:0;
+  width: 100%;
+}
+.bottomRelative {
+  position:relative;
+}
+
+// yuck
+.flex-between ::ng-deep div {
+  justify-content: space-between;
+}

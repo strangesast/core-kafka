@@ -1,0 +1,2 @@
+CREATE DATABASE development;
+GRANT ALL PRIVILEGES ON DATABASE development TO postgres;

@@ -24,7 +24,7 @@
       },
       "3": {
         "col": "D",
-        "key": "order",
+        "key": "order_id",
         "value_type": "string"
       },
       "4": {

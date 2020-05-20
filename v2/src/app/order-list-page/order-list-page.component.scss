@@ -1,0 +1,50 @@
+:host {
+  overflow: hidden;
+}
+
+.controls {
+  & > ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.search-form {
+  display: flex;
+}
+
+mat-table {
+  mat-cell, mat-header-cell {
+    white-space: nowrap;
+  }
+  .mat-header-row, .mat-footer-row, .mat-row {
+    min-width: 1000px;
+  }
+  .mat-table-sticky:first-child {
+    border-right: 1px solid #e0e0e0;
+  }
+  .mat-table-sticky:last-child {
+    border-left: 1px solid #e0e0e0;
+  }
+  .mat-column-po, {
+    padding-left: 8px;
+    border-left: 1px solid transparent;
+  }
+  .mat-column-part {
+    width: 160px;
+    flex: 0 0 160px;
+    box-sizing: border-box;
+  }
+  .mat-column-qty_ship, .mat-column-qty_order {
+    justify-content: center;
+  }
+  .mat-column-price {
+    justify-content: flex-end;
+  }
+  mat-cell.mat-column-price {
+    padding-right: 18px;
+  }
+}
