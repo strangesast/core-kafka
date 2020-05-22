@@ -7,9 +7,9 @@ import { pluck, switchMap } from 'rxjs/operators';
   selector: 'app-person-page',
   template: `
   <ng-container *ngIf="person$ | async as person">
-    <app-toolbar>
-      <span><a routerLink="/people">People</a> / <a [routerLink]="['/people', person.id]">{{person.id}}</a></span>
-    </app-toolbar>
+    <app-page-title>
+      <a routerLink="/people">People</a> / <a [routerLink]="['/people', person.id]">{{person.id}}</a>
+    </app-page-title>
     <header>
       <h1>{{person.name}}</h1>
       <p>4% Utilization this Week</p>

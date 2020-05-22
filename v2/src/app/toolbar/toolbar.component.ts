@@ -32,6 +32,11 @@ export class ToolbarComponent implements OnInit {
   }
 
   loginRedirect() {
-    this.router.navigate(['/login'], {queryParams: {redirect: this.router.url}});
+    const redirect = this.router.url;
+    if (redirect !== '/') {
+      this.router.navigate(['/login'], {queryParams: {redirect}});
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 }

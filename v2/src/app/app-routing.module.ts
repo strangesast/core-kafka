@@ -16,6 +16,10 @@ import { CustomerListPageComponent } from './customer-list-page/customer-list-pa
 import { LoginPageComponent } from './login-page/login-page.component';
 import { InventoryPageComponent } from './inventory-page/inventory-page.component';
 import { NotificationsPageComponent } from './notifications-page/notifications-page.component';
+import { CreateAccountPageComponent } from './create-account-page/create-account-page.component';
+import { LoginBasePageComponent } from './login-base-page/login-base-page.component';
+import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-container-page/timeclock-graphs-container-page.component';
+import { NoopComponent } from './noop/noop.component';
 
 
 const routes: Routes = [
@@ -35,7 +39,13 @@ const routes: Routes = [
     /* {path: 'history', component: MachinesPageComponent}, */
     {path: 'notifications', component: NotificationsPageComponent},
   ] },
-  {path: 'login', component: LoginPageComponent},
+  {path: 'login', component: LoginBasePageComponent, children: [
+    {path: '', component: LoginPageComponent},
+    {path: 'new', component: CreateAccountPageComponent},
+  ]},
+  {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
+    {path: '**', component: NoopComponent},
+  ]},
 ];
 
 @NgModule({

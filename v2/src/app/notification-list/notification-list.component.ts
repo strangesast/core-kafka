@@ -12,12 +12,12 @@ import { Component, OnInit } from '@angular/core';
   <mat-menu #menu="matMenu" xPosition="before">
     <mat-action-list>
       <mat-list-item *ngFor="let notification of notifications">
-        <p>{{notification.text}}</p>
+        <span>{{notification.text}}</span>
         <button mat-icon-button (click)="dismiss(notification.id); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
       </mat-list-item>
       <button mat-list-item *ngIf="notifications.length" (click)="dismissAll(); $event.stopPropagation()">Dismiss All</button>
-      <a mat-list-item [routerLink]="['/notifications']">All Notifications</a>
     </mat-action-list>
+    <a class="text" mat-menu-item [routerLink]="['/notifications']">All Notifications</a>
   </mat-menu>
   `,
   styleUrls: ['./notification-list.component.scss']

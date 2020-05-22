@@ -1,0 +1,36 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  mat-toolbar {
+    flex: 0 0 auto;
+    justify-content: space-between;
+
+    & > *:not(:first-child) {
+      margin-left: 16px;
+    }
+    & > div {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+mat-sidenav {
+  width: 280px;
+}
+
+mat-toolbar {
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+mat-sidenav-container {
+  height: 100%;
+}

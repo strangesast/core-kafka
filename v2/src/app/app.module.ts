@@ -36,6 +36,12 @@ import { InventoryPageComponent } from './inventory-page/inventory-page.componen
 import { NotificationsPageComponent } from './notifications-page/notifications-page.component';
 import { NotificationListComponent } from './notification-list/notification-list.component';
 import { BrandComponent } from './brand/brand.component';
+import { CreateAccountPageComponent } from './create-account-page/create-account-page.component';
+import { LoginBasePageComponent } from './login-base-page/login-base-page.component';
+import { TimeclockShiftDialogComponent } from './timeclock-shift-dialog/timeclock-shift-dialog.component';
+import { DurationPipe } from './duration.pipe';
+import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-container-page/timeclock-graphs-container-page.component';
+import { NoopComponent } from './noop/noop.component';
 
 
 @NgModule({
@@ -67,7 +73,13 @@ import { BrandComponent } from './brand/brand.component';
     InventoryPageComponent,
     NotificationsPageComponent,
     NotificationListComponent,
-    BrandComponent
+    BrandComponent,
+    CreateAccountPageComponent,
+    LoginBasePageComponent,
+    TimeclockShiftDialogComponent,
+    DurationPipe,
+    TimeclockGraphsContainerPageComponent,
+    NoopComponent
   ],
   imports: [
     BrowserModule,
