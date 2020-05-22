@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { PortalModule } from '@angular/cdk/portal';
 
 import { MaterialModule } from './material.module';
 import { AppRoutingModule } from './app-routing.module';
@@ -29,6 +30,12 @@ import { TimeclockTableComponent } from './timeclock-table/timeclock-table.compo
 import { TimeclockStaggeredComponent } from './timeclock-staggered/timeclock-staggered.component';
 import { TimeclockDatepickerComponent } from './timeclock-datepicker/timeclock-datepicker.component';
 import { PieComponent } from './pie/pie.component';
+import { LayoutComponent } from './layout/layout.component';
+import { PageTitleComponent } from './page-title/page-title.component';
+import { InventoryPageComponent } from './inventory-page/inventory-page.component';
+import { NotificationsPageComponent } from './notifications-page/notifications-page.component';
+import { NotificationListComponent } from './notification-list/notification-list.component';
+import { BrandComponent } from './brand/brand.component';
 
 
 @NgModule({
@@ -54,7 +61,13 @@ import { PieComponent } from './pie/pie.component';
     TimeclockTableComponent,
     TimeclockStaggeredComponent,
     TimeclockDatepickerComponent,
-    PieComponent
+    PieComponent,
+    LayoutComponent,
+    PageTitleComponent,
+    InventoryPageComponent,
+    NotificationsPageComponent,
+    NotificationListComponent,
+    BrandComponent
   ],
   imports: [
     BrowserModule,
@@ -65,6 +78,7 @@ import { PieComponent } from './pie/pie.component';
     ReactiveFormsModule,
     FormsModule,
     GraphQLModule,
+    PortalModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

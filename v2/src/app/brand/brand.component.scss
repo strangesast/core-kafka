@@ -1,0 +1,13 @@
+:host {
+  &, & > a {
+    display: flex;
+    align-items: center;
+  }
+  a {
+    text-decoration: none;
+  }
+  svg {
+    width: 200px;
+    height: 21px;
+  }
+}

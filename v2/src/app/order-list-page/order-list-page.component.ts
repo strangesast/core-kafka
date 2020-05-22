@@ -17,9 +17,9 @@ interface Record {
 @Component({
   selector: 'app-order-list-page',
   template: `
-  <app-toolbar>
+  <app-page-title>
     <a [routerLink]="['/orders']">Orders</a>
-  </app-toolbar>
+  </app-page-title>
   <header>
     <h1>Recent Orders</h1>
   </header>
@@ -95,6 +95,7 @@ interface Record {
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
+    <mat-paginator></mat-paginator>
   </div>
   `,
   styleUrls: ['../base.scss', './order-list-page.component.scss']

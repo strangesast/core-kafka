@@ -12,17 +12,17 @@ mat-sidenav-container {
   height: 100%;
 }
 
-mat-sidenav {
-  width: 268px;
+mat-sidenav-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  app-toolbar {
+    flex: 0 0 auto;
+  }
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  & > svg {
-    width: 200px;
-    height: 21px;
-  }
+mat-sidenav {
+  width: 268px;
 }
 
 .bottom {
@@ -40,4 +40,8 @@ mat-sidenav {
 // yuck
 .flex-between ::ng-deep div {
   justify-content: space-between;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
 }

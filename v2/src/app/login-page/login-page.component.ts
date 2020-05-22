@@ -8,7 +8,7 @@ import { publishBehavior, refCount } from 'rxjs/operators';
   selector: 'app-login-page',
   template: `
   <mat-toolbar>
-    <a [routerLink]="['/']">CORE</a>
+    <app-brand></app-brand>
     <button mat-stroked-button (click)="back()">Back</button>
   </mat-toolbar>
   <section>

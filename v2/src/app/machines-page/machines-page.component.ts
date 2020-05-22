@@ -9,20 +9,21 @@ interface Record {
 @Component({
   selector: 'app-machines-page',
   template: `
-  <app-toolbar>
+  <app-page-title>
     <a [routerLink]="['/machines']">Machines</a>
-  </app-toolbar>
+  </app-page-title>
   <header>
     <h1>3+ Machines Active</h1>
     <p>4% Utilization this Week</p>
   </header>
   <div class="controls">
+    <span class="flex-spacer"></span>
     <mat-button-toggle-group [(ngModel)]="activeView">
       <mat-button-toggle value="map" aria-label="Shop Map">
         <mat-icon>map</mat-icon>
       </mat-button-toggle>
       <mat-button-toggle value="list" aria-label="List">
-        <mat-icon>view_list</mat-icon>
+        <mat-icon>list</mat-icon>
       </mat-button-toggle>
       <mat-button-toggle value="grid" aria-label="Grid">
         <mat-icon>view_module</mat-icon>

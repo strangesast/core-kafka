@@ -6,14 +6,9 @@ import { MediaMatcher } from '@angular/cdk/layout';
   selector: 'app-main',
   template: `
   <mat-sidenav-container>
-    <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'" [fixedInViewport]="mobileQuery.matches" fixedTopGap="56" [opened]="!mobileQuery.matches || opened">
+    <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'" [fixedInViewport]="mobileQuery.matches" [opened]="!mobileQuery.matches || opened">
       <mat-toolbar>
-        <a routerLink="/" class="brand">
-          <span>CORE</span>
-          <!--
-          <svg><use href="/assets/logo.svg#logo"/></svg>
-          -->
-        </a>
+        <app-brand></app-brand>
       </mat-toolbar>
       <mat-nav-list>
         <div>
@@ -25,12 +20,33 @@ import { MediaMatcher } from '@angular/cdk/layout';
           <!-- huh? <a mat-list-item [routerLink]="['/history']">History</a>-->
         </div>
         <div [ngClass]="navStickyClass" class="bottom">
-          <a mat-list-item target="_blank" class="flex-between" rel="noopener noreferrer" href="http://git.direktforce.com">Git<mat-icon>launch</mat-icon></a>
-          <a mat-list-item target="_blank" class="flex-between" rel="noopener noreferrer" href="http://icinga.direktforce.com">Icinga<mat-icon>launch</mat-icon></a>
+          <a
+            mat-list-item
+            target="_blank"
+            class="flex-between"
+            rel="noopener noreferrer"
+            href="http://git.direktforce.com/direktforce/programs">
+            Programs<mat-icon>launch</mat-icon>
+          </a>
+          <a
+            mat-list-item
+            target="_blank"
+            class="flex-between"
+            rel="noopener noreferrer"
+            href="http://direktforce.github.io">
+            direktforce.com<mat-icon>launch</mat-icon>
+          </a>
         </div>
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content>
+      <app-toolbar>
+        <button type="button" *ngIf="mobileQuery.matches" mat-icon-button (click)="snav.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <div id="cdkPortalOutlet"></div>
+        <span class="flex-spacer"></span>
+      </app-toolbar>
       <router-outlet></router-outlet>
     </mat-sidenav-content>
   </mat-sidenav-container>

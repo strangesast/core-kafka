@@ -12,23 +12,7 @@ import { UserService } from '../user.service';
       <ng-container *ngIf="user$ | async as user">
         <ul>
           <li>
-            <button
-              mat-icon-button
-              aria-label="Alerts"
-              [matMenuTriggerFor]="menu">
-              <mat-icon matBadge="8" matBadgePosition="after" matBadgeColor="accent">notifications</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu" xPosition="before">
-              <mat-action-list>
-                <button mat-list-item role="listitem">
-                  <mat-icon matListIcon>folder</mat-icon>
-                  <h4 matLine>Long alert that indicates something</h4>
-                  <p matLine>This alert happened yesterday.</p>
-                </button>
-              </mat-action-list>
-              <button mat-menu-item>Item 1</button>
-              <button mat-menu-item>Item 2</button>
-            </mat-menu>
+            <app-notification-list></app-notification-list>
           </li>
           <li *ngIf="user.user == null">
             <button (click)="loginRedirect()" mat-icon-button aria-label="Log in"><mat-icon>person</mat-icon></button>
@@ -50,5 +34,4 @@ export class ToolbarComponent implements OnInit {
   loginRedirect() {
     this.router.navigate(['/login'], {queryParams: {redirect: this.router.url}});
   }
-
 }

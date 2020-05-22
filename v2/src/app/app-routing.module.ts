@@ -14,6 +14,8 @@ import { PartListPageComponent } from './part-list-page/part-list-page.component
 import { PartPageComponent } from './part-page/part-page.component';
 import { CustomerListPageComponent } from './customer-list-page/customer-list-page.component';
 import { LoginPageComponent } from './login-page/login-page.component';
+import { InventoryPageComponent } from './inventory-page/inventory-page.component';
+import { NotificationsPageComponent } from './notifications-page/notifications-page.component';
 
 
 const routes: Routes = [
@@ -27,10 +29,11 @@ const routes: Routes = [
     {path: 'people', component: PersonListPageComponent},
     {path: 'people/:id', component: PersonPageComponent},
     {path: 'customers', component: CustomerListPageComponent},
-    {path: 'inventory', component: MachinesPageComponent},
+    {path: 'inventory', component: InventoryPageComponent},
     {path: 'parts', component: PartListPageComponent},
     {path: 'parts/:id', component: PartPageComponent},
-    {path: 'history', component: MachinesPageComponent},
+    /* {path: 'history', component: MachinesPageComponent}, */
+    {path: 'notifications', component: NotificationsPageComponent},
   ] },
   {path: 'login', component: LoginPageComponent},
 ];

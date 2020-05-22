@@ -12,9 +12,9 @@ interface Record {
   selector: 'app-machine-page',
   template: `
   <ng-container *ngIf="machine$ | async as machine; else loading">
-    <mat-toolbar>
-      <span><a routerLink="/machines">Machines</a> / <a [routerLink]="['/machines', machine.id]">{{machine.name}}</a></span>
-    </mat-toolbar>
+    <app-page-title>
+      <a routerLink="/machines">Machines</a> / <a [routerLink]="['/machines', machine.id]">{{machine.name}}</a>
+    </app-page-title>
     <header>
       <h1>{{machine.name}}</h1>
       <p>4% Utilization this Week</p>

@@ -7,9 +7,9 @@ import { pluck, switchMap } from 'rxjs/operators';
   selector: 'app-order-page',
   template: `
   <ng-container *ngIf="order$ | async as order; else loading">
-    <mat-toolbar>
-      <span><a routerLink="/orders">Orders</a> / <a [routerLink]="['/orders', order.id]">{{order.name}}</a></span>
-    </mat-toolbar>
+    <app-page-title>
+      <a [routerLink]="['/orders']">Orders</a> / <a [routerLink]="['/orders', order.id]">{{order.name}}</a>
+    </app-page-title>
     <header>
       <h1>{{order.name}}</h1>
       <p>This is an order.</p>

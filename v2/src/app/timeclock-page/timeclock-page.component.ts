@@ -16,9 +16,9 @@ interface Record {
 @Component({
   selector: 'app-timeclock-page',
   template: `
-  <app-toolbar>
+  <app-page-title>
     <a [routerLink]="['/timeclock']">Timeclock</a>
-  </app-toolbar>
+  </app-page-title>
   <header>
     <h1>3 Clocked In <small>(As of 15:00)</small></h1>
     <p>34 Total Hours Today</p>
@@ -30,7 +30,7 @@ interface Record {
         <mat-icon>clear_all</mat-icon>
       </mat-button-toggle>
       <mat-button-toggle value="table" aria-label="Table" title="Table">
-        <mat-icon>view_list</mat-icon>
+        <mat-icon>list</mat-icon>
       </mat-button-toggle>
     </mat-button-toggle-group>
   </div>
