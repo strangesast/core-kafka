@@ -3,11 +3,12 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-summary-page',
   template: `
-  <mat-toolbar>
-    <h1>Overview</h1>
-  </mat-toolbar>
+  <app-toolbar>
+    <span>Overview</span>
+  </app-toolbar>
   <section>
     <h1>3 Machines Active</h1>
+    <app-pie></app-pie>
   </section>
   <mat-divider></mat-divider>
   <section>

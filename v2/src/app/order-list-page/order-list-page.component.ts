@@ -17,85 +17,85 @@ interface Record {
 @Component({
   selector: 'app-order-list-page',
   template: `
-    <mat-toolbar>
-      <span><a routerLink="/machines">Orders</a></span>
-    </mat-toolbar>
-    <header>
-      <h1>Recent Orders</h1>
-    </header>
-    <div class="controls">
-      <!--
-      <ul>
-        <li><a [routerLink]="['/customers']">Customers</a></li>
-      </ul>
-      -->
-      <mat-chip-list>
-        <mat-chip *ngFor="let param of paramsList$ | async"
-          [removable]="true"
-          (removed)="removeParam(param.key)">
-          {{param.key}} = {{param.value}}
-          <mat-icon matChipRemove>cancel</mat-icon>
-        </mat-chip>
-      </mat-chip-list>
-      <form [formGroup]="searchForm" class="search-form">
-        <mat-form-field floatLabel="never" appearance="standard">
-          <mat-icon matPrefix>search</mat-icon>
-          <mat-label>Search...</mat-label>
-          <input matInput type="text" formControlName="search">
-          <button
-            mat-button
-            *ngIf="searchForm.get('search').value"
-            matSuffix
-            mat-icon-button
-            aria-label="Clear"
-            (click)="searchForm.get('search').reset()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-form-field>
-      </form>
-    </div>
-    <div class="table-container">
-      <mat-table [dataSource]="dataSource" matSort>
-        <ng-container matColumnDef="order_id" sticky>
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Order </mat-header-cell>
-          <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders', cell.id]"> {{cell.order_id}} </a></mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="part" sticky>
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Part </mat-header-cell>
-          <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders']" [queryParams]="{part: cell.part}"> {{cell.part}} </a></mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="po">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Purchase Order </mat-header-cell>
-          <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders', cell.po]"> {{cell.po}} </a></mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="customer">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Customer </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.customer}} </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="description">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Description </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.description}} </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="price">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Unit Price </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.price | currency}} </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="qty_order">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Ordered </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.qty_order}} </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="qty_ship">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Shipped </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.qty_ship}} </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="ship_date">
-          <mat-header-cell mat-sort-header *matHeaderCellDef> Date Shipped </mat-header-cell>
-          <mat-cell *matCellDef="let cell"> {{cell.ship_date}} </mat-cell>
-        </ng-container>
-        <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-      </mat-table>
-    </div>
+  <app-toolbar>
+    <a [routerLink]="['/orders']">Orders</a>
+  </app-toolbar>
+  <header>
+    <h1>Recent Orders</h1>
+  </header>
+  <div class="controls">
+    <!--
+    <ul>
+      <li><a [routerLink]="['/customers']">Customers</a></li>
+    </ul>
+    -->
+    <mat-chip-list>
+      <mat-chip *ngFor="let param of paramsList$ | async"
+        [removable]="true"
+        (removed)="removeParam(param.key)">
+        {{param.key}} = {{param.value}}
+        <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+    </mat-chip-list>
+    <form [formGroup]="searchForm" class="search-form">
+      <mat-form-field floatLabel="never" appearance="standard">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Search...</mat-label>
+        <input matInput type="text" formControlName="search">
+        <button
+          mat-button
+          *ngIf="searchForm.get('search').value"
+          matSuffix
+          mat-icon-button
+          aria-label="Clear"
+          (click)="searchForm.get('search').reset()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </form>
+  </div>
+  <div class="table-container">
+    <mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="order_id" sticky>
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Order </mat-header-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders', cell.id]"> {{cell.order_id}} </a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="part" sticky>
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Part </mat-header-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders']" [queryParams]="{part: cell.part}"> {{cell.part}} </a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="po">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Purchase Order </mat-header-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders', cell.po]"> {{cell.po}} </a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="customer">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Customer </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.customer}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Description </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.description}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="price">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Unit Price </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.price | currency}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="qty_order">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Ordered </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.qty_order}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="qty_ship">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Shipped </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.qty_ship}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="ship_date">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Date Shipped </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.ship_date}} </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
   `,
   styleUrls: ['../base.scss', './order-list-page.component.scss']
 })

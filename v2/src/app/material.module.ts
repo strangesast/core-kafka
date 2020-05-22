@@ -15,6 +15,12 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 
 const components = [
@@ -33,6 +39,12 @@ const components = [
   MatFormFieldModule,
   MatChipsModule,
   MatTooltipModule,
+  MatMenuModule,
+  MatBadgeModule,
+  MatCardModule,
+  MatDatepickerModule,
+  MatNativeDateModule,
+  ScrollingModule,
 ];
 
 @NgModule({

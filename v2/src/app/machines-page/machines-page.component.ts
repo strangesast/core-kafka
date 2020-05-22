@@ -9,9 +9,9 @@ interface Record {
 @Component({
   selector: 'app-machines-page',
   template: `
-  <mat-toolbar>
-    <span>Machines</span>
-  </mat-toolbar>
+  <app-toolbar>
+    <a [routerLink]="['/machines']">Machines</a>
+  </app-toolbar>
   <header>
     <h1>3+ Machines Active</h1>
     <p>4% Utilization this Week</p>

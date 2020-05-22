@@ -22,6 +22,13 @@ import { GraphQLModule } from './graphql.module';
 import { PartListPageComponent } from './part-list-page/part-list-page.component';
 import { CustomerListPageComponent } from './customer-list-page/customer-list-page.component';
 import { PartPageComponent } from './part-page/part-page.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
+import { LoginPageComponent } from './login-page/login-page.component';
+import { UserAccountPageComponent } from './user-account-page/user-account-page.component';
+import { TimeclockTableComponent } from './timeclock-table/timeclock-table.component';
+import { TimeclockStaggeredComponent } from './timeclock-staggered/timeclock-staggered.component';
+import { TimeclockDatepickerComponent } from './timeclock-datepicker/timeclock-datepicker.component';
+import { PieComponent } from './pie/pie.component';
 
 
 @NgModule({
@@ -40,7 +47,14 @@ import { PartPageComponent } from './part-page/part-page.component';
     OrderPageComponent,
     PartListPageComponent,
     CustomerListPageComponent,
-    PartPageComponent
+    PartPageComponent,
+    ToolbarComponent,
+    LoginPageComponent,
+    UserAccountPageComponent,
+    TimeclockTableComponent,
+    TimeclockStaggeredComponent,
+    TimeclockDatepickerComponent,
+    PieComponent
   ],
   imports: [
     BrowserModule,

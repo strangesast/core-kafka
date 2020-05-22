@@ -9,9 +9,9 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'app-part-list-page',
   template: `
-  <mat-toolbar>
-    <span>Parts</span>
-  </mat-toolbar>
+  <app-toolbar>
+    <a [routerLink]="['/parts']">Parts</a>
+  </app-toolbar>
   <header>
     <h1>Parts</h1>
     <p>These are parts.</p>

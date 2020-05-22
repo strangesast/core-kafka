@@ -7,9 +7,9 @@ import { pluck, switchMap } from 'rxjs/operators';
   selector: 'app-part-page',
   template: `
   <ng-container *ngIf="part$ | async as part; else loading">
-    <mat-toolbar>
+    <app-toolbar>
       <span><a routerLink="/parts">Parts</a> / <a [routerLink]="['/parts', part.id]">{{part.name}}</a></span>
-    </mat-toolbar>
+    </app-toolbar>
     <header>
       <h1>{{part.name}}</h1>
       <p>This is a part.</p>

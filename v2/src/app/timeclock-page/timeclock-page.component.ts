@@ -1,7 +1,7 @@
 import { ViewChild, Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
-// import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator } from '@angular/material/paginator';
 
 
 interface Record {
@@ -16,19 +16,15 @@ interface Record {
 @Component({
   selector: 'app-timeclock-page',
   template: `
-  <mat-toolbar>
-    <span>Timeclock</span>
-  </mat-toolbar>
+  <app-toolbar>
+    <a [routerLink]="['/timeclock']">Timeclock</a>
+  </app-toolbar>
   <header>
     <h1>3 Clocked In <small>(As of 15:00)</small></h1>
     <p>34 Total Hours Today</p>
   </header>
   <div class="controls">
-    <div class="window-controller">
-      <button mat-icon-button><mat-icon>chevron_left</mat-icon></button>
-      <span>{{ window?.start | date }} - {{ window?.end | date }}</span>
-      <button mat-icon-button><mat-icon>chevron_right</mat-icon></button>
-    </div>
+    <app-timeclock-datepicker [(ngModel)]="window"></app-timeclock-datepicker>
     <mat-button-toggle-group [(ngModel)]="activeView">
       <mat-button-toggle value="timeline" aria-label="Timeline" title="Timeline">
         <mat-icon>clear_all</mat-icon>
@@ -39,31 +35,8 @@ interface Record {
     </mat-button-toggle-group>
   </div>
   <ng-container [ngSwitch]="activeView">
-    <mat-table [dataSource]="dataSource" matSort *ngSwitchCase="'table'">
-      <ng-container matColumnDef="name">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Name </mat-header-cell>
-        <mat-cell *matCellDef="let cell"><a [routerLink]="['/people', cell.id]"> {{cell.name}} </a></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="start">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Start </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.start}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="end">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> End </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.end}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="total">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Total </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.total}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="weekly_total">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Weekly Total </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.weekly_total}} </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
-    <!--<mat-paginator [hidePageSize]="true"></mat-paginator>-->
+    <app-timeclock-table [dataSource]="dataSource" *ngSwitchCase="'table'"></app-timeclock-table>
+    <app-timeclock-staggered [dataSource]="dataSource" *ngSwitchCase="'timeline'"></app-timeclock-staggered>
   </ng-container>
   `,
   styleUrls: ['../base.scss', './timeclock-page.component.scss'],
@@ -74,7 +47,7 @@ export class TimeclockPageComponent implements OnInit {
 
   activeView = 'table';
   displayedColumns = ['name', 'start', 'end', 'total', 'weekly_total'];
-  window = {start: new Date(), end: new Date()};
+  window = new Date();
   data = [
     {id: '0', name: 'Person 1', start: '8:00', end: '4:00', total: '8hrs', weekly_total: '16hrs'},
     {id: '0', name: 'Person 1', start: '8:00', end: '4:00', total: '8hrs', weekly_total: '16hrs'},

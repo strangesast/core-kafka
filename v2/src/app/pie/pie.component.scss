@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+:host > span {
+  border-radius: 50%;
+  display: block;
+  padding: 50%;
+  background: conic-gradient(var(--pcolor) calc(var(--p)*1%), var(--bcolor) 0%);
+}

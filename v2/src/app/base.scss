@@ -30,7 +30,7 @@ header {
 .controls {
   display: flex;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 8px 16px;
   background: white;
   align-items: center;
 
@@ -58,14 +58,5 @@ mat-table {
     &:hover {
       text-decoration: underline;
     }
-  }
-}
-
-mat-toolbar a {
-  text-decoration: none;
-  color: inherit;
-
-  &:hover {
-    text-decoration: underline;
   }
 }

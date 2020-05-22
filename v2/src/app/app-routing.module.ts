@@ -13,6 +13,7 @@ import { OrderPageComponent } from './order-page/order-page.component';
 import { PartListPageComponent } from './part-list-page/part-list-page.component';
 import { PartPageComponent } from './part-page/part-page.component';
 import { CustomerListPageComponent } from './customer-list-page/customer-list-page.component';
+import { LoginPageComponent } from './login-page/login-page.component';
 
 
 const routes: Routes = [
@@ -31,6 +32,7 @@ const routes: Routes = [
     {path: 'parts/:id', component: PartPageComponent},
     {path: 'history', component: MachinesPageComponent},
   ] },
+  {path: 'login', component: LoginPageComponent},
 ];
 
 @NgModule({
