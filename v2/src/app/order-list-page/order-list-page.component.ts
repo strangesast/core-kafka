@@ -18,10 +18,10 @@ interface Record {
   selector: 'app-order-list-page',
   template: `
   <app-page-title>
-    <a [routerLink]="['/orders']">Orders</a>
+    <a [routerLink]="['/orders']">Orders</a> / <a [routerLink]="['/orders', 'historical']">List</a>
   </app-page-title>
   <header>
-    <h1>Recent Orders</h1>
+    <h1>Historical Orders</h1>
   </header>
   <div class="controls">
     <!--
@@ -62,7 +62,7 @@ interface Record {
       </ng-container>
       <ng-container matColumnDef="part" sticky>
         <mat-header-cell mat-sort-header *matHeaderCellDef> Part </mat-header-cell>
-        <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders']" [queryParams]="{part: cell.part}"> {{cell.part}} </a></mat-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/orders', 'historical']" [queryParams]="{part: cell.part}"> {{cell.part}} </a></mat-cell>
       </ng-container>
       <ng-container matColumnDef="po">
         <mat-header-cell mat-sort-header *matHeaderCellDef> Purchase Order </mat-header-cell>
@@ -70,7 +70,7 @@ interface Record {
       </ng-container>
       <ng-container matColumnDef="customer">
         <mat-header-cell mat-sort-header *matHeaderCellDef> Customer </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.customer}} </mat-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/customers', cell.customer]"> {{cell.customer}} </a></mat-cell>
       </ng-container>
       <ng-container matColumnDef="description">
         <mat-header-cell mat-sort-header *matHeaderCellDef> Description </mat-header-cell>

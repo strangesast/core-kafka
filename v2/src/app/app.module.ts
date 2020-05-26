@@ -42,6 +42,8 @@ import { TimeclockShiftDialogComponent } from './timeclock-shift-dialog/timecloc
 import { DurationPipe } from './duration.pipe';
 import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-container-page/timeclock-graphs-container-page.component';
 import { NoopComponent } from './noop/noop.component';
+import { ActiveOrdersPageComponent } from './active-orders-page/active-orders-page.component';
+import { CustomerPageComponent } from './customer-page/customer-page.component';
 
 
 @NgModule({
@@ -79,7 +81,9 @@ import { NoopComponent } from './noop/noop.component';
     TimeclockShiftDialogComponent,
     DurationPipe,
     TimeclockGraphsContainerPageComponent,
-    NoopComponent
+    NoopComponent,
+    ActiveOrdersPageComponent,
+    CustomerPageComponent
   ],
   imports: [
     BrowserModule,

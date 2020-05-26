@@ -1,0 +1,7 @@
+:host {
+  display: block;
+}
+
+.list > a:not(:last-child):after {
+  content: ",\00a0";
+}

@@ -20,6 +20,8 @@ import { CreateAccountPageComponent } from './create-account-page/create-account
 import { LoginBasePageComponent } from './login-base-page/login-base-page.component';
 import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-container-page/timeclock-graphs-container-page.component';
 import { NoopComponent } from './noop/noop.component';
+import { ActiveOrdersPageComponent } from './active-orders-page/active-orders-page.component';
+import { CustomerPageComponent } from './customer-page/customer-page.component';
 
 
 const routes: Routes = [
@@ -28,11 +30,13 @@ const routes: Routes = [
     {path: 'timeclock', component: TimeclockPageComponent},
     {path: 'machines', component: MachinesPageComponent},
     {path: 'machines/:id', component: MachinePageComponent},
-    {path: 'orders', component: OrderListPageComponent},
+    {path: 'orders', component: ActiveOrdersPageComponent},
+    {path: 'orders/historical', component: OrderListPageComponent},
     {path: 'orders/:id', component: OrderPageComponent},
     {path: 'people', component: PersonListPageComponent},
     {path: 'people/:id', component: PersonPageComponent},
     {path: 'customers', component: CustomerListPageComponent},
+    {path: 'customers/:id', component: CustomerPageComponent},
     {path: 'inventory', component: InventoryPageComponent},
     {path: 'parts', component: PartListPageComponent},
     {path: 'parts/:id', component: PartPageComponent},

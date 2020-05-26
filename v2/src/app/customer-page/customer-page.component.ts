@@ -1,26 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { pluck, switchMap } from 'rxjs/operators';
+import { switchMap, pluck } from 'rxjs/operators';
+
 
 @Component({
-  selector: 'app-part-page',
+  selector: 'app-customer-page',
   template: `
-  <ng-container *ngIf="part$ | async as part; else loading">
+  <ng-container *ngIf="customer$ | async as customer; else loading">
     <app-page-title>
-      <a routerLink="/parts">Parts</a> / <a [routerLink]="['/parts', part.id]">{{part.name}}</a>
+      <a routerLink="/customers">Customers</a> / <a [routerLink]="['/customers', customer.id]">{{customer.name}}</a>
     </app-page-title>
     <header>
-      <h1>{{part.name}}</h1>
-      <p>This is a part.</p>
+      <h1>{{customer.name}}</h1>
     </header>
   </ng-container>
   <ng-template #loading>Loading...</ng-template>
   `,
-  styleUrls: ['../base.scss', './part-page.component.scss']
+  styleUrls: ['../base.scss', './customer-page.component.scss']
 })
-export class PartPageComponent implements OnInit {
-  part$ = this.route.params.pipe(
+export class CustomerPageComponent implements OnInit {
+  customer$ = this.route.params.pipe(
     pluck('id'),
     switchMap(id => {
       return of({id, name: id.split('-').map(s => s[0].toUpperCase() + s.slice(1)).join(' ')});
@@ -30,7 +30,6 @@ export class PartPageComponent implements OnInit {
   constructor(public route: ActivatedRoute) { }
 
   ngOnInit(): void {
-    console.log(this.route);
   }
 
 }

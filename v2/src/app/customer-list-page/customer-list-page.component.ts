@@ -8,12 +8,12 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'app-customer-list-page',
   template: `
-  <mat-toolbar>
-    <span>Parts</span>
-  </mat-toolbar>
+  <app-page-title>
+    <a routerLink="/customers">Customers</a>
+  </app-page-title>
   <header>
-    <h1>Parts</h1>
-    <p>These are parts.</p>
+    <h1>Customers</h1>
+    <p>These are customers.</p>
   </header>
   <mat-table [dataSource]="dataSource" matSort>
     <ng-container matColumnDef="order_id">
@@ -56,10 +56,10 @@ import { MatTableDataSource } from '@angular/material/table';
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
   `,
-  styleUrls: ['./customer-list-page.component.scss']
+  styleUrls: ['../base.scss', './customer-list-page.component.scss']
 })
 export class CustomerListPageComponent implements OnInit {
-  displayedColumns = ['customer', 'sum'];
+  displayedColumns = ['customer'];
 
   query = gql`
     query BQuery {

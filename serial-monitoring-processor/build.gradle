@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
     id 'com.google.protobuf' version '0.8.8'
     id 'idea'
+    id "com.github.johnrengelman.shadow" version "5.2.0" // pack into single jar (shadowJar)
 }
 
 group 'org.example'
@@ -23,6 +24,7 @@ dependencies {
     implementation "io.grpc:grpc-stub:${grpcVersion}"
 
     implementation 'org.mongodb.kafka:mongo-kafka-connect:1.0.1'
+    implementation 'org.postgresql:postgresql:42.2.12.jre7'
 
     // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
     compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'

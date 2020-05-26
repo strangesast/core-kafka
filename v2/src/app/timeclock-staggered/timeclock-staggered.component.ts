@@ -47,7 +47,10 @@ export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterView
 
   labels$ = of(Array.from(Array(20)));
 
-  constructor(public scrollDispatcher: ScrollDispatcher, public dialog: MatDialog) {}
+  constructor(
+    public scrollDispatcher: ScrollDispatcher,
+    public dialog: MatDialog,
+  ) {}
 
   ngOnInit(): void {
     this.values$ = this.dataSource.connect();
@@ -56,11 +59,23 @@ export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterView
   ngAfterViewInit() {
     const resize$ = fromEvent(window, 'resize');
     const scrolled$ = this.scroller.elementScrolled();
+
+    {
+      const { width, height } = this.getHostElementSize();
+      console.log('toast', width / 2);
+      this.scroller.scrollTo({left: width / 2});
+    }
+
     resize$.pipe(
       startWith(null),
-      map(() => this.scroller.getElementRef().nativeElement.getBoundingClientRect()),
+      map(() => this.getHostElementSize()),
       switchMap(({width, height}) => scrolled$.pipe(map(() => ({offset: this.scroller.measureScrollOffset('left'), width, height})))),
     ).subscribe(v => console.log(v));
+  }
+
+  getHostElementSize(): {width: number, height: number} {
+    return this.scroller.getElementRef()
+      .nativeElement.getBoundingClientRect();
   }
 
   ngOnDestroy(): void {

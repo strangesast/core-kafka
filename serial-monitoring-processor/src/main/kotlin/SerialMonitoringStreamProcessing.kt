@@ -1,11 +1,13 @@
 package main
 
-import com.google.protobuf.DynamicMessage
 import com.google.protobuf.Message
 import com.google.protobuf.Parser
+import com.google.protobuf.util.TimeUtil
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.common.serialization.Serializer
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
@@ -14,12 +16,10 @@ import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
 import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
-import com.google.protobuf.Value
-import com.google.protobuf.util.TimeUtil
-import io.netty.handler.address.DynamicAddressConnectHandler
-import org.apache.kafka.common.serialization.Deserializer
-import org.apache.kafka.common.serialization.Serializer
 import proto.SerialMonitoring
+import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Instant
@@ -29,6 +29,28 @@ import kotlin.system.exitProcess
 
 
 fun main() {
+
+    val logger = LoggerFactory.getLogger("test")
+
+    val url = "jdbc:postgresql://localhost/test"
+    // val url = "jdbc:postgresql://localhost/test?user=fred&password=secret&ssl=true"
+    val psqlProps = Properties()
+    psqlProps.setProperty("user", "fred")
+    psqlProps.setProperty("password", "secret")
+    psqlProps.setProperty("ssl", "true")
+    val conn = DriverManager.getConnection(url, psqlProps)
+
+    val st: Statement = conn.createStatement()
+    val rs: ResultSet = st.executeQuery("SELECT * FROM mytable WHERE columnfoo = 500")
+    while (rs.next()) {
+        print("Column 1 returned ")
+        logger.info("Column")
+        logger.info(rs.getString(1))
+    }
+    rs.close()
+    st.close()
+
+
     val props = Properties()
     props[StreamsConfig.APPLICATION_ID_CONFIG] = "streams-monitoring"
     props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
@@ -40,7 +62,6 @@ fun main() {
 
     val builder = StreamsBuilder()
 
-    val logger = LoggerFactory.getLogger("test")
 
     logger.info("starting...")
 

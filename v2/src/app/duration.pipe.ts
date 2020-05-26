@@ -7,7 +7,6 @@ export class DurationPipe implements PipeTransform {
 
   transform(value: number, arg?: string): string {
     if (arg && arg === 'h:mm:ss') {
-      console.log(value);
       const h = Math.floor(value / (60 * 60 * 1000));
       value -= h * 60 * 60 * 1000;
       const m = Math.floor(value / (60 * 1000));
