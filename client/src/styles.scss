@@ -1,21 +1,31 @@
 @import '~@angular/material/theming';
 @include mat-core();
-$core-primary: mat-palette($mat-indigo);
-$core-accent: mat-palette($mat-pink, A200, A100, A400);
-$core-warn: mat-palette($mat-red);
-$core-theme: mat-light-theme($core-primary, $core-accent, $core-warn);
-@include angular-material-theme($core-theme);
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
+$app-primary: mat-palette($mat-pink);
+$app-accent:  mat-palette($mat-green, A200, A100, A400);
+$app-warn:    mat-palette($mat-red);
+$app-theme:   mat-light-theme($app-primary, $app-accent, $app-warn);
+
+@include angular-material-theme($app-theme);
+
+
+html, body { height: 100%; }
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  color: #262626;
+  font-weight: 400;
 }
 
-h1, h3 {
-  font-weight: 300;
+.mat-toolbar {
+  background: white;
+}
+
+.mat-toolbar, * {
+  h1, h2, h3 {
+    font-weight: 400;
+  }
+}
+
+.mat-drawer {
+  border-right: none;
 }

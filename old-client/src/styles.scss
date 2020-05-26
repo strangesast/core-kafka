@@ -1,0 +1,21 @@
+@import '~@angular/material/theming';
+@include mat-core();
+$core-primary: mat-palette($mat-indigo);
+$core-accent: mat-palette($mat-pink, A200, A100, A400);
+$core-warn: mat-palette($mat-red);
+$core-theme: mat-light-theme($core-primary, $core-accent, $core-warn);
+@include angular-material-theme($core-theme);
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #262626;
+}
+
+h1, h3 {
+  font-weight: 300;
+}
