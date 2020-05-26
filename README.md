@@ -23,3 +23,20 @@
 - [ ] Code Organization
   - [ ] Editor
   - [ ] FTP
+
+
+# Project Components
+## Timeclock
+- Handpunch timeclock connected via serial to PC running management daemon and MYSQL db (polled at regular interval)
+- Data injested on schedule and by request via AMGTime XMLRPC client API, saved to postgres table
+- Hasura graphql-engine tracks tables and provides graphql endpoint w/ realtime updates
+- Angular client application presents data with notifications, tables, and graphs
+## Machine Monitoring
+- MTConnect agent or adapter collects machine data over network
+- Sent via producer into Kafka topic
+- Kafka streams processes input, produces to postgres table
+- Hasura graphql-engine tracks tables and provides graphql endpoint w/ realtime updates
+- Angular client application presents data with notifications, tables, and graphs
+## User, Part, Customer, & Others
+- Manage these objects
+- Print things (labels, routers, hot-jobs tables)
