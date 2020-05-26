@@ -1,0 +1,65 @@
+version: '3.7'
+services:
+  client:
+    build:
+      context: .
+      dockerfile: docker/client/Dockerfile
+    image: strangesast/timeclock-vis_client
+    ports:
+      - '80:80'
+    restart: always
+  api:
+    image: strangesast/timeclock-vis_server
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    entrypoint: /app/start-api.sh
+    environment:
+      - env=production
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+    volumes:
+      - ./server/config.ini:/app/config.ini
+    depends_on:
+      - mongo
+    restart: always
+  daemon:
+    image: strangesast/timeclock-vis_server
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    entrypoint: /app/start-daemon.sh
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - MYSQL_HOST=host.docker.internal
+      - MYSQL_PORT=3306
+      - AMG_HOST=host.docker.internal
+      - AMG_PORT=3003
+      - AMG_USER=admin
+    volumes:
+      - ./server/config.ini:/app/config.ini
+    restart: always
+  ws:
+    image: strangesast/timeclock-vis_server
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    entrypoint: /app/start-ws.sh
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+    volumes:
+      - ./server/config.ini:/app/config.ini
+    restart: always
+  mongo:
+    image: mongo
+    ports:
+      - '27017:27017'
+    restart: always
+#    volumes:
+#      - ./data:/data/db

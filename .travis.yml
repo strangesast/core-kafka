@@ -1,4 +1,8 @@
+os:
+  - linux
 dist: trusty
+sudo: required
+
 language: node_js
 node_js:
   - 13
@@ -9,9 +13,6 @@ services:
 arch:
   - rpi
   - amd64
-
-os:
-  linux
 
 addons:
   apt:
@@ -45,12 +46,35 @@ jobs:
       - npm run-script build:ci
 
 deploy:
-  provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN
-  allow_failure: true
-  verbose: true
-  local_dir: client/dist/core
-  edge: true
-  on:
-    branch: beta
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    allow_failure: true
+    keep_history: true
+    verbose: true
+    local_dir: ./timeclock-vis/client/dist
+    edge: true
+    on:
+      branch: master
+  - provider: script
+    script: docker-compose push
+    verbose: true
+    on:
+      branch: master
+
+branches:
+  only:
+  - master
+
+cache:
+  directories:
+    - ./timeclock-vis/client/node_modules
+
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+script:
+  - docker-compose build
+  - cd ./client/
+  - npm install
+  - npm run-script build:ci

@@ -1,1 +1,8 @@
-/docker
+timeclock-vis/docker
+.git
+docker-compose.yml
+**/Dockerfile
+**/env/
+**/node_modules
+**/__pycache__
+**/*.pyc

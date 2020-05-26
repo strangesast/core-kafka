@@ -1,1 +1,6 @@
 /data/
+*~
+*.un~
+/sql/
+**/*.swp
+/angular
