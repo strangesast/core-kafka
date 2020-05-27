@@ -11,5 +11,10 @@
     "context": "/v1/graphql",
     "target": "http://localhost:8080",
     "secure": false
+  },
+  {
+    "context": "/console",
+    "target": "http://localhost:8080",
+    "secure": false
   }
 ]
