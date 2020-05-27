@@ -68,5 +68,6 @@ services:
       dockerfile: docker/server/Dockerfile
     environment:
       NODE_CONFIG: '{"Customer":{"dbConfig":{"host":"customerdb.prod"}}}'
+
 volumes:
   db_data:
