@@ -3,4 +3,4 @@
 *.un~
 /sql/
 **/*.swp
-/angular
+db_data/

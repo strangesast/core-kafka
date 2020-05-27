@@ -4,10 +4,11 @@ RUN apk update && apk add ca-certificates && apk add protobuf protobuf-dev
 WORKDIR /app
 COPY ./monitoring/go.mod ./monitoring/go.sum ./
 RUN go mod download
+
 COPY monitoring/ .
 RUN go get -u github.com/golang/protobuf/protoc-gen-go && \
-  protoc --go_out=plugins=grpc:. ./monitoring.proto && \
-  go build -o ./out/main .
+  protoc --go_out=plugins=grpc:proto ./monitoring.proto
+RUN go build -o ./out/main .
 
 FROM alpine
 COPY --from=builder /app/out/main /app/main
