@@ -1,5 +1,8 @@
 import { HostListener, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { MediaMatcher } from '@angular/cdk/layout';
+import { pluck } from 'rxjs/operators';
+
+import { UserService } from '../user.service';
 
 
 @Component({
@@ -17,6 +20,9 @@ import { MediaMatcher } from '@angular/cdk/layout';
           <a mat-list-item [routerLink]="['/orders']">Orders</a>
           <a mat-list-item [routerLink]="['/inventory']">Inventory</a>
           <a mat-list-item [routerLink]="['/parts']">Parts</a>
+          <ng-container *ngIf="user$ | async as user">
+            <a mat-list-item [routerLink]="['/users']" *ngIf="user.roles?.includes('isAdmin')">Users</a>
+          </ng-container>
           <!-- huh? <a mat-list-item [routerLink]="['/history']">History</a>-->
         </div>
         <div [ngClass]="navStickyClass" class="bottom">
@@ -59,7 +65,13 @@ export class MainComponent implements OnInit, OnDestroy {
   mobileQuery: MediaQueryList;
   private mobileQueryListener: () => void;
 
-  constructor(changeDetectorRef: ChangeDetectorRef, media: MediaMatcher) {
+  user$ = this.userService.user$.pipe(pluck('user'));
+
+  constructor(
+    public userService: UserService,
+    changeDetectorRef: ChangeDetectorRef,
+    media: MediaMatcher,
+  ) {
     this.mobileQuery = media.matchMedia('(max-width: 600px)');
     this.mobileQueryListener = () => changeDetectorRef.detectChanges();
     this.mobileQuery.addListener(this.mobileQueryListener);

@@ -19,16 +19,15 @@ mat-table {
   .mat-table-sticky:last-child {
     border-left: 1px solid #e0e0e0;
   }
-  .mat-column-description, {
+  .mat-column-customer {
     padding-left: 8px;
     border-left: 1px solid transparent;
   }
-  .mat-column-part {
-    width: 160px;
-    flex: 0 0 160px;
-    box-sizing: border-box;
-  }
   .mat-column-qty, .mat-column-qty {
     justify-content: center;
+  }
+  .mat-column-description {
+    width: 280px;
+    flex: 0 0 280px;
   }
 }

@@ -3,10 +3,15 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-not-found-page',
   template: `
-  <h1>Shit!</h1>
-  <p>Not found.</p>
+  <mat-toolbar>
+    <app-brand></app-brand>
+    <button mat-stroked-button (click)="back()">Back</button>
+  </mat-toolbar>
+  <section>
+    <h1>Not Found</h1>
+  </section>
   `,
-  styleUrls: ['./not-found-page.component.scss']
+  styleUrls: ['../basic.scss'],
 })
 export class NotFoundPageComponent implements OnInit {
 
@@ -15,4 +20,7 @@ export class NotFoundPageComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  back() {
+    history.back();
+  }
 }

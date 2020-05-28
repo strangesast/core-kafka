@@ -1,19 +1,1 @@
-:host {
-  flex: 1 1 auto;
-  &, & > section {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-  }
-  height: 100%;
-}
 
-mat-toolbar {
-  flex: 0 0 auto;
-  justify-content: space-between;
-}
-
-section > h1 {
-  font-size: 4em;
-  margin: 0 0 0 16px;
-}

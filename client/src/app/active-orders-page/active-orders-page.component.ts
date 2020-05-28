@@ -70,7 +70,7 @@ export class ActiveOrdersPageComponent implements OnInit, OnDestroy {
       }
     }
   `;
-  displayedColumns = ['part', 'description', 'customer', 'date', 'qty', 'qty_note', 'sos'];
+  displayedColumns = ['part', 'customer', 'description', 'date', 'qty', 'qty_note', 'sos'];
 
   dataSource = new MatTableDataSource();
   destroyed$ = new Subject();

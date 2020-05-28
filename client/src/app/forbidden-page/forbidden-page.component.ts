@@ -11,7 +11,7 @@ import { Component, OnInit } from '@angular/core';
       <h1>Forbidden</h1>
     </section>
   `,
-  styleUrls: ['./forbidden-page.component.scss']
+  styleUrls: ['../basic.scss'],
 })
 export class ForbiddenPageComponent implements OnInit {
 
