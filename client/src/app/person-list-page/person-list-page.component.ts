@@ -10,33 +10,33 @@ interface Record {
 @Component({
   selector: 'app-person-list-page',
   template: `
-    <mat-toolbar>
-      <span><a routerLink="/people">People</a></span>
-    </mat-toolbar>
-    <mat-table [dataSource]="dataSource" matSort>
-      <ng-container matColumnDef="name">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Name </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.name}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="start">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Start </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.start}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="end">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> End </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.end}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="total">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Total </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.total}} </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="weekly_total">
-        <mat-header-cell mat-sort-header *matHeaderCellDef> Weekly Total </mat-header-cell>
-        <mat-cell *matCellDef="let cell"> {{cell.weekly_total}} </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+  <app-page-title>
+    <a routerLink="/people">People</a>
+  </app-page-title>
+  <mat-table [dataSource]="dataSource" matSort>
+    <ng-container matColumnDef="name">
+      <mat-header-cell mat-sort-header *matHeaderCellDef> Name </mat-header-cell>
+      <mat-cell *matCellDef="let cell"><a [routerLink]="['/people', cell.id]"> {{cell.name}} </a></mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="start">
+      <mat-header-cell mat-sort-header *matHeaderCellDef> Start </mat-header-cell>
+      <mat-cell *matCellDef="let cell"> {{cell.start}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="end">
+      <mat-header-cell mat-sort-header *matHeaderCellDef> End </mat-header-cell>
+      <mat-cell *matCellDef="let cell"> {{cell.end}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="total">
+      <mat-header-cell mat-sort-header *matHeaderCellDef> Total </mat-header-cell>
+      <mat-cell *matCellDef="let cell"> {{cell.total}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="weekly_total">
+      <mat-header-cell mat-sort-header *matHeaderCellDef> Weekly Total </mat-header-cell>
+      <mat-cell *matCellDef="let cell"> {{cell.weekly_total}} </mat-cell>
+    </ng-container>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
   `,
   styleUrls: ['../base.scss', './person-list-page.component.scss']
 })

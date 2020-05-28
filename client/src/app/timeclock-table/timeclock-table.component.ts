@@ -27,7 +27,7 @@ import { MatTableDataSource } from '@angular/material/table';
       <mat-cell *matCellDef="let cell"> {{cell.weekly_total}} </mat-cell>
     </ng-container>
     -->
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
   <!--<mat-paginator [hidePageSize]="true"></mat-paginator>-->

@@ -1,3 +1,8 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 :host app-timeclock-staggered {
   flex: 1 1 auto;
 }

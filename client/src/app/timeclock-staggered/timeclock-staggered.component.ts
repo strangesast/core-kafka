@@ -62,7 +62,6 @@ export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterView
 
     {
       const { width, height } = this.getHostElementSize();
-      console.log('toast', width / 2);
       this.scroller.scrollTo({left: width / 2});
     }
 
@@ -101,7 +100,6 @@ export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterView
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
     });
   }
 }

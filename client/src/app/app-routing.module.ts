@@ -27,13 +27,15 @@ import { TimesheetPageComponent } from './timesheet-page/timesheet-page.componen
 import { ForbiddenPageComponent } from './forbidden-page/forbidden-page.component';
 import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
 import { SettingsPageComponent } from './settings-page/settings-page.component';
+import { UserListPageComponent } from './user-list-page/user-list-page.component';
 
 // guards
+import { InitGuard } from './init.guard';
 import { RolesGuard } from './roles.guard';
 
 
 const routes: Routes = [
-  {path: '', component: MainComponent, children: [
+  {path: '', canActivate: [InitGuard], component: MainComponent, children: [
     {path:  '', component: SummaryPageComponent},
     {path: 'timeclock', component: TimeclockPageComponent},
     {path: 'machines', component: MachinesPageComponent},
@@ -55,9 +57,15 @@ const routes: Routes = [
       path: 'timesheet',
       canActivate: [RolesGuard],
       component: TimesheetPageComponent,
-      data: {roles: ['toast']},
+      data: {roles: ['isPaidHourly']},
     },
-  ] },
+    {
+      path: 'users',
+      canActivate: [RolesGuard],
+      component: UserListPageComponent,
+      data: {roles: ['isAdmin']},
+    },
+  ]},
   {path: 'login', component: LoginBasePageComponent, children: [
     {path: '', component: LoginPageComponent},
     {path: 'new', component: CreateAccountPageComponent},

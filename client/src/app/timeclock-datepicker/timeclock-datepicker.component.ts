@@ -40,7 +40,6 @@ export class TimeclockDatepickerComponent implements OnInit, ControlValueAccesso
   registerOnTouched() {}
 
   setValue(value) {
-    console.log('new value', value);
     this.value = value;
     this.propagateChange(value);
   }

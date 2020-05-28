@@ -15,13 +15,13 @@ import { UserService } from '../user.service';
   template: `
   <form [formGroup]="form" (submit)="submit$.next()">
     <h1>Create Account</h1>
-    <div formGroupName="name">
+    <ng-container formGroupName="name">
       <mat-form-field appearance="outline">
         <mat-label>Name</mat-label>
         <input matInput type="text" placeholder="John Doe" formControlName="first">
         <mat-error *ngIf="hasError('name.first', 'required')">Name is required.</mat-error>
       </mat-form-field>
-    </div>
+    </ng-container>
     <mat-form-field appearance="outline">
       <mat-label>Username</mat-label>
       <input matInput type="text" placeholder="username" formControlName="username" appPropertyValidator="username">
@@ -86,7 +86,6 @@ export class CreateAccountPageComponent implements OnInit, OnDestroy {
   destroyed$ = new Subject();
 
   redirect$ = this.activatedRoute.queryParams.pipe(
-    tap(v => console.log(v && v.redirect || '/')),
     map(v => v && v.redirect || '/'),
     publishBehavior('/'),
     refCount(),
@@ -104,7 +103,6 @@ export class CreateAccountPageComponent implements OnInit, OnDestroy {
     public snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
-    this.form.statusChanges.subscribe(v => console.log(v));
     this.submit$.pipe(
       map(() => this.form),
       filter(form => form.valid),

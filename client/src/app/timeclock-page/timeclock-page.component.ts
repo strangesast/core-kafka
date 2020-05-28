@@ -63,10 +63,10 @@ interface Record {
       </mat-button-toggle>
     </mat-button-toggle-group>
   </div>
-  <ng-container [ngSwitch]="activeView">
+  <div class="table-container" [ngSwitch]="activeView">
     <app-timeclock-table [dataSource]="dataSource" *ngSwitchCase="'table'"></app-timeclock-table>
     <app-timeclock-staggered [dataSource]="dataSource" *ngSwitchCase="'timeline'"></app-timeclock-staggered>
-  </ng-container>
+  </div>
   `,
   styleUrls: ['../base.scss', './timeclock-page.component.scss'],
 })

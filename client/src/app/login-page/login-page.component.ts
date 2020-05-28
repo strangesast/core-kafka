@@ -43,7 +43,6 @@ export class LoginPageComponent implements OnInit, OnDestroy {
   destroyed$ = new Subject();
 
   redirect$ = this.activatedRoute.queryParams.pipe(
-    tap(v => console.log(v && v.redirect || '/')),
     map(v => v && v.redirect || '/'),
     publishBehavior('/'),
     refCount(),

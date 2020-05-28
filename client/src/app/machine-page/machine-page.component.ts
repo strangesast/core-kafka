@@ -56,7 +56,6 @@ export class MachinePageComponent implements OnInit {
   constructor(public route: ActivatedRoute) { }
 
   ngOnInit(): void {
-    console.log(this.route);
   }
 
 }

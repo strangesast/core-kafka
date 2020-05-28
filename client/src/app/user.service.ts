@@ -42,18 +42,21 @@ export class UserService {
 
   constructor(
     public http: HttpClient,
-    public store: Store<State>,
+    public store: Store<any>,
   ) {}
 
   login(payload: UserLoginPayload) {
-    console.log(payload);
     return this.http.post<UserLoginResult>('/api/login', payload).pipe(
-      tap(({token, user}) => this.store.dispatch(login({user, token}))),
+      tap(({token, user}) => {
+        this.store.dispatch(login({user, token}));
+        localStorage.setItem('token', token);
+      }),
     );
   }
 
   logout() {
     this.store.dispatch(logout());
+    localStorage.removeItem('token');
   }
 
   create(payload: UserCreatePayload) {

@@ -17,38 +17,40 @@ import { tap, pluck, takeUntil } from 'rxjs/operators';
       <li><a [routerLink]="['/orders', 'historical']">Historical</a></li>
     </ul>
   </header>
-  <mat-table [dataSource]="dataSource" matSort>
-    <ng-container matColumnDef="part">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Part Name </mat-header-cell>
-      <mat-cell *matCellDef="let cell"><a [routerLink]="['/parts', cell.part]"> {{cell.part}} </a></mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="description">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Description </mat-header-cell>
-      <mat-cell *matCellDef="let cell"> {{cell.description}} </mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="customer">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Customer </mat-header-cell>
-      <mat-cell *matCellDef="let cell"><a [routerLink]="['/customers', cell.customer]"> {{cell.customer}} </a></mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="date">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Date </mat-header-cell>
-      <mat-cell *matCellDef="let cell"> {{cell.date}} </mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="qty">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Qty </mat-header-cell>
-      <mat-cell *matCellDef="let cell"> {{cell.qty}} </mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="qty_note">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Note </mat-header-cell>
-      <mat-cell *matCellDef="let cell"> {{cell.qty_note}} </mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="sos">
-      <mat-header-cell mat-sort-header *matHeaderCellDef> SOs </mat-header-cell>
-      <mat-cell *matCellDef="let cell" class="list"><a [routerLink]="['/']" *ngFor="let so of cell.sos">{{so}}</a></mat-cell>
-    </ng-container>
-    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-  </mat-table>
+  <div class="table-container">
+    <mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="part" sticky>
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Part Name </mat-header-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/parts', cell.part]"> {{cell.part}} </a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Description </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.description}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="customer">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Customer </mat-header-cell>
+        <mat-cell *matCellDef="let cell"><a [routerLink]="['/customers', cell.customer]"> {{cell.customer}} </a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="date">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Date </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.date}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="qty">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Qty </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.qty}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="qty_note">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> Qty Note </mat-header-cell>
+        <mat-cell *matCellDef="let cell"> {{cell.qty_note}} </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="sos">
+        <mat-header-cell mat-sort-header *matHeaderCellDef> SOs </mat-header-cell>
+        <mat-cell *matCellDef="let cell" class="list"><a [routerLink]="['/']" *ngFor="let so of cell.sos">{{so}}</a></mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
   `,
   styleUrls: ['../base.scss', './active-orders-page.component.scss']
 })

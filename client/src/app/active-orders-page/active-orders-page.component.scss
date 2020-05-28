@@ -1,7 +1,34 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .list > a:not(:last-child):after {
   content: ",\00a0";
+}
+
+
+mat-table {
+  .mat-header-row, .mat-footer-row, .mat-row {
+    min-width: 1000px;
+  }
+  .mat-table-sticky:first-child {
+    border-right: 1px solid #e0e0e0;
+  }
+  .mat-table-sticky:last-child {
+    border-left: 1px solid #e0e0e0;
+  }
+  .mat-column-description, {
+    padding-left: 8px;
+    border-left: 1px solid transparent;
+  }
+  .mat-column-part {
+    width: 160px;
+    flex: 0 0 160px;
+    box-sizing: border-box;
+  }
+  .mat-column-qty, .mat-column-qty {
+    justify-content: center;
+  }
 }

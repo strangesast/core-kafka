@@ -52,6 +52,9 @@ import { TimesheetPageComponent } from './timesheet-page/timesheet-page.componen
 import { ForbiddenPageComponent } from './forbidden-page/forbidden-page.component';
 import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
 import { SettingsPageComponent } from './settings-page/settings-page.component';
+import { UserBadgeComponent } from './user-badge/user-badge.component';
+import { UserListPageComponent } from './user-list-page/user-list-page.component';
+import { ColorInputComponent } from './color-input/color-input.component';
 
 
 @NgModule({
@@ -96,7 +99,10 @@ import { SettingsPageComponent } from './settings-page/settings-page.component';
     TimesheetPageComponent,
     ForbiddenPageComponent,
     NotFoundPageComponent,
-    SettingsPageComponent
+    SettingsPageComponent,
+    UserBadgeComponent,
+    UserListPageComponent,
+    ColorInputComponent
   ],
   imports: [
     BrowserModule,

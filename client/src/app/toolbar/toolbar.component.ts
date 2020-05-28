@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
-import { map } from 'rxjs/operators';
+import { pluck, map } from 'rxjs/operators';
 
 import { UserService } from '../user.service';
 
@@ -19,7 +19,9 @@ import { UserService } from '../user.service';
             <button (click)="loginRedirect()" mat-icon-button aria-label="Log in"><mat-icon>person</mat-icon></button>
           </li>
           <li *ngIf="data.user != null">
-            <button mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu"><mat-icon>account_circle</mat-icon></button>
+            <button mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu">
+              <app-user-badge [initials]="initials$ | async"></app-user-badge>
+            </button>
             <mat-menu #menu="matMenu" xPosition="before">
               <a mat-menu-item [routerLink]="['/timesheet']"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
               <a mat-menu-item [routerLink]="['/settings']"><mat-icon>settings</mat-icon><span>Account Settings</span></a>
@@ -35,6 +37,17 @@ import { UserService } from '../user.service';
 export class ToolbarComponent implements OnInit {
   user$ = this.userService.user$;
 
+  initials$ = this.user$.pipe(
+    pluck('user'),
+    map(user => {
+      if (user) {
+        const {first, middle, last} = user.name;
+        return [first, middle, last].map(v => (v || '').slice(0, 1)).join('');
+      }
+      return '';
+    }),
+  );
+
   notifications$ = this.store.pipe(
     select('user', 'notifications'),
   );
@@ -46,8 +59,6 @@ export class ToolbarComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.user$.subscribe(v => console.log('v', v));
-    this.notifications$.subscribe(v => console.log(v));
   }
 
   loginRedirect() {
