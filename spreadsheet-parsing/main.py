@@ -1,9 +1,7 @@
 import json
-from pymongo import MongoClient
 import psycopg2
 from psycopg2.extras import execute_values
 import hashlib
-from pprint import pprint
 from datetime import datetime
 from openpyxl import Workbook, load_workbook
 from itertools import chain
@@ -29,23 +27,18 @@ MONTHS = [
 
 
 def write_shipping_schedule(root_dir):
-    #db = MongoClient('mongodb://localhost:27017').development
     conn = psycopg2.connect(
             host="localhost",
             port="5432",
-            dbname="postgres",
+            dbname="development",
             user="postgres",
             password="password")
     cur = conn.cursor()
 
     schedules = root_dir.joinpath('SCHEDULES')
     configs = Path('./configs')
-    files = schedules.glob('**/*.xls*')
-    #files = [schedules.joinpath('Weekly Shipping Plan.xls')]
+    files = schedules.glob('**/*.xls')
 
-    #db.drop_collection('shipping')
-
-    #cur.execute('CREATE DATABASE python_test'
     cur.execute('DROP TABLE IF EXISTS shipping')
     cur.execute('''
         CREATE TABLE IF NOT EXISTS shipping (
@@ -71,13 +64,15 @@ def write_shipping_schedule(root_dir):
         if not filepath.is_file():
             continue
 
-        p = configs.joinpath(filepath.relative_to(schedules))
-        config_filepath = p.parent / (p.name + '.json')
+        rel = configs / filepath.relative_to(schedules)
+        config_filepath = rel.parent / (rel.name + '.json')
  
         if not (config_filepath.is_file() or config_filepath.is_symlink()):
             continue
- 
-        parse_shipping_schedule(filepath, config_filepath)
+
+        rel = filepath.relative_to(schedules)
+        
+        data = list(parse_shipping_schedule(filepath, config_filepath, rel))
 
         keys = ["ship_date", "part", "qty_order", "order_id", "customer",
                 "part_customer", "description", "po", "qty_ship", "rem",
@@ -87,7 +82,7 @@ def write_shipping_schedule(root_dir):
         conn.commit()
 
 
-def parse_shipping_schedule(filepath: Path, config_filepath: Path):
+def parse_shipping_schedule(filepath: Path, config_filepath: Path, rel):
     with open(config_filepath, 'r') as json_file:
         try:
             config = json.load(json_file)
@@ -116,11 +111,9 @@ def parse_shipping_schedule(filepath: Path, config_filepath: Path):
                 raise Exception('missing sheets!')
     
         # iterate sheets
-        data = []
         for sheet_name, sheet, rows in sheets:
-            print(config_filepath, sheet_name)
             meta = {
-                'filename': str(filepath.relative_to(schedules)),
+                'filename': str(rel),
                 'sheet':    sheet.name,
                 'filehash': filehash,
             }
@@ -131,7 +124,6 @@ def parse_shipping_schedule(filepath: Path, config_filepath: Path):
                 start_row, end_row = [*rows[i:i+2], None][0:2]
                 end_row = end_row or sheet.nrows
     
-                print(f'{start_row=} {end_row=}')
                 for j in range(start_row, end_row):
                     datum = []
                     for si, column in columns.items():
@@ -172,13 +164,13 @@ def parse_shipping_schedule(filepath: Path, config_filepath: Path):
                         yield datum
         
     elif filepath.name.endswith('.xlsx'):
-        pass
+        return
         #f.write(f'{filepath}\n')
         wb = load_workbook(filename=filepath)
         #for i, sheet in enumerate(wb):
         #    f.write(f'sheet "{sheet.title}" {i} rows: {sheet.max_row}\n')
     else:
-        continue
+        return
 
 
 def hash(fname):
@@ -192,4 +184,4 @@ if __name__ == '__main__':
     root_dir = Path.home().joinpath('f')
     if not root_dir.is_dir():
         raise Exception('root_dir is invalid')
-    main(root_dir)
+    write_shipping_schedule(root_dir)

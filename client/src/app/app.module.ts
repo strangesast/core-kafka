@@ -3,11 +3,12 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PortalModule } from '@angular/cdk/portal';
+import { StoreModule } from '@ngrx/store';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MaterialModule } from './material.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MainComponent } from './main/main.component';
 import { SummaryPageComponent } from './summary-page/summary-page.component';
 import { TimeclockPageComponent } from './timeclock-page/timeclock-page.component';
@@ -44,6 +45,13 @@ import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-contai
 import { NoopComponent } from './noop/noop.component';
 import { ActiveOrdersPageComponent } from './active-orders-page/active-orders-page.component';
 import { CustomerPageComponent } from './customer-page/customer-page.component';
+
+import { userReducer } from './user.reducer';
+import { PropertyValidatorDirective } from './property-validator.directive';
+import { TimesheetPageComponent } from './timesheet-page/timesheet-page.component';
+import { ForbiddenPageComponent } from './forbidden-page/forbidden-page.component';
+import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
+import { SettingsPageComponent } from './settings-page/settings-page.component';
 
 
 @NgModule({
@@ -83,7 +91,12 @@ import { CustomerPageComponent } from './customer-page/customer-page.component';
     TimeclockGraphsContainerPageComponent,
     NoopComponent,
     ActiveOrdersPageComponent,
-    CustomerPageComponent
+    CustomerPageComponent,
+    PropertyValidatorDirective,
+    TimesheetPageComponent,
+    ForbiddenPageComponent,
+    NotFoundPageComponent,
+    SettingsPageComponent
   ],
   imports: [
     BrowserModule,
@@ -95,6 +108,7 @@ import { CustomerPageComponent } from './customer-page/customer-page.component';
     FormsModule,
     GraphQLModule,
     PortalModule,
+    StoreModule.forRoot({user: userReducer}),
   ],
   providers: [],
   bootstrap: [AppComponent]

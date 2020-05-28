@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
+// components
 import { MainComponent } from './main/main.component';
 import { SummaryPageComponent } from './summary-page/summary-page.component';
 import { MachinesPageComponent } from './machines-page/machines-page.component';
@@ -22,6 +23,13 @@ import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-contai
 import { NoopComponent } from './noop/noop.component';
 import { ActiveOrdersPageComponent } from './active-orders-page/active-orders-page.component';
 import { CustomerPageComponent } from './customer-page/customer-page.component';
+import { TimesheetPageComponent } from './timesheet-page/timesheet-page.component';
+import { ForbiddenPageComponent } from './forbidden-page/forbidden-page.component';
+import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
+import { SettingsPageComponent } from './settings-page/settings-page.component';
+
+// guards
+import { RolesGuard } from './roles.guard';
 
 
 const routes: Routes = [
@@ -42,6 +50,13 @@ const routes: Routes = [
     {path: 'parts/:id', component: PartPageComponent},
     /* {path: 'history', component: MachinesPageComponent}, */
     {path: 'notifications', component: NotificationsPageComponent},
+    {path: 'settings', component: SettingsPageComponent},
+    {
+      path: 'timesheet',
+      canActivate: [RolesGuard],
+      component: TimesheetPageComponent,
+      data: {roles: ['toast']},
+    },
   ] },
   {path: 'login', component: LoginBasePageComponent, children: [
     {path: '', component: LoginPageComponent},
@@ -50,6 +65,8 @@ const routes: Routes = [
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
     {path: '**', component: NoopComponent},
   ]},
+  {path: 'forbidden', component: ForbiddenPageComponent},
+  {path: '**', component: NotFoundPageComponent},
 ];
 
 @NgModule({

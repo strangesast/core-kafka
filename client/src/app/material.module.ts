@@ -22,6 +22,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { PortalModule } from '@angular/cdk/portal';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 
 const components = [
@@ -46,6 +47,7 @@ const components = [
   MatDatepickerModule,
   MatNativeDateModule,
   ScrollingModule,
+  MatSnackBarModule,
 ];
 
 @NgModule({

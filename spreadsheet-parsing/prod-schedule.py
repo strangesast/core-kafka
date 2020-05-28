@@ -141,13 +141,7 @@ def parse_sheet_qty(text: Union[str,float], cell_pos: Tuple[int, int], sheet: xl
     return qty, qty_note
 
 
-def write_prod_schedule(conn: psycopg2.connection):
-    conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            dbname="postgres",
-            user="postgres",
-            password="password")
+def write_prod_schedule(conn):
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS schedule')
     cur.execute('''
@@ -209,7 +203,14 @@ def write_prod_schedule(conn: psycopg2.connection):
 
 
 def main():
-    write_prod_schedule()
+    conn = psycopg2.connect(
+            host="localhost",
+            port="5432",
+            dbname="development",
+            user="postgres",
+            password="password")
+
+    write_prod_schedule(conn)
 
 
 if __name__ == '__main__':

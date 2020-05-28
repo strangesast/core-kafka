@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-notification-list',
@@ -12,7 +12,7 @@ import { Component, OnInit } from '@angular/core';
   <mat-menu #menu="matMenu" xPosition="before">
     <mat-action-list>
       <mat-list-item *ngFor="let notification of notifications">
-        <span>{{notification.text}}</span>
+        <span>{{notification.message}}</span>
         <button mat-icon-button (click)="dismiss(notification.id); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
       </mat-list-item>
       <button mat-list-item *ngIf="notifications.length" (click)="dismissAll(); $event.stopPropagation()">Dismiss All</button>
@@ -24,14 +24,8 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NotificationListComponent implements OnInit {
 
-  notifications = [
-    {text: 'Long alert that indicates something', id: 0},
-    {text: 'Long alert that indicates something', id: 1},
-    {text: 'Long alert that indicates something', id: 2},
-    {text: 'Long alert that indicates something', id: 3},
-    {text: 'Long alert that indicates something', id: 4},
-    {text: 'Long alert that indicates something', id: 5},
-  ];
+  @Input()
+  notifications = [];
 
 
   constructor() { }
