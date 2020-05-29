@@ -6,6 +6,8 @@ section {
   display: grid;
   background: white;
   grid-template-columns: 1fr 2fr;
+  grid-auto-rows: 1fr;
+  align-items: center;
   grid-gap: 16px;
   padding: 0 16px;
   & > h2 {
@@ -13,7 +15,6 @@ section {
   }
   & > p:nth-of-type(2n + 1) {
     text-align: right;
-    align-self: center;
   }
   input {
     &[type="text"], &[type="email"], &[type="number"] {

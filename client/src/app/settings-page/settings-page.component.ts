@@ -36,7 +36,7 @@ import { UserService } from '../user.service';
         <p>roles</p>
         <p>
           <mat-chip-list>
-            <mat-chip *ngFor="let role of form.get('roles').value" [value]="role.id">{{role.name}}</mat-chip>
+            <mat-chip *ngFor="let item of form.get('roles').value | keyvalue" [value]="item.key">{{item.value.name}}</mat-chip>
           </mat-chip-list>
         </p>
       </section>

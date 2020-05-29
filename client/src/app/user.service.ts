@@ -91,7 +91,7 @@ export class UserService {
     return this.apollo.query({query}).pipe(
       map((result: any) => {
         const {color, email, first_name, last_name, middle_name, user_roles, username, id} = result.data.users[0];
-        const roles = user_roles.map(({role}) => role);
+        const roles = user_roles.reduce((acc, {role}) => ({...acc, [role.id]: role}), {});
         const user = {username, email, color, name: {first: first_name, middle: middle_name, last: last_name}, roles};
         return user;
       }),

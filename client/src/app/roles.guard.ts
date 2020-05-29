@@ -21,7 +21,7 @@ export class RolesGuard implements CanActivate {
         if (next.data.roles.length === 0) {
           return true;
         }
-        if (!user.roles?.some(role => next.data.roles.includes(role))) {
+        if (!user.roles?.some(role => role in next.data.roles)) {
           this.router.navigate(['/forbidden']);
           return false;
         }
