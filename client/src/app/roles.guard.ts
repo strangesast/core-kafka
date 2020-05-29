@@ -13,11 +13,13 @@ export class RolesGuard implements CanActivate {
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
     return this.service.user$.pipe(
-      pluck('user'),
       map(user => {
         if (!user) {
           this.router.navigate(['/login']);
           return false;
+        }
+        if (next.data.roles.length === 0) {
+          return true;
         }
         if (!user.roles?.some(role => next.data.roles.includes(role))) {
           this.router.navigate(['/forbidden']);

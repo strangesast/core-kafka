@@ -3,7 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { sameValueValidator } from '../validators';
 import { Subject, empty } from 'rxjs';
-import { refCount, publishBehavior, catchError, finalize, delay, exhaustMap, map, filter, takeUntil, tap, distinctUntilChanged } from 'rxjs/operators';
+import { refCount, publishBehavior, catchError, finalize, delay, exhaustMap, map, filter, takeUntil, tap } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 

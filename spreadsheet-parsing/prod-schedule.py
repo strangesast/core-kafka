@@ -143,39 +143,6 @@ def parse_sheet_qty(text: Union[str,float], cell_pos: Tuple[int, int], sheet: xl
 
 def write_prod_schedule(conn):
     cur = conn.cursor()
-    cur.execute('DROP TABLE IF EXISTS schedule')
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS schedule (
-          col                    int PRIMARY KEY,
-          part                   text,
-          customer               text,
-          date                   date,
-          qty                    int,
-          qty_note               text,
-          sos                    text[],
-          description            text,
-
-          readystate             text,
-          hardware_kit           json,
-          seal_kit               json,
-
-          body_assy              json,
-          body_assy_body         json,
-          body_assy_collar       json,
-          body_assy_end_cap      json,
-          body_assy_base_mount   json,
-          rod_assy               json,
-          rod_assy_rod           json,
-          rod_assy_rod_mount     json,
-          gland                  json,
-          piston                 json,
-          stroke_limiter         json,
-          misc_1                 json,
-          misc_2                 json,
-          misc_3                 json
-        );
-    ''');
-    conn.commit()
 
     root_dir = Path.home().joinpath('f')
     filepath = root_dir / 'SCHEDULES' / 'PRODUCTION SCHEDULE.xls'

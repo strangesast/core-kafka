@@ -39,25 +39,6 @@ def write_shipping_schedule(root_dir):
     configs = Path('./configs')
     files = schedules.glob('**/*.xls')
 
-    cur.execute('DROP TABLE IF EXISTS shipping')
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS shipping (
-          id            int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-          ship_date     date,
-          part          text,
-          qty_order     int,
-          order_id      text,
-          customer      text,
-          part_customer text,
-          description   text,
-          po            text,
-          qty_ship      int,
-          rem           int,
-          price         real,
-          vend          text,
-          meta          json
-        );
-    ''');
     conn.commit()
 
     for filepath in files:

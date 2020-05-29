@@ -52,7 +52,12 @@ const routes: Routes = [
     {path: 'parts/:id', component: PartPageComponent},
     /* {path: 'history', component: MachinesPageComponent}, */
     {path: 'notifications', component: NotificationsPageComponent},
-    {path: 'settings', component: SettingsPageComponent},
+    {
+      path: 'settings',
+      canActivate: [RolesGuard],
+      component: SettingsPageComponent,
+      data: {roles: []}, // just redirect to /login if no user
+    },
     {
       path: 'timesheet',
       canActivate: [RolesGuard],

@@ -6,6 +6,7 @@ import { select, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { tap, catchError, exhaustMap, map } from 'rxjs/operators';
 
+import { UserService } from './user.service';
 import { User } from './models';
 import { init, login } from './user.actions';
 
@@ -13,12 +14,12 @@ interface UserResponsePayload {
   user: User;
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
 export class InitGuard implements CanActivate {
   constructor(
+    public userService: UserService,
     public http: HttpClient,
     public store: Store<any>) {}
 
@@ -32,23 +33,32 @@ export class InitGuard implements CanActivate {
             return of(isInitialized);
           }
           const token = localStorage.getItem('token');
-          if (!token) {
+
+          let user;
+          try {
+            user = JSON.parse(localStorage.getItem('user'));
+          } catch (e) {
+            user = null;
+          }
+
+          if (!token || !user) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
             this.store.dispatch(init());
             return of(true);
           }
-          return this.http.get<UserResponsePayload>('/api/user', {headers: {Authorization: `bearer ${token}`}}).pipe(
-            map(payload => {
-              const user = payload.user;
-              this.store.dispatch(login({token, user}));
+          return this.userService.getUser(user.id).pipe(
+            map(fullUser => {
+              this.store.dispatch(login({token, user: fullUser}));
               return true;
             }),
             catchError(err => {
-              localStorage.removeItem('token');
+              this.userService.reset();
               return of(true);
             }),
             tap(() => this.store.dispatch(init())),
           );
         }),
-      );
+      ) as any;
   }
 }

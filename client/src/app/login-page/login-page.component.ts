@@ -88,6 +88,7 @@ export class LoginPageComponent implements OnInit, OnDestroy {
           );
         }),
         catchError(err => {
+          console.log('error', err);
           this.error = 'error';
           return empty().pipe(delay(1000), finalize(() => {
             this.form.enable();

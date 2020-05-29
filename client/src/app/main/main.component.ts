@@ -65,7 +65,7 @@ export class MainComponent implements OnInit, OnDestroy {
   mobileQuery: MediaQueryList;
   private mobileQueryListener: () => void;
 
-  user$ = this.userService.user$.pipe(pluck('user'));
+  user$ = this.userService.user$;
 
   constructor(
     public userService: UserService,

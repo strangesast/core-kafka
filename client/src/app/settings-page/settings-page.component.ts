@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 
+import { UserService } from '../user.service';
+
 
 @Component({
   selector: 'app-settings-page',
@@ -44,6 +46,8 @@ import { FormBuilder } from '@angular/forms';
   styleUrls: ['../base.scss', './settings-page.component.scss']
 })
 export class SettingsPageComponent implements OnInit {
+  user$ = this.userService.user$;
+
   form = this.fb.group({
     email: ['someone@example.com'],
     username: ['someone'],
@@ -51,10 +55,15 @@ export class SettingsPageComponent implements OnInit {
     color: ['#1f78b4'],
   });
 
-  constructor(public fb: FormBuilder) { }
+  constructor(public fb: FormBuilder, public userService: UserService) { }
 
   ngOnInit(): void {
     this.form.disable();
+    this.user$.subscribe(user => {
+      console.log('user', user);
+      const { email, username, roles, color } = user;
+      this.form.setValue({email, username, roles, color});
+    });
   }
 
 }
