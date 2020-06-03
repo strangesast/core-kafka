@@ -23,6 +23,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { PortalModule } from '@angular/cdk/portal';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
 const components = [
@@ -48,6 +49,7 @@ const components = [
   MatNativeDateModule,
   ScrollingModule,
   MatSnackBarModule,
+  MatProgressBarModule,
 ];
 
 @NgModule({

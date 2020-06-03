@@ -17,28 +17,28 @@ services:
   celery:
     image: python:3
 
-  # read machine data
-  machine-monitoring-processor:
-    build:
-      context: .
-      dockerfile: docker/monitoring/Dockerfile
-    ports:
-      - "8082:8080"
-    environment:
-      - KAFKA_HOST=kafka
-      - BASE_URL="http://10.0.0.101:5000"
+## read machine data
+#  machine-monitoring-processor:
+#    build:
+#      context: .
+#      dockerfile: docker/monitoring/Dockerfile
+#    ports:
+#      - "8082:8080"
+#    environment:
+#      - KAFKA_HOST=kafka
+#      - BASE_URL="http://10.0.0.101:5000"
       
-  # main angular application
-  client:
-    build:
-      context: .
-      dockerfile: docker/client/Dockerfile
-    ports:
-      - "8081:80"
+## main angular application
+#  client:
+#    build:
+#      context: .
+#      dockerfile: docker/client/Dockerfile
+#    ports:
+#      - "8081:80"
 
-  # graphql server
+# graphql server
   graphql-engine:
-    image: hasura/graphql-engine:v1.2.1
+    image: hasura/graphql-engine
     ports:
     - "8080:8080"
     depends_on:
@@ -53,7 +53,7 @@ services:
 
   # database
   postgres:
-    image: postgres:12
+    image: postgres
     volumes:
       - ./sql/:/docker-entrypoint-initdb.d/
       - db_data:/var/lib/postgresql/data

@@ -16,6 +16,7 @@
     .controls {
       display: flex;
       flex-direction: row-reverse;
+      margin: 12px 0;
       & > *:not(:first-child) {
         margin-right: 16px;
       }

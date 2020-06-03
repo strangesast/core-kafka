@@ -23,7 +23,7 @@ import { UserService } from '../user.service';
               <app-user-badge [initials]="initials$ | async"></app-user-badge>
             </button>
             <mat-menu #menu="matMenu" xPosition="before">
-              <a mat-menu-item [routerLink]="['/timesheet']" *ngIf="userData.user.roles['isPaidHourly'] != null"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
+              <a mat-menu-item [routerLink]="['/timesheet']" *ngIf="userService.hasRole(userData.user, 'isPaidHourly')"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
               <a mat-menu-item [routerLink]="['/settings']"><mat-icon>settings</mat-icon><span>Account Settings</span></a>
               <button mat-menu-item (click)="logout()"><mat-icon>exit_to_app</mat-icon><span>Log out</span></button>
             </mat-menu>
@@ -40,8 +40,9 @@ export class ToolbarComponent implements OnInit {
   initials$ = this.userData$.pipe(
     map(({user}) => {
       if (user) {
-        const {name: {first, middle, last}, username} = user;
-        return [first, middle, last].map(v => (v || '').slice(0, 1)).join('') || username.slice(0, 1);
+        // const {name: {first, middle, last}, username} = user;
+        // [first, middle, last].map(v => (v || '').slice(0, 1)).join('')
+        return user.username.slice(0, 1);
       }
       return '';
     }),

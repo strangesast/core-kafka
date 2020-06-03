@@ -36,7 +36,12 @@ import { UserService } from '../user.service';
         <p>roles</p>
         <p>
           <mat-chip-list>
-            <mat-chip *ngFor="let item of form.get('roles').value | keyvalue" [value]="item.key">{{item.value.name}}</mat-chip>
+            <mat-chip
+              *ngFor="let item of form.get('user_roles').value"
+              [value]="item.role.id"
+              [matTooltip]="item.role.description">
+              {{item.role.name}}
+            </mat-chip>
           </mat-chip-list>
         </p>
       </section>
@@ -51,7 +56,7 @@ export class SettingsPageComponent implements OnInit {
   form = this.fb.group({
     email: ['someone@example.com'],
     username: ['someone'],
-    roles: [[{id: 'isAdmin', name: 'Administrator', description: ''}, {id: 'isPaidHourly', name: 'Paid Hourly', description: ''}]],
+    user_roles: [],
     color: ['#1f78b4'],
   });
 
@@ -61,8 +66,8 @@ export class SettingsPageComponent implements OnInit {
     this.form.disable();
     this.user$.subscribe(user => {
       console.log('user', user);
-      const { email, username, roles, color } = user;
-      this.form.setValue({email, username, roles, color});
+      const { email, username, user_roles, color } = user;
+      this.form.setValue({email, username, user_roles, color});
     });
   }
 

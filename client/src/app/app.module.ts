@@ -55,6 +55,7 @@ import { SettingsPageComponent } from './settings-page/settings-page.component';
 import { UserBadgeComponent } from './user-badge/user-badge.component';
 import { UserListPageComponent } from './user-list-page/user-list-page.component';
 import { ColorInputComponent } from './color-input/color-input.component';
+import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full-page.component';
 
 
 @NgModule({
@@ -102,7 +103,8 @@ import { ColorInputComponent } from './color-input/color-input.component';
     SettingsPageComponent,
     UserBadgeComponent,
     UserListPageComponent,
-    ColorInputComponent
+    ColorInputComponent,
+    TimeclockFullPageComponent
   ],
   imports: [
     BrowserModule,

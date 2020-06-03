@@ -1,4 +1,4 @@
-import { ElementRef, AfterViewInit, ViewChild, Input, Component, OnInit, OnDestroy } from '@angular/core';
+import { OnChanges, SimpleChanges, ElementRef, AfterViewInit, ViewChild, Input, Component, OnInit, OnDestroy } from '@angular/core';
 import { ScrollDispatcher, CdkScrollable } from '@angular/cdk/scrolling';
 import { MatTableDataSource } from '@angular/material/table';
 import { of, BehaviorSubject, fromEvent } from 'rxjs';
@@ -37,7 +37,7 @@ import { TimeclockShiftDialogComponent } from '../timeclock-shift-dialog/timeclo
   `,
   styleUrls: ['./timeclock-staggered.component.scss']
 })
-export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterViewInit {
+export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   @ViewChild(CdkScrollable) scroller: CdkScrollable;
 
   @Input()
@@ -53,7 +53,12 @@ export class TimeclockStaggeredComponent implements OnInit, OnDestroy, AfterView
   ) {}
 
   ngOnInit(): void {
-    this.values$ = this.dataSource.connect();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if ('dataSource' in changes && changes.dataSource.currentValue != null) {
+      this.values$ = this.dataSource.connect();
+    }
   }
 
   ngAfterViewInit() {

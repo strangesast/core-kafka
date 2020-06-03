@@ -3,11 +3,14 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-user-list-page',
   template: `
-    <p>
-      user-list-page works!
-    </p>
+  <app-page-title>
+    <a [routerLink]="['/users']">Users</a>
+  </app-page-title>
+  <header>
+    <h1>Users</h1>
+  </header>
   `,
-  styleUrls: ['./user-list-page.component.scss']
+  styleUrls: ['../base.scss', './user-list-page.component.scss']
 })
 export class UserListPageComponent implements OnInit {
 

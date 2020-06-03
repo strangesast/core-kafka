@@ -28,6 +28,7 @@ import { ForbiddenPageComponent } from './forbidden-page/forbidden-page.componen
 import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
 import { SettingsPageComponent } from './settings-page/settings-page.component';
 import { UserListPageComponent } from './user-list-page/user-list-page.component';
+import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full-page.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -78,6 +79,7 @@ const routes: Routes = [
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
     {path: '**', component: NoopComponent},
   ]},
+  {path: 'timeclock/full', component: TimeclockFullPageComponent},
   {path: 'forbidden', component: ForbiddenPageComponent},
   {path: '**', component: NotFoundPageComponent},
 ];

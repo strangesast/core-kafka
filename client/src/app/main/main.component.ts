@@ -21,7 +21,7 @@ import { UserService } from '../user.service';
           <a mat-list-item [routerLink]="['/inventory']">Inventory</a>
           <a mat-list-item [routerLink]="['/parts']">Parts</a>
           <ng-container *ngIf="user$ | async as user">
-            <a mat-list-item [routerLink]="['/users']" *ngIf="user.roles['isAdmin'] != null">Users</a>
+            <a mat-list-item [routerLink]="['/users']" *ngIf="userService.hasRole(user, 'isAdmin')">Users</a>
           </ng-container>
           <!-- huh? <a mat-list-item [routerLink]="['/history']">History</a>-->
         </div>

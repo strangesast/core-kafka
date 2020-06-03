@@ -1,25 +1,41 @@
 import { ViewChild, ElementRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Subject, empty } from 'rxjs';
-import { publishBehavior, refCount, finalize, delay, catchError, exhaustMap, filter, tap, map, takeUntil } from 'rxjs/operators';
+import { throwError, Subject, empty } from 'rxjs';
+import {
+  timeoutWith,
+  ignoreElements,
+  publishBehavior,
+  refCount,
+  finalize,
+  delay,
+  catchError,
+  exhaustMap,
+  filter,
+  tap,
+  map,
+  takeUntil,
+  take,
+} from 'rxjs/operators';
 
 import { UserService } from '../user.service';
+
 
 @Component({
   selector: 'app-login-page',
   template: `
-  <form [formGroup]="form" (submit)="submit$.next()">
+  <form [formGroup]="form" (submit)="submit$.next()" (focus)="focused$.next()">
     <h1>Login</h1>
     <mat-form-field appearance="outline">
       <mat-label>Username</mat-label>
-      <input #username autofocus matInput type="text" placeholder="username" formControlName="username" (focus)="onFocus()">
+      <input #username autofocus matInput type="text" placeholder="username" formControlName="username">
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Password</mat-label>
-      <input #password matInput type="password" placeholder="password" formControlName="password" (focus)="onFocus()">
+      <input #password matInput type="password" placeholder="password" formControlName="password">
     </mat-form-field>
-    <mat-error *ngIf="error">Invalid username or password</mat-error>
+    <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+    <mat-error *ngIf="error">{{error}}</mat-error>
     <div class="controls">
       <div
         [matTooltip]="form.invalid ? 'Items above need to be fixed.' : 'Login to account.'"
@@ -40,6 +56,7 @@ import { UserService } from '../user.service';
 })
 export class LoginPageComponent implements OnInit, OnDestroy {
   submit$ = new Subject();
+  focused$ = new Subject();
   destroyed$ = new Subject();
 
   redirect$ = this.activatedRoute.queryParams.pipe(
@@ -47,7 +64,6 @@ export class LoginPageComponent implements OnInit, OnDestroy {
     publishBehavior('/'),
     refCount(),
   );
-
 
   @ViewChild('username')
   username: ElementRef;
@@ -78,9 +94,21 @@ export class LoginPageComponent implements OnInit, OnDestroy {
       map(() => this.form),
       filter(form => form.valid),
       map(form => form.value),
-      tap(() => this.form.disable()),
+      tap(() => {
+        this.loading = true;
+        this.form.disable();
+      }),
       exhaustMap(payload => this.service.login(payload).pipe(
+        catchError(err => {
+          if (err.status === 401) {
+            err = new Error('Invalid username / password.');
+          }
+          return throwError(err);
+        }),
+      ).pipe(
+        timeoutWith(4000, throwError(new Error('Could not reach server.'))),
         exhaustMap(() => {
+          this.loading = false;
           this.complete = true;
           return this.redirect$.pipe(
             delay(1000),
@@ -88,12 +116,16 @@ export class LoginPageComponent implements OnInit, OnDestroy {
           );
         }),
         catchError(err => {
-          console.log('error', err);
-          this.error = 'error';
-          return empty().pipe(delay(1000), finalize(() => {
-            this.form.enable();
-            this.form.patchValue({password: ''});
-            this.password.nativeElement.focus();
+          this.error = err.message || 'error';
+          this.loading = false;
+          this.form.enable();
+          this.form.patchValue({password: ''});
+          this.password.nativeElement.focus();
+
+          return this.form.valueChanges.pipe(
+            take(1),
+            finalize(() => {
+              this.error = '';
           }));
         })
       )),
@@ -107,9 +139,6 @@ export class LoginPageComponent implements OnInit, OnDestroy {
   }
 
   onFocus() {
-    if (this.error) {
-      this.error = '';
-    }
   }
 
 }

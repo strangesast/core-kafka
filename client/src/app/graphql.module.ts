@@ -13,13 +13,15 @@ export function createApollo(httpLink: HttpLink) {
       Accept: 'charset=utf-8'
     }
   }));
-  const token = localStorage.getItem('token');
-  console.log('setting token', token);
-  const auth = setContext((operation, context) => ({
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }));
+
+  const auth = setContext((operation, context) => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    };
+  });
 
   const link = ApolloLink.from([basic, auth, httpLink.create({ uri })]);
   const cache = new InMemoryCache();
