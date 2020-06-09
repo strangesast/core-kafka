@@ -65,7 +65,20 @@ func main() {
 	defer conn.Close()
 	log.Printf("using ADAPTER_HOST='%s'", adapterHost)
 
-	fmt.Fprintf(conn, "* PING")
+	ticker := time.NewTicker(10 * time.Second)
+
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				fmt.Fprintf(conn, "* PING")
+			case <- quit:
+			    ticker.Stop()
+			    return
+			}
+		}
+	 }()
 
 	reader := bufio.NewReader(conn)
 	for {
@@ -76,9 +89,15 @@ func main() {
 		}
 
 		line := strings.TrimSuffix(string(buf), "\n")
+
 		log.Println(line)
+
 		values := strings.Split(line, "|")
 		timestampString, values := values[0], values[1:]
+
+		if strings.HasPrefix(line, "* PONG") {
+			continue
+		}
 
 		timestamp, err := time.Parse(timestampFormat, timestampString)
 		if err != nil {
