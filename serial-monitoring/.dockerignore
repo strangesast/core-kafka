@@ -4,3 +4,4 @@ proto/
 protoc/
 mongo/
 kafka/
+**/*.~

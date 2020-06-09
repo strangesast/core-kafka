@@ -7,13 +7,16 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017
       - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=172.17.0.1:7878
+      - ADAPTER_HOST=10.0.0.101:7880
+    restart: always
+    depends_on:
+      - "kafka"
   mongo:
     image: 'mongo'
     ports:
-      - "27017:27017"
+      - "27019:27017"
     volumes:
-      - ./mongo:/data/db
+      - data:/data/db
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -27,4 +30,6 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
-      - ./kafka:/kafka
+      - data:/kafka
+volumes:
+  data:

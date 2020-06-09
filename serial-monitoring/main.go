@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -46,6 +47,7 @@ func main() {
 
 	// mongo stuff
 	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
+	log.Printf("using MONGO_URI='%s'", mongoURI)
 	client := newMongoClient(mongoURI)
 	if err != nil {
 		log.Fatalf("failed to connect to mongodb database: %v", err)
@@ -54,17 +56,27 @@ func main() {
 
 	// tcp socket stuff
 	adapterHost := getEnv("ADAPTER_HOST", "localhost:7878")
-	conn := getTCPConn(adapterHost)
+
+	var d net.Dialer
+	conn, err := d.DialContext(context.Background(), "tcp", adapterHost)
+	if err != nil {
+		log.Fatalf("Failed to dial: %v", err)
+	}
 	defer conn.Close()
+	log.Printf("using ADAPTER_HOST='%s'", adapterHost)
+
+	fmt.Fprintf(conn, "* PING")
 
 	reader := bufio.NewReader(conn)
 	for {
 		buf, err := reader.ReadBytes('\n')
 		if err != nil {
 			log.Fatalf("Error while reading: %v", err)
+			continue
 		}
 
 		line := strings.TrimSuffix(string(buf), "\n")
+		log.Println(line)
 		values := strings.Split(line, "|")
 		timestampString, values := values[0], values[1:]
 
@@ -101,10 +113,12 @@ func main() {
 
 		kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(bytes)}
 		// producer.Input() <- kMessage
-		_, _, err = producer.SendMessage(kMessage)
+		partition, offset, err := producer.SendMessage(kMessage)
 		if err != nil {
+			log.Println("failed to write message to kafka")
 			// ignore
 		}
+		log.Printf("partition: %d, offset: %d\n", partition, offset)
 	}
 }
 
@@ -119,18 +133,6 @@ func newMongoClient(uri string) *mongo.Client {
 	err = client.Connect(ctx)
 
 	return client
-}
-
-func getTCPConn(uri string) net.Conn {
-	var d net.Dialer
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	conn, err := d.DialContext(ctx, "tcp", uri)
-	if err != nil {
-		log.Fatalf("Failed to dial: %v", err)
-	}
-	return conn
 }
 
 func getEnv(key, fallback string) string {
