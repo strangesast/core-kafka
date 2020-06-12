@@ -12,7 +12,13 @@ services:
 #      - KAFKA_CREATE_TOPICS="input:1:1"
 #      - KAFKA_ADVERTISED_HOST_NAME=kafka
 #      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-
+#
+#  # connect kafka to postgres
+#  connect:
+#    build:
+#      context: .
+#      dockerfile: docker/kafka-connect/Dockerfile
+#
   # facilitate timeclock polling
   celery:
     image: python:3

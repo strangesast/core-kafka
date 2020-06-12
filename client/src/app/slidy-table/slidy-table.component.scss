@@ -14,7 +14,7 @@
 }
 
 .table-container, table {
-  // width: 100%;
+  width: 100%;
 }
 
 .mat-column-name {
@@ -30,12 +30,17 @@
   // min-width: 140px;
 }
 
-.mat-column-total, .mat-column-name {
-  padding: 0 8px;
+.mat-column-total,
+.mat-column-start,
+.mat-column-stop {
+  min-width: 80px;
+  white-space: nowrap;
+  text-align: center;
 }
 
+.mat-column-name,
 .mat-column-total {
-  text-align: center;
+  padding: 0 8px;
 }
 
 tr.example-detail-row {

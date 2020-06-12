@@ -7,25 +7,23 @@ import { group } from 'd3-array';
 import { of, interval, ReplaySubject } from 'rxjs';
 import { startWith, pluck, tap, map, switchMap } from 'rxjs/operators';
 
+
 const query = gql`
-  query MyQuery($from: timestamp!, $to: timestamp!) {
-    timeclock_shifts(where: {_and: {date_start: {_gte: $from, _lt: $to}}}) {
+  query DateShiftGroups($date: date) {
+    timeclock_shift_groups(order_by: {date_start: desc}, limit: 20, where: {date: {_eq: $date}}) {
       employee {
+        id
         first_name
         last_name
-        middle_name
         color
+      }
+      shifts(order_by: {date_start: asc}) {
         id
+        date_start
+        date_stop
       }
       date_start
       date_stop
-      duration
-      punch_start
-      punch_stop
-      timeclock_sync {
-        complete_date
-        id
-      }
     }
   }
 `;
@@ -43,10 +41,18 @@ const query = gql`
         <ng-container matColumnDef="parts">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let row">
-            <div [ngStyle]="{'min-width.px': totalWidth, 'width.px': totalWidth, 'overflow': 'hidden'}" class="blocks">
+            <div [ngStyle]="{'min-width.px': totalWidth, 'overflow': 'hidden'}" class="blocks">
               <span *ngFor="let shift of row.shifts" matTooltip="{{shift.date_start | date:'short'}} - {{shift.date_stop | date:'shortTime'}}" [ngStyle]="positionShift(shift, row.employee.color)"></span>
             </div>
           </td>
+        </ng-container>
+        <ng-container matColumnDef="start">
+          <th mat-header-cell *matHeaderCellDef> Start </th>
+          <td mat-cell *matCellDef="let row"> {{row.date_start | date:'shortTime'}} </td>
+        </ng-container>
+        <ng-container matColumnDef="stop">
+          <th mat-header-cell *matHeaderCellDef> Stop </th>
+          <td mat-cell *matCellDef="let row"> {{row.date_stop | date:'shortTime'}} </td>
         </ng-container>
         <ng-container matColumnDef="total" stickyEnd>
           <th mat-header-cell *matHeaderCellDef> Total </th>
@@ -69,10 +75,10 @@ const query = gql`
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <!--(click)="expanded = expanded === row ? null : row"-->
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             class="example-row-row"
-            [class.example-expanded-row]="expanded === row"
-            (click)="expanded = expanded === row ? null : row">
+            [class.example-expanded-row]="expanded === row">
         </tr>
         <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
       </table>
@@ -89,7 +95,7 @@ const query = gql`
   ],
 })
 export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
-  displayedColumns = ['name', 'parts', 'total'];
+  displayedColumns = ['name', 'parts', 'start', 'stop', 'total'];
   expanded = null;
 
   @Input()
@@ -104,45 +110,33 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   range$ = new ReplaySubject(1);
 
-  data$ = this.range$.pipe(
-    switchMap(([from, to]) => this.apollo.query({query, variables: {from, to}})),
-    pluck('data'),
-  );
-
-  rows$ = this.data$.pipe(
-    pluck('timeclock_shifts'),
-    map((shifts: any[]) => Array.from(
-      group(shifts.map(datum => {
-        let {date_start, date_stop} = datum;
-        date_start = new Date(date_start + 'Z');
-        date_stop = date_stop ? new Date(date_stop + 'Z') : null;
-        return {...datum, date_start, date_stop};
-      }), s => s.employee.id),
-      ([_, arr]) => {
-        let duration;
-        let base = arr.sort((a, b) => a.date_start < b.date_start ? -1 : 1)
-          .reduce((acc, datum) => acc + (datum.date_stop ? +datum.date_stop - +datum.date_start : 0), 0);
-
-        if (arr[arr.length - 1].date_stop != null) {
-          duration = of(base);
-        } else {
-          base -= +arr[arr.length - 1].date_start;
-          duration = this.clock$.pipe(map(now => +now + base));
-        }
-        return {
-          employee: arr[0].employee,
-          shifts: arr,
-          duration,
-        };
-      }).sort((a, b) => {
-        if (a.shifts[a.shifts.length - 1].date_stop != null && b.shifts[b.shifts.length - 1].date_stop == null) {
-          return 1;
-        } else if (a.shifts[a.shifts.length - 1].date_stop == null && b.shifts[b.shifts.length - 1].date_stop != null) {
-          return -1;
-        }
-        return a.shifts[0].date_start < b.shifts[0].date_start ? -1 : 1;
-      }),
-    ),
+  rows$ = this.range$.pipe(
+    map(([from, to]) => formatDate(from)),
+    switchMap(date => this.apollo.query({ query, variables: {date}})),
+    pluck('data', 'timeclock_shift_groups'),
+    map((arr: any[]) => arr.map(record => {
+      const {employee, date_start, date_stop} = record;
+      const shifts = record.shifts.map(({id, date_start: a, date_stop: b}) => ({
+        id,
+        date_start: a && new Date(a + 'Z'),
+        date_stop: b && new Date(b + 'Z'),
+      }));
+      let base = shifts.reduce((acc, {date_start: a, date_stop: b}) => b ? b - a + acc : acc, 0);
+      let duration;
+      if (date_stop != null) {
+        duration = of(base);
+      } else {
+        base -= +shifts[shifts.length - 1].date_start;
+        duration = this.clock$.pipe(map(now => +now + base));
+      }
+      return {
+        employee,
+        duration,
+        shifts,
+        date_start: date_start && new Date(date_start + 'Z'),
+        date_stop: date_stop && new Date(date_stop + 'Z'),
+      };
+    })),
   );
 
   constructor(
@@ -185,6 +179,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
     let maxDate = new Date(minDate);
     maxDate.setDate(minDate.getDate() + 1);
+    maxDate.setHours(6, 0, 0, 0);
 
     const now = new Date();
     if (now < maxDate) {
@@ -193,10 +188,14 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
     const dateRange = +maxDate - +minDate;
 
-    const left = (+shift.date_start - +minDate) / dateRange * this.totalWidth;
+    const left = (+shift.date_start - +minDate) / dateRange * 100 + '%'; //  * this.totalWidth;
 
-    const width = (+(shift.date_stop || new Date()) - +shift.date_start) / dateRange * this.totalWidth;
+    const width = ((+(shift.date_stop || new Date()) - +shift.date_start) / dateRange) * 100 + '%'; //  * this.totalWidth;
 
-    return {'left.px': left, 'width.px': width, 'background-color': color};
+    return {left, width, 'background-color': color};
   }
+}
+
+function formatDate(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }

@@ -46,7 +46,6 @@ fun main() {
     logger.info("starting...")
 
     val input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
-            .map { _, value -> KeyValue("", value) }
             .flatTransform(TransformerSupplier {
                 // convert List<String> to List<[String, String]> to List<SplitSample>
                 object : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
@@ -57,7 +56,7 @@ fun main() {
                     }
 
                     override fun transform(
-                            s: String,
+                            key: String?,
                             bytes: ByteArray
                     ): Iterable<KeyValue<String, ByteArray>> {
                         val value = SerialMonitoring.Sample.parseFrom(bytes)
@@ -67,17 +66,7 @@ fun main() {
                                 if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
                         return stringValues
                                 .filter { it[0] != "" }
-                                .map {
-                                    KeyValue(
-                                            it[0], SerialMonitoring.SplitSample.newBuilder()
-                                            .setTimestamp(value.timestamp)
-                                            .setOffset(offset)
-                                            .setKey(it[0])
-                                            .setValue(it[1])
-                                            .build()
-                                            .toByteArray()
-                                    )
-                                }
+                                .map { KeyValue(key ?: "unknown", SerialMonitoring.SplitSample.newBuilder().setTimestamp(value.timestamp).setOffset(offset).setKey(it[0]).setValue(it[1]).build().toByteArray()) }
                     }
 
                     override fun close() {
@@ -215,6 +204,19 @@ fun main() {
             "execution"
     )
 
+    val schema2 = ConnectSchema(
+            "struct",
+            listOf(
+                    ConnectSchemaField(
+                            "json",
+                            true,
+                            "properties"
+                    )
+            ),
+            false,
+            "machine_state"
+    )
+
     val splitSamples = input
             .mapValues { bytes ->
                 SerialMonitoring.SplitSample.parseFrom(bytes);
@@ -223,19 +225,77 @@ fun main() {
     val splitSampleSerde = ProtoMessageSerde(SerialMonitoring.SplitSample.parser())
     val machineStateSerde = ProtoMessageSerde(SerialMonitoring.MachineState.parser())
 
-    splitSamples
-        .groupBy({ _, _ -> "machine_state" }, Grouped.with(Serdes.String(), splitSampleSerde))
-        .aggregate(
-                { SerialMonitoring.MachineState.newBuilder().build() },
-                { _, sample, agg ->
-                    val map = agg.propertiesMap.plus(Pair(sample.key, sample.value))
-                    SerialMonitoring.MachineState.newBuilder().putAllProperties(map).build()
-                },
-                Materialized.with(Serdes.String(), machineStateSerde)
+    val machinePropertiesTable= splitSamples
+        .map { key, value ->
+            KeyValue(
+                SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.key).build().toByteArray(),
+                SerialMonitoring.SampleValue.newBuilder().setValue(value.value).setTimestamp(value.timestamp).build().toByteArray()
+            )
+        }
+        .toTable(Materialized.with(Serdes.ByteArray(), Serdes.ByteArray()))
+
+    machinePropertiesTable.toStream().map { key, value ->
+        val k = SerialMonitoring.SampleKey.parseFrom(key)
+        val v = SerialMonitoring.SampleValue.parseFrom(value)
+        KeyValue(
+            gson.toJson(ConnectSchemaAndPayload(
+                ConnectSchema(
+                        "struct",
+                        listOf(
+                                ConnectSchemaField(
+                                        "string",
+                                        false,
+                                        "machine_id"
+                                ),
+                                ConnectSchemaField(
+                                        "string",
+                                        false,
+                                        "property"
+                                )
+                        ),
+                false,
+                        "machine_state_key"
+                ),
+                mapOf(Pair("machine_id", k.machineID), Pair("property", k.property))
+            )),
+            gson.toJson(ConnectSchemaAndPayload(
+                ConnectSchema(
+                    "struct",
+                        listOf(
+                                ConnectSchemaField(
+                                        "string",
+                                        true,
+                                        "value"
+                                ),
+                                ConnectSchemaField(
+                                        "string",
+                                        true,
+                                        "timestamp"
+                                )
+                        ),
+                        false,
+                        "machine_state_value"
+                ),
+                mapOf(Pair("value", v.value), Pair("timestamp", stringifyTimestamp(v.timestamp)))
+            ))
         )
-        .toStream()
-        .map { _, value -> KeyValue("machine_state", gson.toJson(value.propertiesMap)) }
-        .to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
+    }.to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
+
+    // input
+    //     .groupBy({ _, _ -> "machine_state" }, Grouped.with(Serdes.String(), Serdes.ByteArray()))
+    //     .aggregate(
+    //             { SerialMonitoring.MachineState.getDefaultInstance().toByteArray() },
+    //             { _, a, b ->
+    //                 val sample = SerialMonitoring.SplitSample.parseFrom(a)
+    //                 val agg = SerialMonitoring.MachineState.parseFrom(b)
+    //                 val map = agg.propertiesMap.plus(Pair(sample.key, sample.value))
+    //                 SerialMonitoring.MachineState.newBuilder().putAllProperties(map).build().toByteArray()
+    //             },
+    //             Materialized.with(Serdes.String(), Serdes.ByteArray())
+    //     )
+    //     .toStream()
+    //     .map { _, value -> KeyValue("machine_state", gson.toJson(ConnectSchemaAndPayload(schema2, mapOf(Pair("properties", SerialMonitoring.MachineState.parseFrom(value).propertiesMap))))) }
+    //     .to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
 
 //    splitSamples
 //            .filter { _, value -> value.key == "execution" }

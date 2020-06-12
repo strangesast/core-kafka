@@ -13,6 +13,15 @@ message Sample {
   repeated string values = 2;
 }
 
+message SampleKey {
+  string machineID = 1;
+  string property = 2;
+}
+message SampleValue {
+  google.protobuf.Timestamp timestamp = 1;
+  string value = 2;
+}
+
 message SplitSample {
   google.protobuf.Timestamp timestamp = 1;
   uint64 offset = 2;

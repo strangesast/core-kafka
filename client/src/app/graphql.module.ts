@@ -4,6 +4,42 @@ import { ApolloLink } from 'apollo-link';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { setContext } from 'apollo-link-context';
+import gql from 'graphql-tag';
+import { GraphQLScalarType, Kind } from 'graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
+
+
+// GraphQL Schema definition.
+const typeDefs = gql`
+  type timeclock_shifts_view {
+    id: Int!
+    date_start: date
+    date_stop: date
+  }
+  scalar date
+`;
+
+const resolvers = {
+  // example of scalar type, which will parse the string into a custom class CustomDate which receives a Date object
+  date: new GraphQLScalarType({
+    name: 'timestamp',
+    serialize: (parsed: Date | null) => parsed && parsed.toISOString(),
+    parseValue: (raw: any) => raw && new Date(raw),
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING || ast.kind === Kind.INT) {
+        return new Date(ast.value);
+      }
+      return null;
+    }
+  })
+};
+
+// GraphQL Schema, required to use the link
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers
+});
 
 const uri = '/v1/graphql';
 

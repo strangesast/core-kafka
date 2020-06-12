@@ -33,6 +33,7 @@
     "d3-array": "^2.4.0",
     "graphql": "^14.6.0",
     "graphql-tag": "^2.10.0",
+    "graphql-tools": "^6.0.9",
     "rxjs": "~6.5.4",
     "topojson-client": "^3.1.0",
     "tslib": "^1.10.0",
