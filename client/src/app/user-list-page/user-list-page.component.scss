@@ -1,0 +1,14 @@
+:host {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+.circle-swatch {
+  display: block;
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+}
+
+.mat-column-select {
+  width: 24px;
+}

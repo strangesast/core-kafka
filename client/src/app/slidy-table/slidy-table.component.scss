@@ -1,0 +1,103 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mat-table, .mat-table tr {
+  background: white;
+}
+
+.container {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.table-container, table {
+  // width: 100%;
+}
+
+.mat-column-name {
+  white-space: nowrap;
+  a {
+    color: inherit;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  // width: 140px;
+  // min-width: 140px;
+}
+
+.mat-column-total, .mat-column-name {
+  padding: 0 8px;
+}
+
+.mat-column-total {
+  text-align: center;
+}
+
+tr.example-detail-row {
+  height: 0;
+}
+
+tr.example-row-row:not(.example-expanded-row):hover {
+  background: whitesmoke;
+}
+
+tr.example-row-row:not(.example-expanded-row):active {
+  background: #efefef;
+}
+
+.example-row-row td {
+  border-bottom-width: 0;
+}
+
+.example-row-detail {
+  overflow: hidden;
+  display: flex;
+}
+
+.example-row-diagram {
+  min-width: 80px;
+  border: 2px solid black;
+  padding: 8px;
+  font-weight: lighter;
+  margin: 8px 0;
+  height: 104px;
+}
+
+.example-row-symbol {
+  font-weight: bold;
+  font-size: 40px;
+  line-height: normal;
+}
+
+.example-row-description {
+  padding: 16px;
+}
+
+.example-row-description-attribution {
+  opacity: 0.5;
+}
+
+.header-blocks, .blocks {
+  position: relative;
+
+  & > span {
+    position: absolute;
+  }
+
+}
+.blocks {
+  position: relative;
+  height: 40px;
+  box-sizing: border-box;
+  margin: 0 8px;
+  & > span {
+    top: 8px;
+    height: 24px;
+    border-radius: 8px;
+  }
+}

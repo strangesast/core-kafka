@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-timeclock-full-page',
@@ -6,6 +7,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./timeclock-full-page.component.scss']
 })
 export class TimeclockFullPageComponent implements OnInit {
+  dataSource = new MatTableDataSource();
 
   constructor() { }
 

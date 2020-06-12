@@ -1,39 +1,13 @@
 import { ViewChild, Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
+import { Apollo } from 'apollo-angular';
+import gql from 'graphql-tag';
+import { Observable, of, interval } from 'rxjs';
+import { withLatestFrom, startWith, switchMap, map, tap, pluck } from 'rxjs/operators';
+import { group } from 'd3-array';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
-
-const DATE = new Date();
-DATE.setHours(0, 0, 0, 0);
-
-const DATA = [
-  ...Array.from(Array(10)).map((_, i) => ({
-    employee: {name: `Person ${i + 1}`, id: `person-${i}`},
-    ...(() => {
-      DATE.setHours(DATE.getHours() - 1);
-      const start = new Date(DATE);
-      DATE.setHours(DATE.getHours() + 2);
-      const end = new Date(DATE);
-      return {
-        start,
-        end,
-        duration: +end - +start,
-        expected_duration: 2 * 60 * 60 * 1000,
-      };
-    })(),
-  })),
-];
-
-
-
-interface Record {
-  employee: { name: string };
-  start: Date;
-  end: Date;
-  total: number;
-  duration: number;
-  expected_duration: number;
-}
 
 
 @Component({
@@ -43,17 +17,16 @@ interface Record {
     <a [routerLink]="['/timeclock']">Timeclock</a>
   </app-page-title>
   <header>
-    <h1>3 Clocked In <small>(As of 15:00)</small></h1>
-    <p>34 Total Hours Today</p>
-    <nav>
-      <ul>
-        <li><a [routerLink]="['/graphs', 'timeclock', '1']">Employee Shift Characteristic Graph</a></li>
-        <li><a [routerLink]="['/graphs', 'timeclock', '2']">Employee Count Trend Graph</a></li>
-      </ul>
-    </nav>
+    <ng-container *ngIf="active$ | async as active">
+      <h1>{{active.list.length}} Clocked In</h1>
+      <p>As of {{active.asof | date:'mediumTime'}}, 34 Total Hours Today, <a mat-stroked-button [routerLink]="['/graphs/timeclock']">Graphs</a></p>
+    </ng-container>
   </header>
   <div class="controls">
-    <app-timeclock-datepicker [(ngModel)]="window"></app-timeclock-datepicker>
+    <form [formGroup]="form">
+      <app-timeclock-datepicker formControlName="date"></app-timeclock-datepicker>
+      <!--<button mat-stroked-button [disabled]="isToday()" (click)="setToday()">Today</button>-->
+    </form>
     <mat-button-toggle-group [(ngModel)]="activeView">
       <mat-button-toggle value="timeline" aria-label="Timeline" title="Timeline">
         <mat-icon>clear_all</mat-icon>
@@ -63,10 +36,7 @@ interface Record {
       </mat-button-toggle>
     </mat-button-toggle-group>
   </div>
-  <div class="table-container" [ngSwitch]="activeView">
-    <app-timeclock-table [dataSource]="dataSource" *ngSwitchCase="'table'"></app-timeclock-table>
-    <app-timeclock-staggered [dataSource]="dataSource" *ngSwitchCase="'timeline'"></app-timeclock-staggered>
-  </div>
+  <app-slidy-table [date]="date$ | async"></app-slidy-table>
   `,
   styleUrls: ['../base.scss', './timeclock-page.component.scss'],
 })
@@ -78,14 +48,140 @@ export class TimeclockPageComponent implements OnInit {
   displayedColumns = ['name', 'start', 'end', 'total', 'weekly_total'];
   window = new Date();
   dataSource: MatTableDataSource<any>;
-  data = DATA;
 
-  constructor() {
+  form: FormGroup;
+  range$: Observable<any>;
+  data = [];
+  data$: Observable<any[]>;
+
+  date$: Observable<Date>;
+
+  active$ = this.apollo.watchQuery({
+    query: gql`
+      query MyQuery($timestamp: timestamp) {
+        timeclock_shifts(order_by: {date_start: desc}, where: {date_stop: {_is_null: true}, date_start: {_gt: $timestamp}}) {
+          date_start
+          employee {
+            first_name
+            last_name
+          }
+        }
+        timeclock_polls(limit: 1, order_by: {date: desc_nulls_last}) {
+          date
+        }
+      }`,
+    variables: {
+      timestamp: (() => {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        return date.toISOString();
+      })(),
+    },
+  }).valueChanges.pipe(
+    pluck('data'),
+    map(({timeclock_polls, timeclock_shifts}: any) => {
+      const dstr = timeclock_polls[0].date + 'Z';
+      return {list: timeclock_shifts, asof: new Date(dstr)};
+    }),
+  );
+
+  constructor(public apollo: Apollo, public fb: FormBuilder) {
     this.dataSource = new MatTableDataSource(this.data);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    this.form = this.fb.group({
+      date: [today],
+    });
+
+    this.date$ = this.form.valueChanges.pipe(
+      startWith(this.form.value),
+      pluck('date'),
+    );
+
+    this.range$ = this.date$.pipe(
+      map(date => {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+        return [start, end];
+      }),
+    );
+    const includeActive$ = this.date$.pipe(
+      map(date => date.toISOString().slice(0, 10) === (new Date()).toISOString().slice(0, 10)),
+    );
+
+    this.data$ = this.range$.pipe(
+      withLatestFrom(includeActive$),
+      switchMap(([range, includeActive]) => this.apollo.query({
+        query: gql`
+          query TimeclockShifts($_gte: timestamp, $_lte: timestamp, $includeActive: Boolean = false) {
+            timeclock_shifts(where: {_and: [{date_start: {_gte: $_gte}}, {_or: [{date_stop: {_is_null: $includeActive}},{date_stop: {_lte: $_lte}}]}]}, order_by: {date_start: asc}) {
+              date_start
+              date_stop
+              employee {
+                id
+                first_name
+                last_name
+                middle_name
+              }
+              duration
+            }
+          }`,
+        variables: {_gte: range[0].toISOString(), _lte: range[1].toISOString(), includeActive},
+      })),
+      map(({data}: any) => data.timeclock_shifts as any[]),
+    );
   }
 
   ngOnInit(): void {
     // this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+
+    this.data$.subscribe(data => {
+      data = Array.from(group(data.map(obj => {
+          for (const key of ['date_start', 'date_stop']) {
+            obj[key] = obj[key] ? new Date(obj[key] + 'Z') : null;
+          }
+          return obj;
+        }), d => d.employee.id))
+        .map(([_, shifts]) => shifts.sort((a, b) => a.date_start < b.date_start ? -1 : 1))
+        .sort((a, b) => a[0].date_start < b[0].date_start ? -1 : 1)
+        .map((shifts) => {
+          let duration;
+          if (shifts[shifts.length - 1].duration == null) {
+            const base = shifts.reduce((acc, s) => acc + s.duration || 0, 0);
+            const shift = shifts[shifts.length - 1];
+            duration = interval(1000).pipe(
+              startWith(null),
+              map(() => (+new Date() - shift.date_start)),
+            );
+          } else {
+            duration = of(shifts.reduce((acc, shift) => acc + shift.duration, 0));
+          }
+          return {
+            employee: shifts[0].employee,
+            date_start: shifts[0].date_start,
+            date_stop: shifts[shifts.length - 1].date_stop,
+            shifts,
+            duration,
+          };
+        });
+      this.data = data;
+      this.dataSource.data = data;
+    });
+  }
+
+  isToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return +this.form.get('date').value === +today;
+  }
+
+  setToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    this.form.patchValue({date: today});
   }
 }

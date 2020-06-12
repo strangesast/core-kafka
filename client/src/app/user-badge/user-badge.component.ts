@@ -9,6 +9,7 @@ export class UserBadgeComponent implements OnInit {
   @Input()
   initials = '?';
 
+  @Input()
   @HostBinding('style.--color')
   color = 'rgb(31, 120, 180)';
 

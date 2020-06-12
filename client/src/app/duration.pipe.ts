@@ -12,7 +12,7 @@ export class DurationPipe implements PipeTransform {
       const m = Math.floor(value / (60 * 1000));
       const mm = `0${m}`.slice(-2);
       value -= m * 60 * 1000;
-      const s = Math.floor(value / 1000 / 100) * 100;
+      const s = Math.floor(value / 1000);
       const ss = `0${s}`.slice(-2);
       return `${h}:${mm}:${ss}`;
     } else {

@@ -1,0 +1,19 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  mat-toolbar {
+    flex: 0 0 auto;
+  }
+  mat-table {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+  .controls {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    padding: 16px 16px;
+  }
+}

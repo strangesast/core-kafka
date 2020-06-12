@@ -12,22 +12,24 @@ import { UserService } from '../user.service';
       <ng-content></ng-content>
       <ng-container *ngIf="userData$ | async as userData">
         <ul>
-          <li>
-            <app-notification-list [notifications]="notifications$ | async"></app-notification-list>
-          </li>
           <li *ngIf="userData.user == null">
-            <button (click)="loginRedirect()" mat-icon-button aria-label="Log in"><mat-icon>person</mat-icon></button>
+            <button (click)="loginRedirect()" mat-stroked-button aria-label="Log in"><mat-icon>person</mat-icon> Log In</button>
           </li>
-          <li *ngIf="userData.user != null">
-            <button mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu">
-              <app-user-badge [initials]="initials$ | async"></app-user-badge>
-            </button>
-            <mat-menu #menu="matMenu" xPosition="before">
-              <a mat-menu-item [routerLink]="['/timesheet']" *ngIf="userService.hasRole(userData.user, 'isPaidHourly')"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
-              <a mat-menu-item [routerLink]="['/settings']"><mat-icon>settings</mat-icon><span>Account Settings</span></a>
-              <button mat-menu-item (click)="logout()"><mat-icon>exit_to_app</mat-icon><span>Log out</span></button>
-            </mat-menu>
-          </li>
+          <ng-container *ngIf="userData.user != null">
+            <li>
+              <app-notification-list [notifications]="notifications$ | async"></app-notification-list>
+            </li>
+            <li>
+              <button mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu">
+                <app-user-badge [color]="userData.user.color" [initials]="initials$ | async"></app-user-badge>
+              </button>
+              <mat-menu #menu="matMenu" xPosition="before">
+                <a mat-menu-item [routerLink]="['/timesheet']" *ngIf="userService.hasRole(userData.user, 'isPaidHourly')"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
+                <a mat-menu-item [routerLink]="['/settings']"><mat-icon>settings</mat-icon><span>Account Settings</span></a>
+                <button mat-menu-item (click)="logout()"><mat-icon>exit_to_app</mat-icon><span>Log out</span></button>
+              </mat-menu>
+            </li>
+          </ng-container>
         </ul>
       </ng-container>
     </mat-toolbar>

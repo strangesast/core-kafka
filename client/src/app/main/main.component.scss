@@ -1,6 +1,7 @@
 :host {
   display: block;
   height: 100%;
+  background: white;
 }
 
 mat-toolbar a {
@@ -8,8 +9,13 @@ mat-toolbar a {
   text-decoration: none;
 }
 
+mat-sidenav {
+  background: inherit;
+}
+
 mat-sidenav-container {
   height: 100%;
+  background: inherit;
 }
 
 mat-sidenav-content {

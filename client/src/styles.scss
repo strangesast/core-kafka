@@ -1,8 +1,8 @@
 @import '~@angular/material/theming';
 @include mat-core();
 
-$app-primary: mat-palette($mat-pink);
-$app-accent:  mat-palette($mat-green, A200, A100, A400);
+$app-primary: mat-palette($mat-blue);
+$app-accent:  mat-palette($mat-light-blue, A200, A100, A400);
 $app-warn:    mat-palette($mat-red);
 $app-theme:   mat-light-theme($app-primary, $app-accent, $app-warn);
 
@@ -14,9 +14,12 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   font-weight: 400;
+  color: #2e2e2e;
+  background: white;
 }
 
 .mat-toolbar {
+  color: inherit;
   background: white;
 }
 

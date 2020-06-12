@@ -5,7 +5,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   selector: 'app-color-input',
   template: `
     <input id="input" [disabled]="disabled" [value]="value" (change)="setValue(input.value)" #input type="color"/>
-    <button [disabled]="disabled" mat-icon-button><label for="input"></label></button>
+    <button type="button" [disabled]="disabled" mat-icon-button><label for="input"></label></button>
   `,
   styleUrls: ['./color-input.component.scss'],
   providers: [

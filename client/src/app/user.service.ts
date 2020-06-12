@@ -23,6 +23,13 @@ const OneUserQuery = gql`
           name
         }
       }
+      employees(limit: 1, where: {user_id: {_eq: $id}}) {
+        id
+        first_name
+        last_name
+        middle_name
+        code
+      }
     }
   }
 `;

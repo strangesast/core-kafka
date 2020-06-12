@@ -8,7 +8,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   <button (click)="picker.open()" mat-button>{{ value | date }}</button>
   <button mat-icon-button (click)="increment()"><mat-icon>chevron_right</mat-icon></button>
   <mat-datepicker #picker></mat-datepicker>
-  <input matInput [matDatepicker]="picker" placeholder="Choose a date" [(ngModel)]="value">
+  <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="value" (dateChange)="onChange($event.value)">
   `,
   styleUrls: ['./timeclock-datepicker.component.scss'],
   providers: [
@@ -56,5 +56,9 @@ export class TimeclockDatepickerComponent implements OnInit, ControlValueAccesso
     value.setDate(value.getDate() + 1);
     this.value = value;
     this.propagateChange(this.value);
+  }
+
+  onChange(value) {
+    this.setValue(value);
   }
 }

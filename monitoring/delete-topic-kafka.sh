@@ -1,2 +1,5 @@
 #!/bin/bash
-./env/bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic output
+docker run --rm -it --network=host wurstmeister/kafka /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --delete \
+  --topic ${1:-output}

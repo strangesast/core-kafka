@@ -24,6 +24,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { PortalModule } from '@angular/cdk/portal';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 const components = [
@@ -50,6 +51,7 @@ const components = [
   ScrollingModule,
   MatSnackBarModule,
   MatProgressBarModule,
+  MatCheckboxModule,
 ];
 
 @NgModule({

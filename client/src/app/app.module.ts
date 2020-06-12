@@ -56,6 +56,10 @@ import { UserBadgeComponent } from './user-badge/user-badge.component';
 import { UserListPageComponent } from './user-list-page/user-list-page.component';
 import { ColorInputComponent } from './color-input/color-input.component';
 import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full-page.component';
+import { SlidyTableComponent } from './slidy-table/slidy-table.component';
+import { CameraViewerComponent } from './camera-viewer/camera-viewer.component';
+import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
+import { CameraListComponent } from './camera-list/camera-list.component';
 
 
 @NgModule({
@@ -104,7 +108,11 @@ import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full
     UserBadgeComponent,
     UserListPageComponent,
     ColorInputComponent,
-    TimeclockFullPageComponent
+    TimeclockFullPageComponent,
+    SlidyTableComponent,
+    CameraViewerComponent,
+    CameraViewerPageComponent,
+    CameraListComponent
   ],
   imports: [
     BrowserModule,

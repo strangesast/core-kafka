@@ -25,3 +25,7 @@ message SplitSamplePair {
   SplitSample first = 1;
   SplitSample second = 2;
 }
+
+message MachineState {
+  map<string,string> properties = 4;
+}

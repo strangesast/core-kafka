@@ -29,6 +29,7 @@ import { NotFoundPageComponent } from './not-found-page/not-found-page.component
 import { SettingsPageComponent } from './settings-page/settings-page.component';
 import { UserListPageComponent } from './user-list-page/user-list-page.component';
 import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full-page.component';
+import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -70,6 +71,12 @@ const routes: Routes = [
       canActivate: [RolesGuard],
       component: UserListPageComponent,
       data: {roles: ['isAdmin']},
+    },
+    {
+      path: 'cameras',
+      canActivate: [RolesGuard],
+      component: CameraViewerPageComponent,
+      data: {roles: ['isCameraViewer']},
     },
   ]},
   {path: 'login', component: LoginBasePageComponent, children: [

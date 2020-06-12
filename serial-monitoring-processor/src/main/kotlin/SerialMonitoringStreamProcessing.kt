@@ -1,9 +1,12 @@
 package main
 
+import com.google.gson.Gson
+import com.google.protobuf.InvalidProtocolBufferException
 import com.google.protobuf.Message
 import com.google.protobuf.Parser
-import com.google.protobuf.util.TimeUtil
+import com.google.protobuf.Timestamp
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.errors.SerializationException
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
@@ -14,15 +17,11 @@ import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
-import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
 import proto.SerialMonitoring
-import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.Statement
-import java.time.Duration
-import java.time.Duration.between
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -31,25 +30,6 @@ import kotlin.system.exitProcess
 fun main() {
 
     val logger = LoggerFactory.getLogger("test")
-
-    val url = "jdbc:postgresql://localhost/test"
-    // val url = "jdbc:postgresql://localhost/test?user=fred&password=secret&ssl=true"
-    val psqlProps = Properties()
-    psqlProps.setProperty("user", "fred")
-    psqlProps.setProperty("password", "secret")
-    psqlProps.setProperty("ssl", "true")
-    val conn = DriverManager.getConnection(url, psqlProps)
-
-    val st: Statement = conn.createStatement()
-    val rs: ResultSet = st.executeQuery("SELECT * FROM mytable WHERE columnfoo = 500")
-    while (rs.next()) {
-        print("Column 1 returned ")
-        logger.info("Column")
-        logger.info(rs.getString(1))
-    }
-    rs.close()
-    st.close()
-
 
     val props = Properties()
     props[StreamsConfig.APPLICATION_ID_CONFIG] = "streams-monitoring"
@@ -66,44 +46,46 @@ fun main() {
     logger.info("starting...")
 
     val input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
-        .map { _, value -> KeyValue("", value) }
-        .flatTransform(TransformerSupplier {
-            // convert List<String> to List<[String, String]> to List<SplitSample>
-            object : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
-                private lateinit var context: ProcessorContext
+            .map { _, value -> KeyValue("", value) }
+            .flatTransform(TransformerSupplier {
+                // convert List<String> to List<[String, String]> to List<SplitSample>
+                object : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
+                    private lateinit var context: ProcessorContext
 
-                override fun init(context: ProcessorContext) {
-                    this.context = context
+                    override fun init(context: ProcessorContext) {
+                        this.context = context
+                    }
+
+                    override fun transform(
+                            s: String,
+                            bytes: ByteArray
+                    ): Iterable<KeyValue<String, ByteArray>> {
+                        val value = SerialMonitoring.Sample.parseFrom(bytes)
+                        val offset = context.offset()
+                        val values = value.valuesList
+                        val stringValues =
+                                if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
+                        return stringValues
+                                .filter { it[0] != "" }
+                                .map {
+                                    KeyValue(
+                                            it[0], SerialMonitoring.SplitSample.newBuilder()
+                                            .setTimestamp(value.timestamp)
+                                            .setOffset(offset)
+                                            .setKey(it[0])
+                                            .setValue(it[1])
+                                            .build()
+                                            .toByteArray()
+                                    )
+                                }
+                    }
+
+                    override fun close() {
+                    }
                 }
+            })
 
-                override fun transform(
-                    s: String,
-                    bytes: ByteArray
-                ): Iterable<KeyValue<String, ByteArray>> {
-                    val value = SerialMonitoring.Sample.parseFrom(bytes)
-                    val offset = context.offset()
-                    val values = value.valuesList
-                    val stringValues =
-                        if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
-                    return stringValues
-                        .map {
-                            KeyValue(
-                                it[0], SerialMonitoring.SplitSample.newBuilder()
-                                    .setTimestamp(value.timestamp)
-                                    .setOffset(offset)
-                                    .setKey(it[0])
-                                    .setValue(it[1])
-                                    .build()
-                                    .toByteArray()
-                            )
-                        }
-                }
-
-                override fun close() {
-                }
-            }
-        })
-
+    /*
     // create store
     val lastValueStore = "lastValueStore"
     val lastValueStoreSupplier = Stores.keyValueStoreBuilder(
@@ -113,9 +95,9 @@ fun main() {
     )
 
     // register store
-    builder.addStateStore(lastValueStoreSupplier)
+    // builder.addStateStore(lastValueStoreSupplier)
 
-    val splitSamplePairSerde = ProtoMessageSerde(SerialMonitoring.SplitSamplePair.parser())
+    // val splitSamplePairSerde = ProtoMessageSerde(SerialMonitoring.SplitSamplePair.parser())
 
     input
         .filter { key, _ -> key == "execution" }
@@ -187,8 +169,85 @@ fun main() {
         //}, lastValueStore)
         .mapValues { _ -> byteArrayOf() }
         .to("filtered", Produced.with(Serdes.String(), Serdes.ByteArray()))
+    */
 
-    // input.to("output", Produced.with(Serdes.String(), Serdes.ByteArray()))
+
+    val gson = Gson()
+
+    val schema = ConnectSchema(
+            "struct",
+            listOf(
+                    ConnectSchemaField(
+                            "string",
+                            true,
+                            "timestamp"
+                    ),
+                    ConnectSchemaField(
+                            "string",
+                            true,
+                            "key"
+                    ),
+                    ConnectSchemaField(
+                            "string",
+                            true,
+                            "value"
+                    )
+            ),
+            false,
+            "sample"
+    )
+
+    val schema1 = ConnectSchema(
+            "struct",
+            listOf(
+                    ConnectSchemaField(
+                            "string",
+                            true,
+                            "timestamp"
+                    ),
+                    ConnectSchemaField(
+                            "string",
+                            true,
+                            "value"
+                    )
+            ),
+            false,
+            "execution"
+    )
+
+    val splitSamples = input
+            .mapValues { bytes ->
+                SerialMonitoring.SplitSample.parseFrom(bytes);
+            }
+
+    val splitSampleSerde = ProtoMessageSerde(SerialMonitoring.SplitSample.parser())
+    val machineStateSerde = ProtoMessageSerde(SerialMonitoring.MachineState.parser())
+
+    splitSamples
+        .groupBy({ _, _ -> "machine_state" }, Grouped.with(Serdes.String(), splitSampleSerde))
+        .aggregate(
+                { SerialMonitoring.MachineState.newBuilder().build() },
+                { _, sample, agg ->
+                    val map = agg.propertiesMap.plus(Pair(sample.key, sample.value))
+                    SerialMonitoring.MachineState.newBuilder().putAllProperties(map).build()
+                },
+                Materialized.with(Serdes.String(), machineStateSerde)
+        )
+        .toStream()
+        .map { _, value -> KeyValue("machine_state", gson.toJson(value.propertiesMap)) }
+        .to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
+
+//    splitSamples
+//            .filter { _, value -> value.key == "execution" }
+//            .map { _, sample -> KeyValue("machine_0_execution", gson.toJson(ConnectSchemaAndPayload(schema1, ExecutionSample(stringifyTimestamp(sample.timestamp), sample.value)))) }
+//            .toTable(Named.`as`("machine_execution_table"), Materialized.with(Serdes.String(), Serdes.String()))
+//            .toStream()
+//            .to("machine_execution_stream")
+//
+//    splitSamples.mapValues { value ->
+//        val timestamp = stringifyTimestamp(value.timestamp);
+//        gson.toJson(ConnectSchemaAndPayload(schema, SplitSample(timestamp, value.key, value.value)))
+//    }.to("output", Produced.with(Serdes.String(), Serdes.String()))
 
     val topology = builder.build()
     logger.info(topology.describe().toString())
@@ -211,13 +270,55 @@ fun main() {
     exitProcess(0)
 }
 
-class ProtoMessageSerde<T: Message>(private val parser: Parser<T>) : Serde<T> {
+class ProtoMessageSerde<T : Message>(private val parser: Parser<T>) : Serde<T> {
 
     override fun serializer(): Serializer<T> {
         return Serializer<T> { _, data -> data.toByteArray() }
     }
 
     override fun deserializer(): Deserializer<T> {
-        return Deserializer<T> { _, data: ByteArray -> parser.parseFrom(data) }
+        return Deserializer<T> { _, data: ByteArray ->
+            try {
+                parser.parseFrom(data)
+            } catch (e: InvalidProtocolBufferException) {
+                throw SerializationException("Error deserializing from Protobuf message", e)
+            }
+        }
     }
 }
+
+fun stringifyTimestamp(timestamp: Timestamp): String {
+    return ZonedDateTime.ofInstant(
+            Instant.ofEpochSecond(timestamp.seconds, timestamp.nanos.toLong()),
+            ZoneId.of("UTC")
+    ).toOffsetDateTime().toString()
+}
+
+data class ConnectSchemaField(
+        val type: String,
+        val optional: Boolean,
+        val field: String
+)
+
+data class ConnectSchema(
+        val type: String,
+        val fields: List<ConnectSchemaField>,
+        val optional: Boolean,
+        val name: String
+)
+
+data class ConnectSchemaAndPayload(
+        val schema: ConnectSchema,
+        val payload: Any
+)
+
+data class ExecutionSample(
+        val timestamp: String,
+        val value: String
+)
+
+data class SplitSample(
+        val timestamp: String,
+        val key: String,
+        val value: String
+)

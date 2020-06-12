@@ -9,7 +9,12 @@ import { UserService } from '../user.service';
   selector: 'app-main',
   template: `
   <mat-sidenav-container>
-    <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'" [fixedInViewport]="mobileQuery.matches" [opened]="!mobileQuery.matches || opened">
+    <mat-sidenav
+      #snav
+      [mode]="mobileQuery.matches ? 'over' : 'side'"
+      [fixedInViewport]="mobileQuery.matches"
+      [opened]="!mobileQuery.matches || opened"
+      [disableClose]="!mobileQuery.matches">
       <mat-toolbar>
         <app-brand></app-brand>
       </mat-toolbar>
@@ -21,6 +26,7 @@ import { UserService } from '../user.service';
           <a mat-list-item [routerLink]="['/inventory']">Inventory</a>
           <a mat-list-item [routerLink]="['/parts']">Parts</a>
           <ng-container *ngIf="user$ | async as user">
+            <a mat-list-item [routerLink]="['/cameras']" *ngIf="userService.hasRole(user, 'isCameraViewer')">Cameras</a>
             <a mat-list-item [routerLink]="['/users']" *ngIf="userService.hasRole(user, 'isAdmin')">Users</a>
           </ng-container>
           <!-- huh? <a mat-list-item [routerLink]="['/history']">History</a>-->
