@@ -54,14 +54,7 @@ export class MachinesPageComponent implements OnInit {
 
   constructor()  {
     const data: Record[] = [
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
-      {id: 'machine-1', name: 'Machine 1'},
+      {id: 'unknown', name: 'Machine (testing)'},
     ];
     this.dataSource = new MatTableDataSource(data);
   }

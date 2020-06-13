@@ -1,1 +1,14 @@
+:host {
+  display: block;
+  position: relative;
+}
 
+:host > * {
+  margin: 16px 0;
+}
+
+svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}

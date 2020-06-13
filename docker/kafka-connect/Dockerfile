@@ -7,4 +7,4 @@ run mkdir -p /opt/kafka/plugins && \
 copy kafka-connect/*.properties ./
 
 env CLASSPATH=/opt/kafka/plugins/postgresql-42.2.13.jar
-cmd ["/opt/kafka/bin/connect-standalone.sh", "worker.properties", "standalone.properties"]
+cmd ["/opt/kafka/bin/connect-standalone.sh", "worker.properties", "one.properties", "two.properties"]
