@@ -20,6 +20,7 @@ message SampleKey {
 message SampleValue {
   google.protobuf.Timestamp timestamp = 1;
   string value = 2;
+  uint64 offset = 3;
 }
 
 message SplitSample {
@@ -37,4 +38,11 @@ message SplitSamplePair {
 
 message MachineState {
   map<string,string> properties = 4;
+}
+
+message ProgramComment {
+  string num = 1;
+  repeated string notes = 2;
+  string originalText = 10;
+  google.protobuf.Timestamp timestamp = 11;
 }

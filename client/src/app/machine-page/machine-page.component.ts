@@ -12,18 +12,26 @@ import { Selection } from 'd3';
 
 const query = gql`
   query ExecutionState($machineID: String = "unknown", $minDate: String!, $maxDate: String!) {
-    machine_execution_state(where: {_and: {machine_id: {_eq: $machineID}, timestamp: {_gte: $minDate, _lt: $maxDate}}}, order_by: {timestamp: asc}) {
+    executions: machine_execution_state(where: {_and: {machine_id: {_eq: $machineID}, timestamp: {_gte: $minDate, _lt: $maxDate}}}, order_by: {timestamp: asc}) {
       value
       timestamp
+    }
+    part_counts: machine_state(where: {_and: {machine_id: {_eq: $machineID}, property: {_eq: "part_count"}, timestamp: {_gte: $minDate, _lt: $maxDate}}}, order_by: {timestamp: asc}) {
+      timestamp
+      value
     }
   }
 `;
 
 const allQuery = gql`
   query ExecutionState($machineID: String = "unknown") {
-    machine_execution_state(where: {machine_id: {_eq: $machineID}}) {
+    executions: machine_execution_state(where: {machine_id: {_eq: $machineID}}, order_by: {timestamp: asc}) {
       value
       timestamp
+    }
+    part_counts: machine_state(where: {_and: {machine_id: {_eq: $machineID}, property: {_eq: "part_count"}}}, order_by: {timestamp: asc}) {
+      timestamp
+      value
     }
   }
 `;
@@ -98,19 +106,23 @@ export class MachinePageComponent implements OnInit, AfterViewInit {
   displayedColumns = ['order', 'part', 'qty'];
   dataSource: MatTableDataSource<any>;
 
-  range$ = this.form.valueChanges.pipe(startWith(this.form.value), pluck('interval'), map(interval => {
-    const now = new Date();
-    switch (interval) {
-      case 'hour':
-        return [d3.timeHour.offset(now, -1), now];
-      case '4hour':
-        return [d3.timeHour.offset(now, -4), now];
-      case 'day':
-        return [d3.timeDay.offset(now, -1), now];
-      default:
-        return null;
-    }
-  }));
+  range$ = this.form.valueChanges.pipe(
+    startWith(this.form.value),
+    pluck('interval'),
+    map(interval => {
+      const now = new Date();
+      switch (interval) {
+        case 'hour':
+          return [d3.timeHour.offset(now, -1), now];
+        case '4hour':
+          return [d3.timeHour.offset(now, -4), now];
+        case 'day':
+          return [d3.timeDay.offset(now, -1), now];
+        default:
+          return null;
+      }
+    }),
+  );
 
   data$ = combineLatest(
     this.machineID$.pipe(map(machineID => ({machineID}))),
@@ -121,11 +133,20 @@ export class MachinePageComponent implements OnInit, AfterViewInit {
       ({ query, variables: { machineID, minDate: range[0], maxDate: range[1] }}) :
       ({ query: allQuery, variables: { machineID }}))
     ),
-    pluck('data', 'machine_execution_state'),
-    map((data: any[]) => data.map(datum => {
-      const {value, timestamp} = datum;
-      return {value, timestamp: new Date(timestamp)};
-    })),
+    pluck('data'),
+    map((data: any) => {
+      const { executions, part_counts } = data;
+      return {
+        executions: executions.map(datum => {
+          const {value, timestamp} = datum;
+          return {value, timestamp: new Date(timestamp)};
+        }),
+        part_counts: part_counts.map(datum => {
+          const {value, timestamp} = datum;
+          return {value: parseInt(value, 10), timestamp: new Date(timestamp)};
+        }),
+      };
+    }),
   );
 
   constructor(
@@ -150,23 +171,34 @@ export class MachinePageComponent implements OnInit, AfterViewInit {
     const { width, height } = this.el.nativeElement.getBoundingClientRect();
     this.xScale.range([this.margin.left, width - this.margin.right]);
 
-    data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
-    const domain = [data[0].timestamp, data[data.length - 1].timestamp];
+    // data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
+
+    const {executions, part_counts} = data;
+
+    const domain = [executions[0].timestamp, executions[executions.length - 1].timestamp];
 
     this.xScale.domain(domain);
 
+    console.log(data);
 
-    const arr = data.slice(0, -1).map((datum, i) => ({
+
+    const arr = executions.slice(0, -1).map((datum, i) => ({
       value: datum.value,
       x0: this.xScale(datum.timestamp),
-      x1: this.xScale(data[i + 1].timestamp),
+      x1: this.xScale(executions[i + 1].timestamp),
     }));
 
-    this.svg.selectAll('rect').data(arr).join('rect')
-      .attr('height', 40)
+    this.svg.selectAll('g.execution').data(arr).join(
+      s => s.append('g').classed('execution', true).call(ss =>
+        ss.append('rect').attr('height', 40)
+      )
+    )
+    .attr('transform', `translate(0,${20})`)
+    .call(s => s.select('rect')
       .attr('width', (d: any) => d.x1 - d.x0)
       .attr('x', (d: any) => d.x0)
       .attr('fill', (d: any) => stateColor(d.value))
+    )
       .on('mouseenter', function(d) {
         const s = d3.select(this);
         s.attr('opacity', 0.5);
@@ -176,7 +208,17 @@ export class MachinePageComponent implements OnInit, AfterViewInit {
         s.attr('opacity', 1);
       });
 
-    this.svg.select('g.x-axis').attr('transform', `translate(0,${42})`).call(this.xAxis);
+    this.svg.selectAll('g.part_count').data(part_counts).join(
+      s => s.append('g').classed('part_count', true)
+        .call(ss => {
+          ss.append('circle').attr('r', 10).attr('fill', 'none').attr('stroke', 'black');
+          ss.append('line').attr('x1', 0).attr('x2', 0).attr('y1', -10).attr('y2', 10).style('stroke', 'black').style('stroke-width', 1);
+          ss.append('text');
+        })
+      ,
+    ).attr('transform', (d: any) => `translate(${this.xScale(d.timestamp)},20)`);
+
+    this.svg.select('g.x-axis').attr('transform', `translate(0,${62})`).call(this.xAxis);
 
   }
 }

@@ -19,11 +19,13 @@ import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
 import org.slf4j.LoggerFactory
 import proto.SerialMonitoring
+import java.lang.NumberFormatException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.CountDownLatch
+import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
 
@@ -45,39 +47,14 @@ fun main() {
 
     logger.info("starting...")
 
-    val input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
-            .flatTransform(TransformerSupplier {
-                // convert List<String> to List<[String, String]> to List<SplitSample>
-                object : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
-                    private lateinit var context: ProcessorContext
-
-                    override fun init(context: ProcessorContext) {
-                        this.context = context
-                    }
-
-                    override fun transform(
-                            key: String?,
-                            bytes: ByteArray
-                    ): Iterable<KeyValue<String, ByteArray>> {
-                        val value = SerialMonitoring.Sample.parseFrom(bytes)
-                        val offset = context.offset()
-                        val values = value.valuesList
-                        val stringValues =
-                                if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
-                        return stringValues
-                                .filter { it[0] != "" }
-                                .map { KeyValue(key ?: "unknown", SerialMonitoring.SplitSample.newBuilder().setTimestamp(value.timestamp).setOffset(offset).setKey(it[0]).setValue(it[1]).build().toByteArray()) }
-                    }
-
-                    override fun close() {
-                    }
-                }
-            })
+    val input = builder
+            .stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
+            .flatTransform(TransformerSupplier { SampleTransformer() })
 
     /*
     // create store
     val lastValueStore = "lastValueStore"
-    val lastValueStoreSupplier = Stores.keyValueStoreBuilder(
+    val lastValueStoreSupplier = Stores.keyValueStoreBuilder
         Stores.inMemoryKeyValueStore(lastValueStore),
         Serdes.Integer(),
         Serdes.Long()
@@ -161,8 +138,8 @@ fun main() {
     */
 
 
-    val gson = Gson()
 
+    /*
     val schema = ConnectSchema(
             "struct",
             listOf(
@@ -216,28 +193,60 @@ fun main() {
             false,
             "machine_state"
     )
+    */
 
-    val splitSamples = input
-            .mapValues { bytes ->
-                SerialMonitoring.SplitSample.parseFrom(bytes);
-            }
+    // key categories
 
-    val splitSampleSerde = ProtoMessageSerde(SerialMonitoring.SplitSample.parser())
-    val machineStateSerde = ProtoMessageSerde(SerialMonitoring.MachineState.parser())
 
-    val machinePropertiesTable= splitSamples
-        .map { key, value ->
+    val splitSamples = input.mapValues { bytes -> SerialMonitoring.SplitSample.parseFrom(bytes) }
+
+    val (tabledStream, streamed) = splitSamples.branch(
+        Predicate { _, sample -> sample.key in setOf("execution", "part_count", "avail", "estop", "mode", "active_axis", "tool_id", "program", "program_comment",
+                    "line", "block" /* ehhhh */, "Fovr", "message", "servo", "comms", "logic", "motion", "system", "Xtravel",
+                    "Xoverheat", "Xservo", "Ztravel", "Zoverheat", "Zservo", "Ctravel", "Coverheat", "Cservo", "S1servo", "S2servo") },
+        Predicate { _, sample -> sample.key in setOf("Xload", "Zload", "Cload", "S1load", "S2load", "Zact", "Xact", "Cact", "S2speed", "S1speed", "path_position", "path_feedrate") }
+    )
+
+    val tabled = tabledStream.map { key, value ->
             KeyValue(
-                SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.key).build(),
-                SerialMonitoring.SampleValue.newBuilder().setValue(value.value).setTimestamp(value.timestamp).build()
+                    SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.key).build(),
+                    SerialMonitoring.SampleValue.newBuilder().setValue(value.value).setOffset(value.offset).setTimestamp(value.timestamp).build()
             )
         }
         .toTable(Materialized.with(ProtoMessageSerde(SerialMonitoring.SampleKey.parser()), ProtoMessageSerde(SerialMonitoring.SampleValue.parser())))
 
-    machinePropertiesTable
-        .filter { key, _ ->  key.property == "execution" }
-        .toStream()
-        .filter { _, record -> record != null }
+
+    val (executionState, partCountState, programCommentState) = tabled.toStream().branch(
+        Predicate { key, _ -> key.property == "execution" },
+        Predicate { key, _ -> key.property == "part_count" },
+        Predicate { key, _ -> key.property == "program_comment"}
+    )
+
+    //         Predicate { _, sample ->
+    //             setOf("avail", "estop", "mode").contains(sample.key)
+    //         },
+    //         Predicate { _, sample ->
+    //             setOf("active_axis", "tool_id", "program", "program_comment", "line", "block", "Fovr").contains(sample.key)
+    //         },
+    //         Predicate { _, sample ->
+    //             setOf("message").contains(sample.key)
+    //         },
+    //         Predicate { _, sample ->
+    //             setOf("Xload", "Zload", "Cload", "S1load", "S2load").contains(sample.key)
+    //         },
+    //         Predicate { _, sample ->
+    //             setOf("Zact", "Xact", "Cact", "S2speed", "S1speed", "path_position", "path_feedrate").contains(sample.key)
+    //         },
+    //         // states (NORMAL, WARNING?, etc)
+    //         Predicate { _, sample ->
+    //             setOf("servo", "comms", "logic", "motion", "system", "Xtravel", "Xoverheat", "Xservo", "Ztravel",
+    //                     "Zoverheat", "Zservo", "Ctravel", "Coverheat", "Cservo", "S1servo", "S2servo").contains(sample.key)
+    //         }
+    //     )
+
+    val gson = Gson()
+
+    executionState.filter { _, record -> record != null }
         .map { key, record ->
             // val key = SerialMonitoring.SampleKey.parseFrom(keyBytes)
             // val record = SerialMonitoring.SampleValue.parseFrom(valueBytes)
@@ -263,14 +272,78 @@ fun main() {
                     false,
                     "machine_execution_state"
                 ),
-                mapOf(Pair("value", record.value), Pair("timestamp", stringifyTimestamp(record.timestamp)), Pair("machine_id", key.machineID))
+                mapOf("value" to record.value, "timestamp" to stringifyTimestamp(record.timestamp), "machine_id" to key.machineID)
             )))
         }
         .to("machine_execution_state", Produced.with(Serdes.String(), Serdes.String()))
 
-    machinePropertiesTable.toStream().map { k, v ->
-        // val k = SerialMonitoring.SampleKey.parseFrom(key)
-        // val v = SerialMonitoring.SampleValue.parseFrom(value)
+    val pat0 = Pattern.compile("^(%\\s{0,2})?(?<num>O[0-9]{3,6})\\s*(?<notes>(\\([\\s\\w\\- \\.\\/]+\\)\\s{0,3})+)")
+    val pat1 = Pattern.compile("\\([\\s\\w\\-\\.\\/]+\\)")
+
+    val programCommentSerde = ProtoMessageSerde(SerialMonitoring.ProgramComment.parser())
+    val programCommentTable = programCommentState
+            .mapValues { value ->
+                val mat = pat0.matcher(value.value)
+                if (mat.matches()) {
+                    val b = SerialMonitoring.ProgramComment.newBuilder()
+                    val mat1 = pat1.matcher(mat.group("notes"))
+                    while (mat1.find()) {
+                        b.addNotes(mat1.group(0))
+                    }
+                    b.num = mat.group("num")
+                    b.originalText = value.value
+                    b.timestamp = value.timestamp
+                    b.build()
+                } else {
+                    null
+                }
+            }
+            .filter { _, value -> value != null }
+            .selectKey { key, _ -> key.machineID }
+            .toTable(Materialized.with(Serdes.String(), programCommentSerde))
+
+    partCountState
+        .map { key, value -> KeyValue(key.machineID, value) }
+        .join(programCommentTable, ValueJoiner<SerialMonitoring.SampleValue, SerialMonitoring.ProgramComment?, String> { value1, value2 ->
+            gson.toJson(ConnectSchemaAndPayload(
+                    ConnectSchema(
+                            "struct",
+                            listOf(
+                                    ConnectSchemaField(
+                                            "string",
+                                            false,
+                                            "part_count"
+                                    ),
+                                    ConnectSchemaField(
+                                            "string",
+                                            true,
+                                            "timestamp"
+                                    ),
+                                    ConnectSchemaField(
+                                            "string",
+                                            true,
+                                            "comment_timestamp"
+                                    ),
+                                    ConnectSchemaField(
+                                            "string",
+                                            true,
+                                            "comment"
+                                    )
+                            ),
+                            false,
+                            "part_count_comment"
+                    ),
+                    mapOf(
+                        "part_count" to value1.value,
+                        "timestamp" to stringifyTimestamp(value1.timestamp),
+                        "comment" to value2?.originalText,
+                        "comment_timestamp" to if (value2 != null) stringifyTimestamp(value2.timestamp) else null
+                    )
+            ))
+        }, Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleValue.parser()), programCommentSerde))
+        .to("machine_part_count_comment", Produced.with(Serdes.String(), Serdes.String()))
+
+tabled.toStream().map { k, v ->
         KeyValue(
             gson.toJson(ConnectSchemaAndPayload(
                 ConnectSchema(
@@ -285,12 +358,17 @@ fun main() {
                                         "string",
                                         false,
                                         "property"
+                                ),
+                                ConnectSchemaField(
+                                        "int64",
+                                false,
+                                    "offset"
                                 )
                         ),
                 false,
                         "machine_state_key"
                 ),
-                mapOf(Pair("machine_id", k.machineID), Pair("property", k.property))
+                mapOf("machine_id" to k.machineID, "property" to k.property, "offset" to v.offset)
             )),
             gson.toJson(ConnectSchemaAndPayload(
                 ConnectSchema(
@@ -310,7 +388,7 @@ fun main() {
                         false,
                         "machine_state_value"
                 ),
-                mapOf(Pair("value", v.value), Pair("timestamp", stringifyTimestamp(v.timestamp)))
+                mapOf("value" to v.value, "timestamp" to stringifyTimestamp(v.timestamp))
             ))
         )
     }.to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
@@ -364,6 +442,41 @@ fun main() {
     exitProcess(0)
 }
 
+// convert List<String> to List<[String, String]> to List<SplitSample>
+class SampleTransformer : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
+    private lateinit var context: ProcessorContext
+
+    override fun init(context: ProcessorContext) {
+        this.context = context
+    }
+
+    override fun transform(
+            key: String?,
+            bytes: ByteArray
+    ): Iterable<KeyValue<String, ByteArray>> {
+        val value = SerialMonitoring.Sample.parseFrom(bytes)
+        val offset = context.offset()
+        val values = value.valuesList
+        val stringValues =
+                if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
+        val eachKey = key ?: "unknown"
+        return stringValues
+                .filter { it[0] != "" }
+                .map {
+                    val eachValue = SerialMonitoring.SplitSample.newBuilder()
+                            .setTimestamp(value.timestamp)
+                            .setOffset(offset)
+                            .setKey(it[0])
+                            .setValue(it[1])
+                            .build().toByteArray()
+                    KeyValue(eachKey, eachValue)
+                }
+    }
+
+    override fun close() {
+    }
+}
+
 class ProtoMessageSerde<T : Message>(private val parser: Parser<T>) : Serde<T> {
 
     override fun serializer(): Serializer<T> {
@@ -415,4 +528,10 @@ data class SplitSample(
         val timestamp: String,
         val key: String,
         val value: String
+)
+
+data class ProgramComment(
+        val num: String,
+        val notes: List<String>,
+        val originalText: String
 )
