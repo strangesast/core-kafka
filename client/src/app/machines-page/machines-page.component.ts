@@ -1,6 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 
+enum MachineStatus {
+  Unknown = 'unknown',
+  Active = 'active',
+  Interrupted = 'interrupted',
+  Stopped = 'stopped',
+  Unavailable = 'unavailable',
+}
+
 interface Record {
   id: string;
   name: string;
@@ -41,16 +49,38 @@ interface Record {
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
     <app-map-viewer *ngSwitchCase="'map'"></app-map-viewer>
+    <ng-container *ngSwitchCase="'grid'">
+      <div class="grid">
+        <a *ngFor="let machine of machines" [routerLink]="['/machines', machine.id]">
+          <span class="status" [ngClass]="machine.status">{{printMachineStatus(machine.status)}}</span>
+          <span class="title">{{machine.name}}</span>
+        </a>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'big-list'">
+    </ng-container>
+
     <!--<mat-paginator [hidePageSize]="true"></mat-paginator>-->
   </ng-container>
   `,
   styleUrls: ['../base.scss', './machines-page.component.scss'],
 })
 export class MachinesPageComponent implements OnInit {
-  activeView = 'list';
+  activeView = 'map';
   displayedColumns: string[] = ['name'];
 
   dataSource: MatTableDataSource<Record>;
+
+  machines = [
+    { id: 'doosan-2600sy',     name: 'Doosan 2600SY', status: MachineStatus.Unknown },
+    { id: 'doosan-gt2100m',    name: 'Doosan GT2100M' , status: MachineStatus.Unknown},
+    { id: 'hardinge-cobra-42', name: 'Hardinge Cobra 42', status: MachineStatus.Unknown},
+    { id: 'hardinge-cobra-65', name: 'Hardinge Cobra 65', status: MachineStatus.Unknown},
+    { id: 'hardinge-gx1600',   name: 'Hardinge Cobra GX1600', status: MachineStatus.Unknown},
+    { id: 'samsung-mcv50',     name: 'Samsung MCV50', status: MachineStatus.Unknown},
+    { id: 'samsung-mcv660',    name: 'Samsung MCV660', status: MachineStatus.Unknown},
+    { id: 'samsung-sl45',      name: 'Samsung SL45', status: MachineStatus.Unknown},
+  ];
 
   constructor()  {
     const data: Record[] = [
@@ -60,6 +90,17 @@ export class MachinesPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+  }
+
+  printMachineStatus(status: MachineStatus) {
+    switch (status) {
+      case MachineStatus.Active: return 'Active';
+      case MachineStatus.Unavailable: return 'Unavailable';
+      case MachineStatus.Stopped: return 'Stopped';
+      case MachineStatus.Interrupted: return 'Interrupted';
+      default:
+        return 'Unknown';
+    }
   }
 
 }

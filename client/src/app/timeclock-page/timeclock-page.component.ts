@@ -19,13 +19,12 @@ import { MatPaginator } from '@angular/material/paginator';
   <header>
     <ng-container *ngIf="active$ | async as active">
       <h1>{{active.list.length}} Clocked In</h1>
-      <p>As of {{active.asof | date:'mediumTime'}}, 34 Total Hours Today, <a mat-stroked-button [routerLink]="['/graphs/timeclock']">Graphs</a></p>
+      <p>As of <span *ngIf="isToday(active.asof); else old">{{active.asof | date:'mediumTime'}}</span><ng-template #old>{{active.asof | date:'medium'}}</ng-template>, 34 Total Hours Today, <a mat-stroked-button [routerLink]="['/graphs/timeclock']">Graphs</a></p>
     </ng-container>
   </header>
   <div class="controls">
     <form [formGroup]="form">
-      <app-timeclock-datepicker formControlName="date"></app-timeclock-datepicker>
-      <!--<button mat-stroked-button [disabled]="isToday()" (click)="setToday()">Today</button>-->
+      <app-timeclock-datepicker formControlName="date" [max]="getMaxDate()"></app-timeclock-datepicker>
     </form>
     <mat-button-toggle-group [(ngModel)]="activeView">
       <mat-button-toggle value="timeline" aria-label="Timeline" title="Timeline">
@@ -173,15 +172,21 @@ export class TimeclockPageComponent implements OnInit {
     });
   }
 
-  isToday() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return +this.form.get('date').value === +today;
-  }
-
   setToday() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     this.form.patchValue({date: today});
+  }
+
+  getMaxDate() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    return d;
+  }
+
+  isToday(date: Date) {
+    const now = new Date();
+    return date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }
 }

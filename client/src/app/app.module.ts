@@ -60,6 +60,7 @@ import { SlidyTableComponent } from './slidy-table/slidy-table.component';
 import { CameraViewerComponent } from './camera-viewer/camera-viewer.component';
 import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
 import { CameraListComponent } from './camera-list/camera-list.component';
+import { TimecardComponent } from './timecard/timecard.component';
 
 
 @NgModule({
@@ -112,7 +113,8 @@ import { CameraListComponent } from './camera-list/camera-list.component';
     SlidyTableComponent,
     CameraViewerComponent,
     CameraViewerPageComponent,
-    CameraListComponent
+    CameraListComponent,
+    TimecardComponent
   ],
   imports: [
     BrowserModule,

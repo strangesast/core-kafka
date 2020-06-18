@@ -16,8 +16,7 @@ import gql from 'graphql-tag';
     <header>
       <h1>{{person.first_name}} {{person.last_name}}</h1>
     </header>
-    <pre>{{person | json}}</pre>
-    <pre *ngFor="let shift of shifts$ | async">{{shift | json}}</pre>
+    <app-timecard [employeeId]="person.id"></app-timecard>
   </ng-container>
   <ng-template #loading>Loading...</ng-template>
   `,

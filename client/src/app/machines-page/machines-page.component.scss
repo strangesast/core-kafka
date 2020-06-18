@@ -1,5 +1,54 @@
+@import '~@angular/material/theming';
+
 :host {
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.grid {
+  display: grid;
+  padding: 0 16px;
+  grid-gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+  & > * {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    color: inherit;
+    text-decoration: none;
+    height: 200px;
+    border-radius: 12px;
+    border: 1px solid lightgrey;
+
+    .status {
+      display: block;
+      align-self: stretch;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px 12px 0 0;
+      &.active {
+        background-color: green;
+      }
+      &.stopped, &.interrupted {
+        background-color: red;
+      }
+      &.unknown {
+        background-color: lightgrey;
+      }
+    }
+
+    .title {
+      padding: 12px;
+      text-align: center;
+      font-size: 1.2em;
+    }
+    transition: box-shadow 0.2s ease;
+    &:hover {
+      @include mat-elevation(2);
+    }
+  }
 }

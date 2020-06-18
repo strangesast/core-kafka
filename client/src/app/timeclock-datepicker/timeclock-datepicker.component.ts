@@ -1,5 +1,6 @@
-import { Input, Output, EventEmitter, Component, OnInit, forwardRef } from '@angular/core';
+import { ViewChild, Input, Output, EventEmitter, Component, OnInit, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MatDatepicker } from '@angular/material/datepicker';
 
 @Component({
   selector: 'app-timeclock-datepicker',
@@ -8,7 +9,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   <button (click)="picker.open()" mat-button>{{ value | date }}</button>
   <button mat-icon-button (click)="increment()"><mat-icon>chevron_right</mat-icon></button>
   <mat-datepicker #picker></mat-datepicker>
-  <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="value" (dateChange)="onChange($event.value)">
+  <input matInput [matDatepicker]="picker" [matDatepickerFilter]="filterDate" placeholder="Choose a date" [value]="value" (dateChange)="onChange($event.value)">
   `,
   styleUrls: ['./timeclock-datepicker.component.scss'],
   providers: [
@@ -21,6 +22,12 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class TimeclockDatepickerComponent implements OnInit, ControlValueAccessor {
   value = new Date();
+
+
+  @Input()
+  max: Date;
+
+  filterDate = (d: Date) => this.max == null || d < this.max;
 
   propagateChange = (_: any) => {};
 
@@ -54,8 +61,10 @@ export class TimeclockDatepickerComponent implements OnInit, ControlValueAccesso
   increment() {
     const value = new Date(this.value);
     value.setDate(value.getDate() + 1);
-    this.value = value;
-    this.propagateChange(this.value);
+    if (this.max == null || value < this.max) {
+      this.value = value;
+      this.propagateChange(this.value);
+    }
   }
 
   onChange(value) {

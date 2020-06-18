@@ -5,7 +5,7 @@ import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { group } from 'd3-array';
 import { of, interval, ReplaySubject } from 'rxjs';
-import { startWith, pluck, tap, map, switchMap } from 'rxjs/operators';
+import { delay, startWith, pluck, tap, map, switchMap } from 'rxjs/operators';
 
 
 const query = gql`
@@ -106,7 +106,14 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   totalWidth = 400;
 
-  clock$ = interval(1000).pipe(startWith(new Date()), map(() => new Date()));
+  clock$ = interval(1000).pipe(
+    delay((() => {
+      const d = +new Date();
+      return d - Math.floor(d / 1000) * 1000 + 500;
+    })()),
+    startWith(null),
+    map(() => new Date()),
+  );
 
   range$ = new ReplaySubject(1);
 

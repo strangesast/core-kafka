@@ -207,13 +207,15 @@ fun main() {
         Predicate { _, sample -> sample.key in setOf("Xload", "Zload", "Cload", "S1load", "S2load", "Zact", "Xact", "Cact", "S2speed", "S1speed", "path_position", "path_feedrate") }
     )
 
+    val sampleValueSerde = ProtoMessageSerde(SerialMonitoring.SampleValue.parser())
+
     val tabled = tabledStream.map { key, value ->
             KeyValue(
                     SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.key).build(),
                     SerialMonitoring.SampleValue.newBuilder().setValue(value.value).setOffset(value.offset).setTimestamp(value.timestamp).build()
             )
         }
-        .toTable(Materialized.with(ProtoMessageSerde(SerialMonitoring.SampleKey.parser()), ProtoMessageSerde(SerialMonitoring.SampleValue.parser())))
+        .toTable(Materialized.with(ProtoMessageSerde(SerialMonitoring.SampleKey.parser()), sampleValueSerde))
 
 
     val (executionState, partCountState, programCommentState) = tabled.toStream().branch(
@@ -221,6 +223,7 @@ fun main() {
         Predicate { key, _ -> key.property == "part_count" },
         Predicate { key, _ -> key.property == "program_comment"}
     )
+
 
     //         Predicate { _, sample ->
     //             setOf("avail", "estop", "mode").contains(sample.key)
@@ -281,30 +284,101 @@ fun main() {
     val pat1 = Pattern.compile("\\([\\s\\w\\-\\.\\/]+\\)")
 
     val programCommentSerde = ProtoMessageSerde(SerialMonitoring.ProgramComment.parser())
+
     val programCommentTable = programCommentState
-            .mapValues { value ->
-                val mat = pat0.matcher(value.value)
-                if (mat.matches()) {
-                    val b = SerialMonitoring.ProgramComment.newBuilder()
-                    val mat1 = pat1.matcher(mat.group("notes"))
-                    while (mat1.find()) {
-                        b.addNotes(mat1.group(0))
-                    }
-                    b.num = mat.group("num")
-                    b.originalText = value.value
-                    b.timestamp = value.timestamp
-                    b.build()
-                } else {
-                    null
+            // .mapValues { value ->
+            //     val mat = pat0.matcher(value.value)
+            //     if (mat.matches()) {
+            //         val b = SerialMonitoring.ProgramComment.newBuilder()
+            //         val mat1 = pat1.matcher(mat.group("notes"))
+            //         while (mat1.find()) {
+            //             b.addNotes(mat1.group(0))
+            //         }
+            //         b.num = mat.group("num")
+            //         b.originalText = value.value
+            //         b.timestamp = value.timestamp
+            //         b.build()
+            //     } else {
+            //         null
+            //     }
+            // }
+            // .filter { _, value -> value != null }
+            .selectKey { key, _ -> key.machineID }
+            .toTable(Materialized.with(Serdes.String(), sampleValueSerde))
+
+    val partCountTable = partCountState
+            .selectKey { key, _ ->  key.machineID }
+            .toTable(Materialized.with(Serdes.String(), sampleValueSerde))
+
+    val sampleValueArraySerde = ProtoMessageSerde(SerialMonitoring.SampleValueArray.parser())
+    val stringPairSerde = ProtoMessageSerde(SerialMonitoring.StringPair.parser())
+
+    programCommentState
+            .selectKey { key, _ -> key.machineID }
+            .join(partCountTable, { programComment, partCount ->
+                SerialMonitoring.SampleValuePair.newBuilder().setFirst(programComment).setSecond(partCount).build()
+            }, Joined.with(Serdes.String(), sampleValueSerde, sampleValueSerde))
+            .selectKey { machineID, pair -> SerialMonitoring.StringPair.newBuilder().setFirst(machineID).setSecond(pair.second.value).build() }
+            .mapValues { pair -> pair.first }
+            .groupByKey(Grouped.with(stringPairSerde, sampleValueSerde))
+            .aggregate(
+                    { SerialMonitoring.SampleValueArray.getDefaultInstance() },
+                    { _, programComment, aggValue ->
+                        if (aggValue.samplesList.find { it.value == programComment.value } != null) {
+                            aggValue
+                        } else {
+                            SerialMonitoring.SampleValueArray.newBuilder().addAllSamples(aggValue.samplesList.plus(programComment)).build()
+                        }
+                    },
+                    Materialized.with(stringPairSerde, sampleValueArraySerde)
+            )
+            .toStream()
+            .flatMap { key, value ->
+                val machineID = key.first;
+                val partCount = key.second;
+                value.samplesList.map {
+                    KeyValue("${key.first}-${key.second}", gson.toJson(ConnectSchemaAndPayload(
+                        ConnectSchema(
+                                "struct",
+                                listOf(
+                                        ConnectSchemaField(
+                                                "string",
+                                                false,
+                                                "machine_id"
+                                        ),
+                                        ConnectSchemaField(
+                                                "string",
+                                                false,
+                                                "part_count"
+                                        ),
+                                        ConnectSchemaField(
+                                                "string",
+                                                false,
+                                                "program_comment"
+                                        ),
+                                        ConnectSchemaField(
+                                                "string",
+                                                false,
+                                                "program_comment_timestamp"
+                                        )
+                                ),
+                                false,
+                                "machine_part_count_program_comment"
+                        ),
+                        mapOf(
+                                "machine_id" to machineID,
+                                "part_count" to partCount,
+                                "program_comment" to it.value,
+                                "program_comment_timestamp" to stringifyTimestamp(it.timestamp)
+                        )
+                    )))
                 }
             }
-            .filter { _, value -> value != null }
-            .selectKey { key, _ -> key.machineID }
-            .toTable(Materialized.with(Serdes.String(), programCommentSerde))
+            .to("machine_part_count_program_comment", Produced.with(Serdes.String(), Serdes.String()))
 
     partCountState
         .map { key, value -> KeyValue(key.machineID, value) }
-        .join(programCommentTable, ValueJoiner<SerialMonitoring.SampleValue, SerialMonitoring.ProgramComment?, String> { value1, value2 ->
+        .join(programCommentTable, ValueJoiner<SerialMonitoring.SampleValue, SerialMonitoring.SampleValue?, String> { value1, value2 ->
             gson.toJson(ConnectSchemaAndPayload(
                     ConnectSchema(
                             "struct",
@@ -336,14 +410,14 @@ fun main() {
                     mapOf(
                         "part_count" to value1.value,
                         "timestamp" to stringifyTimestamp(value1.timestamp),
-                        "comment" to value2?.originalText,
+                        "comment" to value2?.value,
                         "comment_timestamp" to if (value2 != null) stringifyTimestamp(value2.timestamp) else null
                     )
             ))
-        }, Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleValue.parser()), programCommentSerde))
+        }, Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleValue.parser()), sampleValueSerde))
         .to("machine_part_count_comment", Produced.with(Serdes.String(), Serdes.String()))
 
-tabled.toStream().map { k, v ->
+        tabled.toStream().map { k, v ->
         KeyValue(
             gson.toJson(ConnectSchemaAndPayload(
                 ConnectSchema(
@@ -392,35 +466,8 @@ tabled.toStream().map { k, v ->
             ))
         )
     }.to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
+
     
-    // input
-    //     .groupBy({ _, _ -> "machine_state" }, Grouped.with(Serdes.String(), Serdes.ByteArray()))
-    //     .aggregate(
-    //             { SerialMonitoring.MachineState.getDefaultInstance().toByteArray() },
-    //             { _, a, b ->
-    //                 val sample = SerialMonitoring.SplitSample.parseFrom(a)
-    //                 val agg = SerialMonitoring.MachineState.parseFrom(b)
-    //                 val map = agg.propertiesMap.plus(Pair(sample.key, sample.value))
-    //                 SerialMonitoring.MachineState.newBuilder().putAllProperties(map).build().toByteArray()
-    //             },
-    //             Materialized.with(Serdes.String(), Serdes.ByteArray())
-    //     )
-    //     .toStream()
-    //     .map { _, value -> KeyValue("machine_state", gson.toJson(ConnectSchemaAndPayload(schema2, mapOf(Pair("properties", SerialMonitoring.MachineState.parseFrom(value).propertiesMap))))) }
-    //     .to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
-
-//    splitSamples
-//            .filter { _, value -> value.key == "execution" }
-//            .map { _, sample -> KeyValue("machine_0_execution", gson.toJson(ConnectSchemaAndPayload(schema1, ExecutionSample(stringifyTimestamp(sample.timestamp), sample.value)))) }
-//            .toTable(Named.`as`("machine_execution_table"), Materialized.with(Serdes.String(), Serdes.String()))
-//            .toStream()
-//            .to("machine_execution_stream")
-//
-//    splitSamples.mapValues { value ->
-//        val timestamp = stringifyTimestamp(value.timestamp);
-//        gson.toJson(ConnectSchemaAndPayload(schema, SplitSample(timestamp, value.key, value.value)))
-//    }.to("output", Produced.with(Serdes.String(), Serdes.String()))
-
     val topology = builder.build()
     logger.info(topology.describe().toString())
     val streams = KafkaStreams(topology, props)

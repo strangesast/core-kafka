@@ -27,15 +27,16 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   );
 
   CREATE TABLE employees (
-    id            integer primary key,
-    code          text,
-    first_name    text,
-    last_name     text,
-    middle_name   text,
-    hire_date     date,
-    user_id       integer,
-    color         text,
-    last_modified timestamp DEFAULT CURRENT_TIMESTAMP,
+    id                integer primary key,
+    code              text,
+    first_name        text,
+    last_name         text,
+    middle_name       text,
+    hire_date         date,
+    user_id           integer,
+    color             text,
+    compensation_type text,
+    last_modified     timestamp DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
   );
 

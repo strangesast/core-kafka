@@ -25,6 +25,7 @@ import { PortalModule } from '@angular/cdk/portal';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
 
 
 const components = [
@@ -52,6 +53,7 @@ const components = [
   MatSnackBarModule,
   MatProgressBarModule,
   MatCheckboxModule,
+  MatSelectModule,
 ];
 
 @NgModule({
