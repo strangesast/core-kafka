@@ -1,5 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
+import { Apollo } from 'apollo-angular';
+import gql from 'graphql-tag';
+import { Subject, ReplaySubject } from 'rxjs';
+import { multicast, refCount, pluck, tap, map, takeUntil } from 'rxjs/operators';
+
+
+const query = gql`
+  query MyQuery {
+    machine_execution_state(distinct_on: machine_id, order_by: {machine_id: asc, timestamp: desc}) {
+      machine_id
+      timestamp
+      value
+    }
+  }
+`;
+
 
 enum MachineStatus {
   Unknown = 'unknown',
@@ -48,12 +64,12 @@ interface Record {
       </ng-container>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
-    <app-map-viewer *ngSwitchCase="'map'"></app-map-viewer>
+    <app-map-viewer *ngSwitchCase="'map'" [machines]="data$ | async"></app-map-viewer>
     <ng-container *ngSwitchCase="'grid'">
       <div class="grid">
-        <a *ngFor="let machine of machines" [routerLink]="['/machines', machine.id]">
-          <span class="status" [ngClass]="machine.status">{{printMachineStatus(machine.status)}}</span>
-          <span class="title">{{machine.name}}</span>
+        <a *ngFor="let each of data$ | async" [routerLink]="['/machines', each.machine_id]">
+          <span class="status" [ngClass]="each.value">{{printMachineStatus(each.value)}}</span>
+          <span class="title">{{each.name}}</span>
         </a>
       </div>
     </ng-container>
@@ -65,12 +81,14 @@ interface Record {
   `,
   styleUrls: ['../base.scss', './machines-page.component.scss'],
 })
-export class MachinesPageComponent implements OnInit {
+export class MachinesPageComponent implements OnInit, OnDestroy {
   activeView = 'map';
   displayedColumns: string[] = ['name'];
 
-  dataSource: MatTableDataSource<Record>;
+  destroyed$ = new Subject();
+  dataSource = new MatTableDataSource();
 
+  /*
   machines = [
     { id: 'doosan-2600sy',     name: 'Doosan 2600SY', status: MachineStatus.Unknown },
     { id: 'doosan-gt2100m',    name: 'Doosan GT2100M' , status: MachineStatus.Unknown},
@@ -81,15 +99,32 @@ export class MachinesPageComponent implements OnInit {
     { id: 'samsung-mcv660',    name: 'Samsung MCV660', status: MachineStatus.Unknown},
     { id: 'samsung-sl45',      name: 'Samsung SL45', status: MachineStatus.Unknown},
   ];
+  */
 
-  constructor()  {
-    const data: Record[] = [
-      {id: 'unknown', name: 'Machine (testing)'},
-    ];
-    this.dataSource = new MatTableDataSource(data);
+  data$ = this.apollo.watchQuery({query}).valueChanges.pipe(
+    pluck('data', 'machine_execution_state'),
+    map((arr: any[]) => arr.map(({machine_id, timestamp, value}) =>
+      ({
+        name: 'Unknown',
+        machine_id,
+        timestamp: new Date(timestamp),
+        value: value.toLowerCase(),
+      }))
+    ),
+    multicast(new ReplaySubject(1)),
+    refCount(),
+  );
+
+  constructor(public apollo: Apollo) {}
+
+  ngOnInit() {
+    this.data$.pipe(takeUntil(this.destroyed$))
+      .subscribe(data => this.dataSource.data = data);
   }
 
-  ngOnInit(): void {
+  ngOnDestroy() {
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   printMachineStatus(status: MachineStatus) {

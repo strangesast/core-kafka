@@ -137,6 +137,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   ) t
   ORDER BY (t.dates_start[1]) DESC;
 
+  create table machines (
+    id           text primary key,
+    name         text,
+    type         text,
+    manufacturer text,
+    capabilities text[],
+    description  text
+  );
+
   CREATE UNIQUE INDEX timeclock_shift_groups_pk
     ON timeclock_shift_groups (employee_id, shift_num);
 

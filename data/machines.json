@@ -1,0 +1,10 @@
+[
+  {"id": "doosan-2600sy",     "name": "Doosan 2600SY", "manufacturer": "doosan"},
+  {"id": "doosan-gt2100m",    "name": "Doosan GT2100M", "manufacturer": "doosan"},
+  {"id": "hardinge-cobra-42", "name": "Hardinge Cobra 42", "manufacturer": "hardinge"},
+  {"id": "hardinge-cobra-65", "name": "Hardinge Cobra 65", "manufacturer": "hardinge"},
+  {"id": "hardinge-gx1600",   "name": "Hardinge Cobra GX1600", "manufacturer": "hardinge"},
+  {"id": "samsung-mcv50",     "name": "Samsung MCV50"}, "manufacturer": "samsung",
+  {"id": "samsung-mcv660",    "name": "Samsung MCV660", "manufacturer": "samsung"},
+  {"id": "samsung-sl45",      "name": "Samsung SL45", "manufacturer": "samsung"}
+]

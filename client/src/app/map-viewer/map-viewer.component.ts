@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, HostListener, ViewChild, Component, ElementRef, AfterViewInit } from '@angular/core';
+import { OnChanges, SimpleChanges, Input, ChangeDetectorRef, HostListener, ViewChild, Component, ElementRef, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { group } from 'd3-array';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
-import { BehaviorSubject, ReplaySubject } from 'rxjs';
+import { combineLatest, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { filter, multicast, refCount } from 'rxjs/operators';
 import { animate, trigger, transition, state, style } from '@angular/animations';
 
@@ -46,8 +46,14 @@ import { animate, trigger, transition, state, style } from '@angular/animations'
   ],
   styleUrls: ['./map-viewer.component.scss']
 })
-export class MapViewerComponent implements AfterViewInit {
-  @ViewChild('svg') el: ElementRef;
+export class MapViewerComponent implements AfterViewInit, OnChanges {
+  @Input()
+  machines: any[];
+
+  machines$ = new ReplaySubject(1);
+
+  @ViewChild('svg')
+  el: ElementRef;
 
   svg;
   path;
@@ -72,6 +78,12 @@ export class MapViewerComponent implements AfterViewInit {
     const { width, height } = this.el.nativeElement.getBoundingClientRect();
     this.width = width;
     this.height = height;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if ('machines' in changes) {
+      this.machines$.next(changes.machines.currentValue);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -100,89 +112,87 @@ export class MapViewerComponent implements AfterViewInit {
 
     const gBuilding = g.append('g').classed('building', true).call(s => s.append('path'));
 
-    this.assets$.pipe(filter(assets => assets != null)).subscribe(
-      (json: any) => {
-        /* nav changes element size slightly after render, so calculate a bit late */
-        const {width, height} = svg.node().getBoundingClientRect();
-        this.width = width;
-        this.height = height;
+    const assets$ = this.assets$.pipe(filter(assets => assets != null));
 
-        const center = d3.geoCentroid(json);
-        const offset: [number, number] = [this.width / 2, this.height / 2];
+    combineLatest(assets$, this.machines$.pipe(filter(arr => arr != null))).subscribe(([json, machines]: [any, any]) => {
+      /* nav changes element size slightly after render, so calculate a bit late */
+      const {width, height} = svg.node().getBoundingClientRect();
+      this.width = width;
+      this.height = height;
 
-        const buildingFeature = topojson.feature(json, json.objects.building);
+      const machinesMap = machines.reduce((acc, value) => ({...acc, [value.machine_id]: value}), {});
 
-        const buildingZoom = this.calculateZoomTransform(buildingFeature);
+      const center = d3.geoCentroid(json);
+      const offset: [number, number] = [this.width / 2, this.height / 2];
 
-        gBuilding.datum(buildingFeature).select('path').attr('fill', 'none').attr('stroke', 'black').attr('d', path);
+      const buildingFeature = topojson.feature(json, json.objects.building);
 
-        console.log(json);
+      const buildingZoom = this.calculateZoomTransform(buildingFeature);
 
-        const data = Object.entries(json.objects).filter(d => d[0] !== 'cameras' && d[0] !== 'building');
-        //    .map(([id, feat]) => {
-        //      const o = topojson.feature(json, feat);
-        //      const [[ox0, oy0], [ox1, oy1]] = path.bounds(o);
-        //      const [ow, oh] = [ox1 - ox0, oy1 - oy0];
-        //      return [id, o, {x: ox0, y: oy0, width: ow, height: oh}];
-        //    });
+      gBuilding.datum(buildingFeature).select('path').attr('fill', 'none').attr('stroke', 'black').attr('d', path);
 
-        g.selectAll('g.object').data(data, d => d[0]).join(
-          s => s.append('g').classed('object', true)
-            .call(ss => {
-              ss.append('path')
-                .attr('fill', 'none')
-                .attr('stroke', 'black');
-              ss.append('rect').attr('fill', 'transparent');
-              ss.append('circle').attr('fill', 'green');
-            })
-        )
-        .each(function(d: any, i: number) {
-          const s = d3.select(this);
-          const f = topojson.feature(json, d[1]);
-          const [[x, y], [x1, y1]] = path.bounds(f);
-          const [w, h] = [x1 - x, y1 - y];
+      g.selectAll('g.object').data(
+        Object.entries(json.objects).filter(d => d[0] !== 'cameras' && d[0] !== 'building'),
+        d => d[0],
+      ).join(
+        s => s.append('g').classed('object', true)
+          .call(ss => {
+            ss.append('path')
+              .attr('fill', 'none')
+              .attr('stroke', 'black');
+            ss.append('rect').attr('fill', 'transparent');
+            ss.append('circle').attr('fill', 'green');
+          })
+      )
+      .each(function([machineId, geometry]: any, i: number) {
 
-          const [cx, cy] = path.centroid(f);
+        const s = d3.select(this);
+        const f = topojson.feature(json, geometry);
+        const [[x, y], [x1, y1]] = path.bounds(f);
+        const [w, h] = [x1 - x, y1 - y];
 
-          s.select('path').datum(f).attr('d', (dd: any) => path(dd));
-          s.select('circle')
-            .attr('cx', x + w / 2)
-            .attr('cy', y + h / 2)
-            .attr('r', 20)
-            .attr('stroke', 'black')
-            .attr('fill', ['green', 'red', 'yellow', 'blue'][i % 4]);
-          s.select('rect')
-            .attr('width', w)
-            .attr('height', h)
-            .attr('x', x)
-            .attr('y', y);
-        })
-        .on('mouseenter', function(d) {
-          const s = d3.select(this);
-          s.select('path').attr('stroke-width', 4);
-        })
-        .on('mouseleave', function(d) {
-          const s = d3.select(this);
-          s.select('path').attr('stroke-width', null);
-        })
-        .on('click', d => {
-          if (this.lastClicked === d[0]) {
-            // this.dirty$.next(false);
-            this.dirty = false;
-            this.changes.detectChanges();
-            this.lastClicked = '';
-            svg.transition().call(this.zoom.transform, this.calculateZoomTransform(buildingFeature));
-          } else {
-            this.dirty = true;
-            this.changes.detectChanges();
-            this.lastClicked = d[0];
-            svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, d[1]), false));
-          }
-        });
+        const [cx, cy] = path.centroid(f);
 
-        svg.call(this.zoom.transform, buildingZoom);
-      },
-    );
+        const color = getColor(machines, machineId);
+
+        s.select('path').datum(f).attr('d', (dd: any) => path(dd));
+        s.select('circle')
+          .attr('cx', x + w / 2)
+          .attr('cy', y + h / 2)
+          .attr('r', 20)
+          .attr('stroke', 'black')
+          .attr('fill', color);
+        s.select('rect')
+          .attr('width', w)
+          .attr('height', h)
+          .attr('x', x)
+          .attr('y', y);
+      })
+      .on('mouseenter', function(d) {
+        const s = d3.select(this);
+        s.select('path').attr('stroke-width', 4);
+      })
+      .on('mouseleave', function(d) {
+        const s = d3.select(this);
+        s.select('path').attr('stroke-width', null);
+      })
+      .on('click', d => {
+        if (this.lastClicked === d[0]) {
+          // this.dirty$.next(false);
+          this.dirty = false;
+          this.changes.detectChanges();
+          this.lastClicked = '';
+          svg.transition().call(this.zoom.transform, this.calculateZoomTransform(buildingFeature));
+        } else {
+          this.dirty = true;
+          this.changes.detectChanges();
+          this.lastClicked = d[0];
+          svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, d[1]), false));
+        }
+      });
+
+      svg.call(this.zoom.transform, buildingZoom);
+    });
   }
 
   reset() {
@@ -203,4 +213,21 @@ export class MapViewerComponent implements AfterViewInit {
     return z;
   }
 
+}
+
+function getColor(machinesMap, id) {
+  let machineState;
+  if (id in machinesMap) {
+    machineState = machinesMap[id].value;
+  } else {
+    machineState = 'unknown';
+  }
+  switch (machineState) {
+    case 'active': return 'green';
+    case 'unavailable': return 'gray';
+    case 'stopped': return 'red';
+    case 'interrupted': return 'blue';
+    default:
+      return 'gray';
+  }
 }
