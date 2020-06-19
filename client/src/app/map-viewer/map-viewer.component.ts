@@ -1,59 +1,106 @@
-import { HostListener, ViewChild, Component, ElementRef, AfterViewInit } from '@angular/core';
+import { ChangeDetectorRef, HostListener, ViewChild, Component, ElementRef, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { group } from 'd3-array';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
+import { filter, multicast, refCount } from 'rxjs/operators';
+import { animate, trigger, transition, state, style } from '@angular/animations';
 
 @Component({
   selector: 'app-map-viewer',
-  template: `<svg #svg></svg>`,
+  template: `
+  <svg #svg></svg>
+  <div *ngIf="dirty" class="controls" @slideIn>
+    <button mat-flat-button color="primary" (click)="reset()">Reset</button>
+  </div>
+  `,
   styles: [`
   :host {
     display: block;
+    position: relative;
+    overflow: hidden;
   }
   svg {
     width: 100%;
     height: 100%;
+    position: absolute;
+  }
+  .controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
   }
   `],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({transform: 'translateY(200px)'}),
+        animate(200, style({transform: 'translateY(0)'})),
+      ]),
+      transition(':leave', [
+        animate(200, style({transform: 'translateY(200px)'})),
+      ]),
+
+    ]),
+  ],
   styleUrls: ['./map-viewer.component.scss']
 })
 export class MapViewerComponent implements AfterViewInit {
-  @ViewChild('svg') svg: ElementRef;
+  @ViewChild('svg') el: ElementRef;
 
+  svg;
   path;
   width: number;
   height: number;
+  zoom = d3.zoom()
+    .scaleExtent([.01, 2]);
+
+  assets$ = this.http.get('/assets/df_building.json').pipe(
+    multicast(new BehaviorSubject(null)),
+    refCount(),
+  );
+
+  dirty = false;
 
   lastClicked = '';
 
-  constructor(public http: HttpClient) {}
+  constructor(public changes: ChangeDetectorRef, public http: HttpClient) {}
 
   @HostListener('window:resize', ['$event'])
   onResize(event) {
-    const { width, height } = this.svg.nativeElement.getBoundingClientRect();
+    const { width, height } = this.el.nativeElement.getBoundingClientRect();
     this.width = width;
     this.height = height;
   }
 
   ngAfterViewInit(): void {
-    const svg = d3.select(this.svg.nativeElement);
+    const svg = d3.select(this.el.nativeElement);
+    this.svg = svg;
     const path = d3.geoPath().projection(d3.geoIdentity().reflectY(true));
     this.path = path;
 
+    let first = true;
     const g = svg.append('g');
+
     const zoomed = () => {
       g.attr('transform', d3.event.transform);
     };
-    const zoom = d3.zoom()
-      .scaleExtent([.01, 2])
-      .on('zoom', zoomed);
 
-    svg.call(zoom);
+    this.zoom.on('start', () => {
+      if (first) {
+        first = false;
+      } else if (this.dirty === false) {
+        this.dirty = true;
+        this.changes.detectChanges();
+      }
+    }).on('zoom', zoomed);
+
+    svg.call(this.zoom);
 
     const gBuilding = g.append('g').classed('building', true).call(s => s.append('path'));
 
-    this.getAssets().subscribe(
+    this.assets$.pipe(filter(assets => assets != null)).subscribe(
       (json: any) => {
         /* nav changes element size slightly after render, so calculate a bit late */
         const {width, height} = svg.node().getBoundingClientRect();
@@ -120,18 +167,30 @@ export class MapViewerComponent implements AfterViewInit {
         })
         .on('click', d => {
           if (this.lastClicked === d[0]) {
+            // this.dirty$.next(false);
+            this.dirty = false;
+            this.changes.detectChanges();
             this.lastClicked = '';
-            svg.transition().call(zoom.transform, this.calculateZoomTransform(buildingFeature));
+            svg.transition().call(this.zoom.transform, this.calculateZoomTransform(buildingFeature));
           } else {
+            this.dirty = true;
+            this.changes.detectChanges();
             this.lastClicked = d[0];
-            svg.transition().call(zoom.transform, this.calculateZoomTransform(topojson.feature(json, d[1]), false));
+            svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, d[1]), false));
           }
         });
 
-        svg.call(zoom.transform, buildingZoom);
+        svg.call(this.zoom.transform, buildingZoom);
       },
     );
   }
+
+  reset() {
+    const json = (this.assets$.source as any).getSubject().getValue();
+    this.svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, json.objects.building), true));
+    setTimeout(() => this.dirty = false, 500);
+  }
+
   calculateZoomTransform(feature, scale = true) {
     const [[x0, y0], [x1, y1]] = this.path.bounds(feature);
 
@@ -142,10 +201,6 @@ export class MapViewerComponent implements AfterViewInit {
     z = z.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
 
     return z;
-  }
-
-  getAssets() {
-    return this.http.get('/assets/df_building.json');
   }
 
 }
