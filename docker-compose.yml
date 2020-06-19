@@ -11,7 +11,11 @@ services:
     environment:
       - KAFKA_CREATE_TOPICS="input:1:1"
       - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ADVERTISED_PORT=9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+    restart: always
+    volumes:
+      - data:/kafka
 
   # connect kafka to postgres
   connect:
@@ -28,6 +32,59 @@ services:
     build:
       context: .
       dockerfile: docker/serial-monitoring-processor/Dockerfile
+
+  connector0:
+    build:
+      context: .
+      dockerfile: docker/serial-monitoring/Dockerfile
+    environment:
+      - MACHINE_ID=hardinge-gx1600
+      - KAFKA_HOSTS=kafka:9092
+      - ADAPTER_HOST=10.0.0.101:7878
+    restart: always
+    depends_on:
+      - 'kafka'
+
+  connector1:
+    build:
+      context: .
+      dockerfile: docker/serial-monitoring/Dockerfile
+    environment:
+      - MACHINE_ID=samsung-sl45
+      - KAFKA_HOSTS=kafka:9092
+      - ADAPTER_HOST=10.0.0.101:7879
+    restart: always
+    depends_on:
+      - 'kafka'
+
+  connector2:
+    build:
+      context: .
+      dockerfile: docker/serial-monitoring/Dockerfile
+    environment:
+      - MACHINE_ID=doosan-2600sy
+      - KAFKA_HOSTS=kafka:9092
+      - ADAPTER_HOST=10.0.0.101:7880
+    restart: always
+    depends_on:
+      - 'kafka'
+
+  connector3:
+    build:
+      context: .
+      dockerfile: docker/serial-monitoring/Dockerfile
+    environment:
+      - MACHINE_ID=doosan-gt2100m
+      - KAFKA_HOSTS=kafka:9092
+      - ADAPTER_HOST=10.0.0.101:7881
+    restart: always
+    depends_on:
+      - 'kafka'
+
+
+  serial-monitoring:
+    build:
+      context: .
 
   # authentication & authorization server
   server:
@@ -66,7 +123,7 @@ services:
     image: postgres
     volumes:
       - ./sql/:/docker-entrypoint-initdb.d/
-      - db_data:/var/lib/postgresql/data
+      - data:/var/lib/postgresql/data
     ports:
     - "5432:5432"
     environment:
@@ -83,5 +140,5 @@ services:
       - pgadmin:/var/lib/pgadmin
 
 volumes:
-  db_data:
+  data:
   pgadmin:
