@@ -3,11 +3,14 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
     id 'com.google.protobuf' version '0.8.8'
     id 'idea'
-    id "com.github.johnrengelman.shadow" version "5.2.0" // pack into single jar (shadowJar)
+    id 'com.github.johnrengelman.shadow' version '5.2.0' // pack into single jar (shadowJar)
+    id 'application'
 }
 
 group 'org.example'
 version '1.0-SNAPSHOT'
+mainClassName = "main/SerialMonitoringStreamProcessingKt"
+
 
 repositories {
     google()
@@ -67,5 +70,11 @@ compileTestKotlin {
 idea {
     module {
         sourceDirs += file("${projectDir}/src/build/generated/source/main/grpc")
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'main/SerialMonitoringStreamProcessingKt'
     }
 }

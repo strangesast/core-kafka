@@ -7,3 +7,5 @@ docker-compose.yml
 **/__pycache__
 **/*.pyc
 monitoring/monitoring
+docker/
+serial-monitoring-processor/build
