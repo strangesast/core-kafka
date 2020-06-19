@@ -168,7 +168,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   setExpanded(row) {
     this.expanded = this.expanded === row ? null : row;
-    this.expandedData$ = this.getDays(row.employee.id);
+    this.expandedData$ = this.getDays(row.date_start, row.employee.id);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -201,24 +201,23 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     return (+val - +(rel || minDate)) / dateRange * this.totalWidth;
   }
 
-  getDays(employeeId) {
-    const now = new Date();
-    const weekNo = getWeekNumber(now);
-    const n = weekNo % 2 * 7 + now.getDay();
-    const minDate = new Date(now);
+  getDays(ofDate, employeeId) {
+    const weekNo = getWeekNumber(ofDate);
+    const n = weekNo % 2 * 7 + ofDate.getDay();
+
+    const minDate = new Date(ofDate);
     minDate.setDate(minDate.getDate() - n);
+
     const maxDate = new Date(minDate);
     maxDate.setDate(maxDate.getDate() + 14);
     const variables = {minDate, maxDate, employeeId};
 
-
     const days = [];
     const daysData = [];
     {
-      let date = new Date(minDate);
-      const d = date.getDate();
+      const d = minDate.getDate();
       for (let i = 0; i < 14; i++) {
-        date = new Date(date);
+        const date = new Date(minDate);
         date.setDate(d + i);
         const abbr = date.toLocaleDateString('en-us', {weekday: 'short'});
         days.push(`${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)}`);
@@ -241,7 +240,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
           const val = value.reduce((acc, shift) => acc + (+shift.date_stop - +shift.date_start), 0) / 3.6e6;
           total += val;
           daysData[i].value = val;
-          daysData[i].frac = val / 8;
+          daysData[i].frac = Math.min(val / 8, 1.2);
         }
         return {days: daysData, total};
       }),
