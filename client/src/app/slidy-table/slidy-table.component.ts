@@ -5,7 +5,7 @@ import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { group } from 'd3-array';
 import { of, interval, ReplaySubject } from 'rxjs';
-import { delay, startWith, pluck, tap, map, switchMap } from 'rxjs/operators';
+import { delay, startWith, take, pluck, tap, map, switchMap } from 'rxjs/operators';
 
 
 const query = gql`
@@ -24,6 +24,16 @@ const query = gql`
       }
       date_start
       date_stop
+    }
+  }
+`;
+
+const periodSummaryQuery = gql`
+  query MyQuery($minDate: timestamp, $maxDate: timestamp, $employeeId: Int) {
+    timeclock_shifts(where: {_and: {date_start: {_gte: $minDate}, date_stop: {_lt: $maxDate}, employee_id: {_eq: $employeeId}}}) {
+      date_start
+      date_stop
+      date
     }
   }
 `;
@@ -60,23 +70,27 @@ const query = gql`
         </ng-container>
         <ng-container matColumnDef="expandedDetail">
           <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
-            <div class="example-row-detail" [@detailExpand]="row == expanded ? 'expanded' : 'collapsed'">
-              <div class="example-row-diagram">
-                <div class="example-row-position"> {{row.position}} </div>
-                <div class="example-row-symbol"> {{row.symbol}} </div>
-                <div class="example-row-name"> {{row.name}} </div>
-                <div class="example-row-weight"> {{row.weight}} </div>
-              </div>
-              <div class="example-row-description">
-                {{row.description}}
-                <span class="example-row-description-attribution"> -- Wikipedia </span>
-              </div>
+            <div class="detail" [@detailExpand]="row == expanded ? 'expanded' : 'collapsed'">
+              <ng-container *ngIf="expanded === row && expandedData$ | async as data; else loading">
+                <div class="days">
+                  <div class="day" *ngFor="let each of data.days">
+                    <span>{{each.value > 0 ? each.value.toFixed(1) : ''}}</span>
+                    <span class="pill vert" [matTooltip]="each.value.toFixed(2)" [ngStyle]="{'height': (each.frac * 40) + 'px', 'background-color': row.employee.color}"></span>
+                    <div class="label">
+                      <span>{{each.abbr}}</span>
+                      <span>{{each.date | date:'M/d' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div>Total: {{data.total.toFixed(2)}}</div>
+              </ng-container>
+              <ng-template #loading>Loading...</ng-template>
             </div>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <!--(click)="expanded = expanded === row ? null : row"-->
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            (click)="setExpanded(row)"
             class="example-row-row"
             [class.example-expanded-row]="expanded === row">
         </tr>
@@ -97,6 +111,8 @@ const query = gql`
 export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
   displayedColumns = ['name', 'parts', 'start', 'stop', 'total'];
   expanded = null;
+
+  expandedData$ = null;
 
   @Input()
   date: Date = new Date();
@@ -150,6 +166,11 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     public apollo: Apollo,
   ) {}
 
+  setExpanded(row) {
+    this.expanded = this.expanded === row ? null : row;
+    this.expandedData$ = this.getDays(row.employee.id);
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if ('date' in changes) {
       const from = new Date(changes.date.currentValue);
@@ -180,6 +201,53 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     return (+val - +(rel || minDate)) / dateRange * this.totalWidth;
   }
 
+  getDays(employeeId) {
+    const now = new Date();
+    const weekNo = getWeekNumber(now);
+    const n = weekNo % 2 * 7 + now.getDay();
+    const minDate = new Date(now);
+    minDate.setDate(minDate.getDate() - n);
+    const maxDate = new Date(minDate);
+    maxDate.setDate(maxDate.getDate() + 14);
+    const variables = {minDate, maxDate, employeeId};
+
+
+    const days = [];
+    const daysData = [];
+    {
+      let date = new Date(minDate);
+      const d = date.getDate();
+      for (let i = 0; i < 14; i++) {
+        date = new Date(date);
+        date.setDate(d + i);
+        const abbr = date.toLocaleDateString('en-us', {weekday: 'short'});
+        days.push(`${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)}`);
+        daysData.push({date, abbr, frac: 0, value: 0});
+      }
+    }
+
+    return this.apollo.query({query: periodSummaryQuery, variables}).pipe(
+      pluck('data', 'timeclock_shifts'),
+      map((arr: any[]) => arr.map(({date, date_start, date_stop}) => ({
+        date,
+        date_start: new Date(date_start + 'Z'),
+        date_stop: new Date(date_stop + 'Z'),
+      }))),
+      map(arr => {
+        const vals = [];
+        let total = 0;
+        for (const [key, value] of group(arr, d => d.date)) {
+          const i = days.indexOf(key);
+          const val = value.reduce((acc, shift) => acc + (+shift.date_stop - +shift.date_start), 0) / 3.6e6;
+          total += val;
+          daysData[i].value = val;
+          daysData[i].frac = val / 8;
+        }
+        return {days: daysData, total};
+      }),
+    );
+  }
+
   positionShift(shift, color = 'blue') {
     const minDate = new Date(this.date);
     minDate.setHours(0, 0, 0, 0);
@@ -205,4 +273,10 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
 function formatDate(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+function getWeekNumber(date: Date): number {
+  const now = new Date();
+  const onejan = new Date(now.getFullYear(), 0, 1);
+  return Math.ceil( (((+now - +onejan) / 8.64e7) + onejan.getDay() + 1) / 7 );
 }
