@@ -5,30 +5,34 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      - MACHINE_ID=unknown
       - MONGO_URI=mongodb://mongo:27017
       - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=10.0.0.101:7880
+      - ADAPTER_HOST=10.0.0.101:7879
     restart: always
     depends_on:
-      - "kafka"
+      - 'kafka'
   mongo:
     image: 'mongo'
     ports:
-      - "27019:27017"
+      - '27019:27017'
     volumes:
       - data:/data/db
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
-      - "2181:2181"
+      - '2181:2181'
+    restart: always
   kafka:
     image: wurstmeister/kafka
     ports:
-      - "9092:9092"
+      - '9092:9092'
     environment:
-      KAFKA_CREATE_TOPICS: "input:3:1"
+      KAFKA_CREATE_TOPICS: 'input:3:1'
       KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    restart: always
     volumes:
       - data:/kafka
 volumes:

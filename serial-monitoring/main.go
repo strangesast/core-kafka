@@ -57,6 +57,9 @@ func main() {
 	// tcp socket stuff
 	adapterHost := getEnv("ADAPTER_HOST", "localhost:7878")
 
+	machineID := getEnv("MACHINE_ID", "unknown")
+	log.Printf("using MACHINE_ID='%s'\n", machineID)
+
 	var d net.Dialer
 	conn, err := d.DialContext(context.Background(), "tcp", adapterHost)
 	if err != nil {
@@ -89,8 +92,6 @@ func main() {
 		}
 
 		line := strings.TrimSuffix(string(buf), "\n")
-
-		log.Println(line)
 
 		values := strings.Split(line, "|")
 		timestampString, values := values[0], values[1:]
@@ -130,14 +131,15 @@ func main() {
 			// ignore
 		}
 
-		kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(bytes)}
+		kMessage := &sarama.ProducerMessage{Topic: "input", Value: sarama.ByteEncoder(bytes), Key: sarama.StringEncoder(machineID)}
 		// producer.Input() <- kMessage
-		partition, offset, err := producer.SendMessage(kMessage)
+		_, _, err = producer.SendMessage(kMessage)
+		// partition, offset, err := producer.SendMessage(kMessage)
 		if err != nil {
 			log.Println("failed to write message to kafka")
 			// ignore
 		}
-		log.Printf("partition: %d, offset: %d\n", partition, offset)
+		// log.Printf("partition: %d, offset: %d\n", partition, offset)
 	}
 }
 
