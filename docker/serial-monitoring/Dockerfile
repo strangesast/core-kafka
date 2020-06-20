@@ -10,15 +10,15 @@ RUN wget -O /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases
   go get github.com/golang/protobuf/protoc-gen-go
 
 # install go deps
-COPY go.mod go.sum ./
+COPY serial-monitoring/go.mod serial-monitoring/go.sum ./
 RUN go mod download
 
 # generate protoc stuff
-COPY ./serial-monitoring.proto .
+COPY ./serial-monitoring/serial-monitoring.proto .
 RUN mkdir proto && \
   protoc --go_out=plugins=grpc:proto ./serial-monitoring.proto
 
-COPY . .
+COPY serial-monitoring/ .
 RUN mkdir /build && go build -o /build .
 
 FROM golang

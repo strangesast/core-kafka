@@ -203,7 +203,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   getDays(ofDate, employeeId) {
     const weekNo = getWeekNumber(ofDate);
-    const n = weekNo % 2 * 7 + ofDate.getDay();
+    const n = (weekNo + 1) % 2 * 7 + ofDate.getDay();
 
     const minDate = new Date(ofDate);
     minDate.setDate(minDate.getDate() - n);
