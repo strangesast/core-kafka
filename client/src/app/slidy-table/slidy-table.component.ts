@@ -4,6 +4,7 @@ import {
   Component,
   SimpleChanges,
   Input,
+  OnDestroy,
   OnChanges,
   OnInit,
   ViewChild,
@@ -16,18 +17,22 @@ import {
   trigger,
 } from '@angular/animations';
 import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatTableDataSource } from '@angular/material/table';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { group } from 'd3-array';
-import { of, interval, ReplaySubject } from 'rxjs';
+import { Observable, of, Subject, interval, ReplaySubject } from 'rxjs';
 import {
   delay,
+  takeUntil,
   map,
   pluck,
   startWith,
   switchMap,
   take,
   tap,
+  multicast,
+  refCount,
 } from 'rxjs/operators';
 
 
@@ -67,7 +72,7 @@ const periodSummaryQuery = gql`
   template: `
   <div class="container" cdkScrollable>
     <div class="table-container">
-      <table mat-table [dataSource]="rows$" multiTemplateDataRows>
+      <table mat-table [dataSource]="dataSource" [trackBy]="trackByFn" multiTemplateDataRows>
         <ng-container matColumnDef="name" sticky>
           <th mat-header-cell *matHeaderCellDef> Name </th>
           <td mat-cell *matCellDef="let row">
@@ -98,7 +103,10 @@ const periodSummaryQuery = gql`
         </ng-container>
         <ng-container matColumnDef="total" stickyEnd>
           <th mat-header-cell *matHeaderCellDef> Total </th>
-          <td mat-cell *matCellDef="let row"> {{row.duration | async | duration:'h:mm:ss'}} </td>
+          <td mat-cell *matCellDef="let row">
+            <span *ngIf="row.duration != null; else dur">{{row.duration | duration:'h:mm:ss'}}</span>
+            <ng-template #dur>{{getDuration(row.date_start) | async | duration:'h:mm:ss'}}</ng-template>
+          </td>
         </ng-container>
         <ng-container matColumnDef="expandedDetail">
           <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
@@ -148,7 +156,7 @@ const periodSummaryQuery = gql`
     ]),
   ],
 })
-export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
+export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   displayedColumns = ['name', 'parts', 'start', 'stop', 'total'];
   expanded = null;
 
@@ -171,61 +179,19 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     })()),
     startWith(null),
     map(() => new Date()),
+    multicast(new ReplaySubject(1)),
+    refCount(),
   );
 
   range$ = new ReplaySubject(1);
 
   range;
 
-  rows$ = this.date$.pipe(
-    switchMap(date => this.apollo.query({ query, variables: {date}})),
-    pluck('data', 'timeclock_shift_groups'),
-    map((arr: any[]) => {
-      let minDate;
-      let maxDate;
+  dataSource = new MatTableDataSource();
 
-      const records = [];
-      for (const record of arr) {
-        const {employee, date_start: d0, date_stop: d1} = record;
-        const shifts = record.shifts.map(({id, date_start: a, date_stop: b}) => ({
-          id,
-          date_start: a && new Date(a + 'Z'),
-          date_stop: b && new Date(b + 'Z'),
-        }));
-        let base = shifts.reduce((acc, {date_start: a, date_stop: b}) => b ? b - a + acc : acc, 0);
-        let duration;
+  destroyed$ = new Subject();
 
-        const dateStart = d0 && new Date(d0 + 'Z');
-        const dateStop = d1 && new Date(d1 + 'Z');
-
-        if (dateStop != null) {
-          duration = of(base);
-        } else {
-          base -= +shifts[shifts.length - 1].date_start;
-          duration = this.clock$.pipe(map(now => +now + base));
-        }
-
-        if (!minDate || dateStart < minDate) {
-          minDate = dateStart;
-        }
-        if (!maxDate || dateStop > maxDate) {
-          maxDate = dateStop;
-        }
-        records.push({
-          employee,
-          duration,
-          shifts,
-          date_start: dateStart,
-          date_stop: dateStop,
-        });
-      }
-      if (maxDate == null) {
-        maxDate = new Date();
-      }
-      this.range = [minDate, maxDate, +maxDate - +minDate];
-      return records;
-    }),
-  );
+  trackByFn = (row) => row.id;
 
   constructor(
     public apollo: Apollo,
@@ -246,7 +212,55 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  ngOnDestroy() {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
   ngOnInit(): void {
+    this.date$.pipe(
+      switchMap(date => this.apollo.query({ query, variables: {date}})),
+      pluck('data', 'timeclock_shift_groups'),
+      map((arr: any[]) => {
+        let minDate;
+        let maxDate;
+
+        const records = [];
+        for (const record of arr) {
+          const {employee, date_start: d0, date_stop: d1} = record;
+          const shifts = record.shifts.map(({id, date_start: a, date_stop: b}) => ({
+            id,
+            date_start: a && new Date(a + 'Z'),
+            date_stop: b && new Date(b + 'Z'),
+          }));
+
+          const dateStart = d0 && new Date(d0 + 'Z');
+          const dateStop = d1 && new Date(d1 + 'Z');
+          const duration = dateStop != null ? shifts.reduce((acc, {date_start: a, date_stop: b}) => b ? b - a + acc : acc, 0) : null;
+
+          // set range
+          if (!minDate || dateStart < minDate) {
+            minDate = dateStart;
+          }
+          if (!maxDate || dateStop > maxDate) {
+            maxDate = dateStop;
+          }
+          records.push({
+            employee,
+            duration,
+            shifts,
+            date_start: dateStart,
+            date_stop: dateStop,
+          });
+        }
+        if (maxDate == null) {
+          maxDate = new Date();
+        }
+        this.range = [minDate, maxDate, +maxDate - +minDate];
+        return records;
+      }),
+      takeUntil(this.destroyed$),
+    ).subscribe(data => this.dataSource.data = data);
   }
 
   ngAfterViewInit() {
@@ -311,6 +325,10 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
         return {days: daysData, total};
       }),
     );
+  }
+
+  getDuration(dateStart: Date) {
+    return this.clock$.pipe(map(date => +date - +dateStart));
   }
 
   positionShift(shift, color = 'blue') {

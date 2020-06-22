@@ -55,7 +55,6 @@ export class UserService {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
 
-        console.log(this.apollo);
         return from(this.apollo.getClient().resetStore()).pipe(exhaustMap(() =>
           this.getUser(user.id).pipe(tap(fullUser => {
             this.store.dispatch(login({user: fullUser, token}));
@@ -69,7 +68,6 @@ export class UserService {
   getUser(userId: number): Observable<User> {
     return this.apollo.query({query: OneUserQuery, variables: {id: userId}}).pipe(
       map((result: any) => {
-        console.log('result', result);
         return result.data.users_by_pk;
         // const {color, email, user_roles, username, id} = ;
         // const roles = user_roles.reduce((acc, {role}) => ({...acc, [role.id]: role}), {});

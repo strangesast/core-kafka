@@ -137,64 +137,6 @@ fun main() {
         .to("filtered", Produced.with(Serdes.String(), Serdes.ByteArray()))
     */
 
-
-
-    /*
-    val schema = ConnectSchema(
-            "struct",
-            listOf(
-                    ConnectSchemaField(
-                            "string",
-                            true,
-                            "timestamp"
-                    ),
-                    ConnectSchemaField(
-                            "string",
-                            true,
-                            "key"
-                    ),
-                    ConnectSchemaField(
-                            "string",
-                            true,
-                            "value"
-                    )
-            ),
-            false,
-            "sample"
-    )
-
-    val schema1 = ConnectSchema(
-            "struct",
-            listOf(
-                    ConnectSchemaField(
-                            "string",
-                            true,
-                            "timestamp"
-                    ),
-                    ConnectSchemaField(
-                            "string",
-                            true,
-                            "value"
-                    )
-            ),
-            false,
-            "execution"
-    )
-
-    val schema2 = ConnectSchema(
-            "struct",
-            listOf(
-                    ConnectSchemaField(
-                            "json",
-                            true,
-                            "properties"
-                    )
-            ),
-            false,
-            "machine_state"
-    )
-    */
-
     // key categories
 
 

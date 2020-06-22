@@ -30,6 +30,7 @@ section {
     }
     &.editing {
       input {
+        max-width: 200px;
         &[type="text"], &[type="email"], &[type="number"] {
           border: 1px solid lightgrey;
         }

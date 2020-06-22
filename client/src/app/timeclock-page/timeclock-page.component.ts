@@ -27,6 +27,7 @@ import { MatPaginator } from '@angular/material/paginator';
     <form [formGroup]="form">
       <app-timeclock-datepicker formControlName="date" [max]="getMaxDate()"></app-timeclock-datepicker>
     </form>
+    <!--
     <mat-button-toggle-group [(ngModel)]="activeView">
       <mat-button-toggle value="timeline" aria-label="Timeline" title="Timeline">
         <mat-icon>clear_all</mat-icon>
@@ -35,6 +36,7 @@ import { MatPaginator } from '@angular/material/paginator';
         <mat-icon>list</mat-icon>
       </mat-button-toggle>
     </mat-button-toggle-group>
+    -->
   </div>
   <app-slidy-table [date]="date$ | async"></app-slidy-table>
   `,

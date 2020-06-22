@@ -20,11 +20,16 @@ import { UserService } from '../user.service';
               <app-notification-list [notifications]="notifications$ | async"></app-notification-list>
             </li>
             <li>
-              <button mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu">
+              <button matTooltip="Logged in as {{userData.user.username}}" mat-icon-button aria-label="User settings" [matMenuTriggerFor]="menu">
                 <app-user-badge [color]="userData.user.color" [initials]="initials$ | async"></app-user-badge>
               </button>
               <mat-menu #menu="matMenu" xPosition="before">
-                <a mat-menu-item [routerLink]="['/timesheet']" *ngIf="userService.hasRole(userData.user, 'isPaidHourly')"><mat-icon>assignment</mat-icon><span>Your timesheet</span></a>
+                <a
+                  mat-menu-item
+                  [routerLink]="['/timesheet']"
+                  *ngIf="userService.hasRole(userData.user, 'isPaidHourly')">
+                  <mat-icon>assignment</mat-icon><span>Your timesheet</span>
+                </a>
                 <a mat-menu-item [routerLink]="['/settings']"><mat-icon>settings</mat-icon><span>Account Settings</span></a>
                 <button mat-menu-item (click)="logout()"><mat-icon>exit_to_app</mat-icon><span>Log out</span></button>
               </mat-menu>
