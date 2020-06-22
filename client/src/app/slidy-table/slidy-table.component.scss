@@ -14,11 +14,16 @@
 }
 
 .table-container, table {
-  width: 100%;
+  min-width: 100%;
+}
+
+table {
+  table-layout:fixed
 }
 
 .mat-column-name {
   white-space: nowrap;
+  width: 140px;
   a {
     color: inherit;
     text-decoration: none;
@@ -26,14 +31,13 @@
       text-decoration: underline;
     }
   }
-  // width: 140px;
-  // min-width: 140px;
 }
 
 .mat-column-total,
 .mat-column-start,
 .mat-column-stop {
-  min-width: 80px;
+  min-width: 92px;
+  width: 92px;
   white-space: nowrap;
   text-align: center;
 }
@@ -140,7 +144,6 @@ tr.example-row-row:not(.example-expanded-row):active {
   position: relative;
   height: 40px;
   box-sizing: border-box;
-  margin: 0 8px;
   & > span {
     top: 8px;
     height: 24px;

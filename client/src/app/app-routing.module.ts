@@ -34,6 +34,7 @@ import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-pa
 // guards
 import { InitGuard } from './init.guard';
 import { RolesGuard } from './roles.guard';
+import { PersonPageGuard } from './person-page.guard';
 
 
 const routes: Routes = [
@@ -46,7 +47,12 @@ const routes: Routes = [
     {path: 'orders/historical', component: OrderListPageComponent},
     {path: 'orders/:id', component: OrderPageComponent},
     {path: 'people', component: PersonListPageComponent},
-    {path: 'people/:id', component: PersonPageComponent},
+    {
+      path: 'people/:id',
+      component: PersonPageComponent,
+      canActivate: [PersonPageGuard],
+      resolve: {data: PersonPageGuard},
+    },
     {path: 'customers', component: CustomerListPageComponent},
     {path: 'customers/:id', component: CustomerPageComponent},
     {path: 'inventory', component: InventoryPageComponent},
@@ -88,6 +94,7 @@ const routes: Routes = [
   ]},
   {path: 'timeclock/full', component: TimeclockFullPageComponent},
   {path: 'forbidden', component: ForbiddenPageComponent},
+  {path: 'not-found', component: NotFoundPageComponent},
   {path: '**', component: NotFoundPageComponent},
 ];
 

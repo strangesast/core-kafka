@@ -1,92 +1,94 @@
 version: '3.7'
 services:
-  zookeeper:
-    image: wurstmeister/zookeeper
-    ports:
-      - "2181:2181"
-  kafka:
-    image: wurstmeister/kafka
-    ports:
-      - "9092:9092"
-    environment:
-      - KAFKA_CREATE_TOPICS="input:1:1"
-      - KAFKA_ADVERTISED_HOST_NAME=kafka
-      - KAFKA_ADVERTISED_PORT=9092
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-    restart: always
-    volumes:
-      - data:/kafka
+#  zookeeper:
+#    image: wurstmeister/zookeeper
+#    ports:
+#      - "2181:2181"
+#  kafka:
+#    image: wurstmeister/kafka
+#    ports:
+#      - "9093:9092"
+#    environment:
+#      KAFKA_CREATE_TOPICS: "input:1:1"
+#      KAFKA_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9093
+#      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9093
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+#      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#    restart: always
+#    volumes:
+#      - kafka_data:/kafka
 
-  # connect kafka to postgres
-  connect:
-    image: strangesast/core_connect
-    build:
-      context: .
-      dockerfile: docker/kafka-connect/Dockerfile
-
-  # facilitate timeclock polling
-  celery:
-    image: python:3
-
-  # read machine data
-  serial-monitoring-processor:
-    image: strangesast/core_serial-monitoring-processor
-    build:
-      context: .
-      dockerfile: docker/serial-monitoring-processor/Dockerfile
-
-  connector0:
-    image: strangesast/core_connector
-    build:
-      context: .
-      dockerfile: docker/serial-monitoring/Dockerfile
-    environment:
-      - MACHINE_ID=hardinge-gx1600
-      - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=10.0.0.101:7878
-    restart: always
-    depends_on:
-      - 'kafka'
-
-  connector1:
-    image: strangesast/core_connector
-    build:
-      context: .
-      dockerfile: docker/serial-monitoring/Dockerfile
-    environment:
-      - MACHINE_ID=samsung-sl45
-      - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=10.0.0.101:7879
-    restart: always
-    depends_on:
-      - 'kafka'
-
-  connector2:
-    image: strangesast/core_connector
-    build:
-      context: .
-      dockerfile: docker/serial-monitoring/Dockerfile
-    environment:
-      - MACHINE_ID=doosan-2600sy
-      - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=10.0.0.101:7880
-    restart: always
-    depends_on:
-      - 'kafka'
-
-  connector3:
-    image: strangesast/core_connector
-    build:
-      context: .
-      dockerfile: docker/serial-monitoring/Dockerfile
-    environment:
-      - MACHINE_ID=doosan-gt2100m
-      - KAFKA_HOSTS=kafka:9092
-      - ADAPTER_HOST=10.0.0.101:7881
-    restart: always
-    depends_on:
-      - 'kafka'
-
+#  # connect kafka to postgres
+#  connect:
+#    image: strangesast/core_connect
+#    build:
+#      context: .
+#      dockerfile: docker/kafka-connect/Dockerfile
+#
+#  # facilitate timeclock polling
+#  celery:
+#    image: python:3
+#
+#  # read machine data
+#  serial-monitoring-processor:
+#    image: strangesast/core_serial-monitoring-processor
+#    build:
+#      context: .
+#      dockerfile: docker/serial-monitoring-processor/Dockerfile
+#
+#  connector0:
+#    image: strangesast/core_connector
+#    build:
+#      context: .
+#      dockerfile: docker/serial-monitoring/Dockerfile
+#    environment:
+#      - MACHINE_ID=hardinge-gx1600
+#      - KAFKA_HOSTS=kafka:9092
+#      - ADAPTER_HOST=10.0.0.101:7878
+#    restart: always
+#    depends_on:
+#      - 'kafka'
+#
+#  connector1:
+#    image: strangesast/core_connector
+#    build:
+#      context: .
+#      dockerfile: docker/serial-monitoring/Dockerfile
+#    environment:
+#      - MACHINE_ID=samsung-sl45
+#      - KAFKA_HOSTS=kafka:9092
+#      - ADAPTER_HOST=10.0.0.101:7879
+#    restart: always
+#    depends_on:
+#      - 'kafka'
+#
+#  connector2:
+#    image: strangesast/core_connector
+#    build:
+#      context: .
+#      dockerfile: docker/serial-monitoring/Dockerfile
+#    environment:
+#      - MACHINE_ID=doosan-2600sy
+#      - KAFKA_HOSTS=kafka:9092
+#      - ADAPTER_HOST=10.0.0.101:7880
+#    restart: always
+#    depends_on:
+#      - 'kafka'
+#
+#  connector3:
+#    image: strangesast/core_connector
+#    build:
+#      context: .
+#      dockerfile: docker/serial-monitoring/Dockerfile
+#    environment:
+#      - MACHINE_ID=doosan-gt2100m
+#      - KAFKA_HOSTS=kafka:9092
+#      - ADAPTER_HOST=10.0.0.101:7881
+#    restart: always
+#    depends_on:
+#      - 'kafka'
+#
   # authentication & authorization server
   server:
     image: strangesast/core_server
@@ -97,16 +99,16 @@ services:
       - "3001:80"
     environment:
       NODE_CONFIG: '{"secret":"secretSECRETsecretSECRETsecretSECRET", "port": 80, "postgres": {"connectionString": "postgres://postgres:password@postgres:5432/development"}}'
-
-  # main angular application
-  client:
-    image: strangesast/core_client
-    build:
-      context: .
-      dockerfile: docker/client/Dockerfile
-    ports:
-      - "8081:80"
-
+#
+#  # main angular application
+#  client:
+#    image: strangesast/core_client
+#    build:
+#      context: .
+#      dockerfile: docker/client/Dockerfile
+#    ports:
+#      - "8081:80"
+#
   # graphql server
   graphql-engine:
     image: hasura/graphql-engine
@@ -128,7 +130,7 @@ services:
     image: postgres
     volumes:
       - ./sql/:/docker-entrypoint-initdb.d/
-      - data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     ports:
     - "5432:5432"
     environment:
@@ -142,8 +144,9 @@ services:
       - PGADMIN_DEFAULT_EMAIL=admin
       - PGADMIN_DEFAULT_PASSWORD=password
     volumes:
-      - pgadmin:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
-  data:
-  pgadmin:
+  db_data:
+  kafka_data:
+  pgadmin_data:

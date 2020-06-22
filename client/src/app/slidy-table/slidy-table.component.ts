@@ -1,11 +1,34 @@
-import { AfterViewInit, ViewChild, OnChanges, SimpleChanges, Input, Component, OnInit } from '@angular/core';
-import { trigger, state, animate, transition, style } from '@angular/animations';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  SimpleChanges,
+  Input,
+  OnChanges,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import {
+  animate,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
 import { CdkScrollable } from '@angular/cdk/scrolling';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { group } from 'd3-array';
 import { of, interval, ReplaySubject } from 'rxjs';
-import { delay, startWith, take, pluck, tap, map, switchMap } from 'rxjs/operators';
+import {
+  delay,
+  map,
+  pluck,
+  startWith,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs/operators';
 
 
 const query = gql`
@@ -40,19 +63,28 @@ const periodSummaryQuery = gql`
 
 @Component({
   selector: 'app-slidy-table',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
   <div class="container" cdkScrollable>
     <div class="table-container">
       <table mat-table [dataSource]="rows$" multiTemplateDataRows>
         <ng-container matColumnDef="name" sticky>
           <th mat-header-cell *matHeaderCellDef> Name </th>
-          <td mat-cell *matCellDef="let row"> <a [routerLink]="['/people', row.employee.id]">{{row.employee.first_name}} {{row.employee.last_name}}</a> </td>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/people', row.employee.id]">
+            {{row.employee.first_name}} {{row.employee.last_name}}
+            </a>
+          </td>
         </ng-container>
         <ng-container matColumnDef="parts">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let row">
             <div [ngStyle]="{'min-width.px': totalWidth, 'overflow': 'hidden'}" class="blocks">
-              <span *ngFor="let shift of row.shifts" matTooltip="{{shift.date_start | date:'short'}} - {{shift.date_stop | date:'shortTime'}}" [ngStyle]="positionShift(shift, row.employee.color)"></span>
+              <span
+                *ngFor="let shift of row.shifts; ngForTrackBy: trackBy"
+                matTooltip="{{shift.date_start | date:'short'}} - {{shift.date_stop | date:'shortTime'}}"
+                [ngStyle]="positionShift(shift, row.employee.color)">
+              </span>
             </div>
           </td>
         </ng-container>
@@ -75,7 +107,11 @@ const periodSummaryQuery = gql`
                 <div class="days">
                   <div class="day" *ngFor="let each of data.days">
                     <span>{{each.value > 0 ? each.value.toFixed(1) : ''}}</span>
-                    <span class="pill vert" [matTooltip]="each.value.toFixed(2)" [ngStyle]="{'height': (each.frac * 40) + 'px', 'background-color': row.employee.color}"></span>
+                    <span
+                      class="pill vert"
+                      [matTooltip]="each.value.toFixed(2)"
+                      [ngStyle]="{'height': (each.frac * 40) + 'px', 'background-color': row.employee.color}">
+                    </span>
                     <div class="label">
                       <span>{{each.abbr}}</span>
                       <span>{{each.date | date:'M/d' }}</span>
@@ -94,7 +130,11 @@ const periodSummaryQuery = gql`
             class="example-row-row"
             [class.example-expanded-row]="expanded === row">
         </tr>
-        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: ['expandedDetail']"
+          class="example-detail-row">
+        </tr>
       </table>
     </div>
   </div>
@@ -117,6 +157,8 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
   @Input()
   date: Date = new Date();
 
+  date$ = new ReplaySubject(1);
+
   @ViewChild(CdkScrollable)
   scroller: CdkScrollable;
 
@@ -133,38 +175,63 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
   range$ = new ReplaySubject(1);
 
-  rows$ = this.range$.pipe(
-    map(([from, to]) => formatDate(from)),
+  range;
+
+  rows$ = this.date$.pipe(
     switchMap(date => this.apollo.query({ query, variables: {date}})),
     pluck('data', 'timeclock_shift_groups'),
-    map((arr: any[]) => arr.map(record => {
-      const {employee, date_start, date_stop} = record;
-      const shifts = record.shifts.map(({id, date_start: a, date_stop: b}) => ({
-        id,
-        date_start: a && new Date(a + 'Z'),
-        date_stop: b && new Date(b + 'Z'),
-      }));
-      let base = shifts.reduce((acc, {date_start: a, date_stop: b}) => b ? b - a + acc : acc, 0);
-      let duration;
-      if (date_stop != null) {
-        duration = of(base);
-      } else {
-        base -= +shifts[shifts.length - 1].date_start;
-        duration = this.clock$.pipe(map(now => +now + base));
+    map((arr: any[]) => {
+      let minDate;
+      let maxDate;
+
+      const records = [];
+      for (const record of arr) {
+        const {employee, date_start: d0, date_stop: d1} = record;
+        const shifts = record.shifts.map(({id, date_start: a, date_stop: b}) => ({
+          id,
+          date_start: a && new Date(a + 'Z'),
+          date_stop: b && new Date(b + 'Z'),
+        }));
+        let base = shifts.reduce((acc, {date_start: a, date_stop: b}) => b ? b - a + acc : acc, 0);
+        let duration;
+
+        const dateStart = d0 && new Date(d0 + 'Z');
+        const dateStop = d1 && new Date(d1 + 'Z');
+
+        if (dateStop != null) {
+          duration = of(base);
+        } else {
+          base -= +shifts[shifts.length - 1].date_start;
+          duration = this.clock$.pipe(map(now => +now + base));
+        }
+
+        if (!minDate || dateStart < minDate) {
+          minDate = dateStart;
+        }
+        if (!maxDate || dateStop > maxDate) {
+          maxDate = dateStop;
+        }
+        records.push({
+          employee,
+          duration,
+          shifts,
+          date_start: dateStart,
+          date_stop: dateStop,
+        });
       }
-      return {
-        employee,
-        duration,
-        shifts,
-        date_start: date_start && new Date(date_start + 'Z'),
-        date_stop: date_stop && new Date(date_stop + 'Z'),
-      };
-    })),
+      if (maxDate == null) {
+        maxDate = new Date();
+      }
+      this.range = [minDate, maxDate, +maxDate - +minDate];
+      return records;
+    }),
   );
 
   constructor(
     public apollo: Apollo,
   ) {}
+
+  trackBy = (s) => s.id;
 
   setExpanded(row) {
     this.expanded = this.expanded === row ? null : row;
@@ -175,9 +242,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
     if ('date' in changes) {
       const from = new Date(changes.date.currentValue);
       from.setHours(0, 0, 0, 0);
-      const to = new Date(from);
-      to.setDate(to.getDate() + 1);
-      this.range$.next([from, to]);
+      this.date$.next(from);
     }
   }
 
@@ -214,6 +279,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
 
     const days = [];
     const daysData = [];
+
     {
       const d = minDate.getDate();
       for (let i = 0; i < 14; i++) {
@@ -248,30 +314,15 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   positionShift(shift, color = 'blue') {
-    const minDate = new Date(this.date);
-    minDate.setHours(0, 0, 0, 0);
+    const [minDate, maxDate, dateRange] = this.range;
 
-    let maxDate = new Date(minDate);
-    maxDate.setDate(minDate.getDate() + 1);
-    maxDate.setHours(6, 0, 0, 0);
+    const [a, b, c] = [shift.date_start, shift.date_stop || new Date(), minDate].map(s => +s);
 
-    const now = new Date();
-    if (now < maxDate) {
-      maxDate = now;
-    }
-
-    const dateRange = +maxDate - +minDate;
-
-    const left = (+shift.date_start - +minDate) / dateRange * 100 + '%'; //  * this.totalWidth;
-
-    const width = ((+(shift.date_stop || new Date()) - +shift.date_start) / dateRange) * 100 + '%'; //  * this.totalWidth;
+    const left = (a - c) / dateRange * 100 + '%';
+    const width = (b - a) / dateRange * 100 + '%';
 
     return {left, width, 'background-color': color};
   }
-}
-
-function formatDate(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
 function getWeekNumber(date: Date): number {

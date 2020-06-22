@@ -75,6 +75,6 @@ idea {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'main/SerialMonitoringStreamProcessingKt'
+        attributes 'Main-Class': mainClassName
     }
 }

@@ -1,10 +1,11 @@
 import { ViewChild, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { Observable, of, interval } from 'rxjs';
-import { withLatestFrom, startWith, switchMap, map, tap, pluck } from 'rxjs/operators';
+import { first, skip, withLatestFrom, startWith, switchMap, map, tap, pluck } from 'rxjs/operators';
 import { group } from 'd3-array';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -84,19 +85,37 @@ export class TimeclockPageComponent implements OnInit {
     }),
   );
 
-  constructor(public apollo: Apollo, public fb: FormBuilder) {
+  constructor(public apollo: Apollo, public fb: FormBuilder, public route: ActivatedRoute, public router: Router) {
     this.dataSource = new MatTableDataSource(this.data);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     this.form = this.fb.group({
-      date: [today],
+      date: [],
     });
 
-    this.date$ = this.form.valueChanges.pipe(
-      startWith(this.form.value),
+    const qp$ = this.route.queryParams;
+
+    this.date$ = qp$.pipe(
       pluck('date'),
+      map(s => {
+        if (s != null) {
+          const [yyyy, mm, dd] = s.split('-').map(ss => parseInt(ss, 10));
+          return new Date(yyyy, mm - 1, dd);
+        } else {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return today;
+        }
+      }),
     );
+
+    this.date$.pipe(first()).subscribe(date => this.form.patchValue({date}));
+
+    this.form.valueChanges.pipe(
+      pluck('date'),
+      map(date => ({date: [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-')})),
+    ).subscribe(queryParams => {
+      this.router.navigate([], {relativeTo: route, queryParams, queryParamsHandling: 'merge'});
+    });
 
     this.range$ = this.date$.pipe(
       map(date => {

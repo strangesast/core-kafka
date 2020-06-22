@@ -179,6 +179,25 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
     misc_3                 json
   );
 
+  create table notifications (
+    id                integer generated always as identity primary key,
+    deleted           boolean,
+    deleted_on        timestamp,  
+    title             text,
+    description       text,
+    concerning_shifts integer[]
+  );
+
+  create table user_notifications (
+    user_id         integer NOT NULL,
+    notification_id integer NOT NULL,
+    read            boolean,
+    read_on         timestamp,
+  	PRIMARY KEY (user_id, notification_id),
+  	FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (notification_id) REFERENCES notifications (id),
+  );
+
   CREATE TABLE machine_data (
     date timestamp,
     sequence integer,
