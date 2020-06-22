@@ -103,10 +103,7 @@ const periodSummaryQuery = gql`
         </ng-container>
         <ng-container matColumnDef="total" stickyEnd>
           <th mat-header-cell *matHeaderCellDef> Total </th>
-          <td mat-cell *matCellDef="let row">
-            <span *ngIf="row.duration != null; else dur">{{row.duration | duration:'h:mm:ss'}}</span>
-            <ng-template #dur>{{getDuration(row.date_start) | async | duration:'h:mm:ss'}}</ng-template>
-          </td>
+          <td mat-cell *matCellDef="let row">{{getDuration(row.duration, row.date_start) | async | duration:'h:mm:ss'}}</td>
         </ng-container>
         <ng-container matColumnDef="expandedDetail">
           <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
@@ -219,7 +216,7 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, On
 
   ngOnInit(): void {
     this.date$.pipe(
-      switchMap(date => this.apollo.query({ query, variables: {date}})),
+      switchMap(date => this.apollo.watchQuery({ query, variables: {date}}).valueChanges),
       pluck('data', 'timeclock_shift_groups'),
       map((arr: any[]) => {
         let minDate;
@@ -242,7 +239,9 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, On
           if (!minDate || dateStart < minDate) {
             minDate = dateStart;
           }
-          if (!maxDate || dateStop > maxDate) {
+          if (dateStop == null) {
+            maxDate = new Date();
+          } else if (!maxDate || dateStop > maxDate) {
             maxDate = dateStop;
           }
           records.push({
@@ -327,8 +326,12 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, On
     );
   }
 
-  getDuration(dateStart: Date) {
-    return this.clock$.pipe(map(date => +date - +dateStart));
+  getDuration(duration: number, dateStart: Date) {
+    if (duration != null) {
+      return of(duration);
+    } else {
+      return this.clock$.pipe(map(date => +date - +dateStart));
+    }
   }
 
   positionShift(shift, color = 'blue') {

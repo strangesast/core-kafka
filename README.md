@@ -40,3 +40,9 @@
 ## User, Part, Customer, & Others
 - Manage these objects
 - Print things (labels, routers, hot-jobs tables)
+
+# Notes
+### Build Multiplatform
+```
+docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/386 -t strangesast/core_connector -f docker/serial-monitoring/Dockerfile --push .
+```

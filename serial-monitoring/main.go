@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -23,7 +24,7 @@ var (
 
 func main() {
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
 	// kafka stuff
 	kafkaVersion, err := sarama.ParseKafkaVersion(getEnv("KAFKA_VERSION", "2.4.1"))
@@ -58,6 +59,18 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	defer cancel()
+
+	// if interrupted, cancel
+	go func() {
+		select {
+		case <-signals:
+			fmt.Println("cancelling...")
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
 	conn, err := d.DialContext(context.Background(), "tcp", adapterHost)
 	if err != nil {
 		log.Fatalf("Failed to dial: %v", err)
@@ -66,8 +79,11 @@ func main() {
 
 	ticker := time.NewTicker(10 * time.Second) // mtconnect requires PING at some frequency
 
-	lines := make(chan string, 100)
+	lines := make(chan string, 100) // buffer a few lines
 
+	var cnt int
+
+	// send heartbeat ping
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -82,32 +98,21 @@ func main() {
 		}
 	}()
 
+	// read from successes (unnecessary)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for {
 			select {
 			case <-producer.Successes():
-				fmt.Println("sent message to producer")
+				cnt++
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case err := <-producer.Errors():
-				log.Println(err)
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
+	// read from lines channel, send to kafka
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -118,21 +123,28 @@ func main() {
 				producer.AsyncClose()
 				return
 			case line := <-lines:
-				fmt.Printf("got line: %s\n", line)
-
 				message = &sarama.ProducerMessage{
 					Topic: "input-text",
 					Value: sarama.StringEncoder(line),
 					Key:   sarama.StringEncoder(machineID),
 				}
 				producer.Input() <- message
+			case err := <-producer.Errors():
+				log.Printf("err: %v", err)
 			}
 		}
 	}()
 
+	// wait for ctx to close, and close connection
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		<-ctx.Done()
+		conn.Close()
+	}()
+
+	// read lines from connection, send to channel
+	go func() {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -154,7 +166,9 @@ func main() {
 			lines <- line
 		}
 
-		if err := scanner.Err(); err != nil {
+		if ctx.Err() != nil {
+			return
+		} else if err := scanner.Err(); err != nil {
 			log.Fatalf("failed to read from connection: %v", err)
 			cancel()
 		}
