@@ -1,16 +1,9 @@
 package main
 
 import com.google.gson.Gson
-import com.google.protobuf.InvalidProtocolBufferException
-import com.google.protobuf.Message
-import com.google.protobuf.Parser
 import com.google.protobuf.Timestamp
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.errors.SerializationException
-import org.apache.kafka.common.serialization.Deserializer
-import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
-import org.apache.kafka.common.serialization.Serializer
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
@@ -19,8 +12,8 @@ import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
 import org.slf4j.LoggerFactory
 import proto.SerialMonitoring
-import java.lang.NumberFormatException
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
@@ -48,7 +41,7 @@ fun main() {
     logger.info("starting...")
 
     val input = builder
-            .stream("input", Consumed.with(Serdes.String(), Serdes.ByteArray()))
+            .stream("input-text", Consumed.with(Serdes.String(), Serdes.String()))
             .flatTransform(TransformerSupplier { SampleTransformer() })
 
     /*
@@ -198,26 +191,26 @@ fun main() {
             KeyValue("", gson.toJson(ConnectSchemaAndPayload(ConnectSchema(
                     "struct",
                     listOf(
-                        ConnectSchemaField(
-                            "string",
-                            false,
-                            "machine_id"
-                        ),
-                        ConnectSchemaField(
-                            "string",
-                            false,
-                            "value"
-                        ),
-                        ConnectSchemaField(
-                            "string",
-                            false,
-                            "timestamp"
-                        )
+                            ConnectSchemaField(
+                                    "string",
+                                    false,
+                                    "machine_id"
+                            ),
+                            ConnectSchemaField(
+                                    "string",
+                                    false,
+                                    "value"
+                            ),
+                            ConnectSchemaField(
+                                    "string",
+                                    false,
+                                    "timestamp"
+                            )
                     ),
                     false,
                     "machine_execution_state"
-                ),
-                mapOf("value" to record.value, "timestamp" to stringifyTimestamp(record.timestamp), "machine_id" to key.machineID)
+            ),
+                    mapOf("value" to record.value, "timestamp" to stringifyTimestamp(record.timestamp), "machine_id" to key.machineID)
             )))
         }
         .to("machine_execution_state", Produced.with(Serdes.String(), Serdes.String()))
@@ -280,39 +273,39 @@ fun main() {
                 val partCount = key.second;
                 value.samplesList.map {
                     KeyValue("${key.first}-${key.second}", gson.toJson(ConnectSchemaAndPayload(
-                        ConnectSchema(
-                                "struct",
-                                listOf(
-                                        ConnectSchemaField(
-                                                "string",
-                                                false,
-                                                "machine_id"
-                                        ),
-                                        ConnectSchemaField(
-                                                "string",
-                                                false,
-                                                "part_count"
-                                        ),
-                                        ConnectSchemaField(
-                                                "string",
-                                                false,
-                                                "program_comment"
-                                        ),
-                                        ConnectSchemaField(
-                                                "string",
-                                                false,
-                                                "program_comment_timestamp"
-                                        )
-                                ),
-                                false,
-                                "machine_part_count_program_comment"
-                        ),
-                        mapOf(
-                                "machine_id" to machineID,
-                                "part_count" to partCount,
-                                "program_comment" to it.value,
-                                "program_comment_timestamp" to stringifyTimestamp(it.timestamp)
-                        )
+                            ConnectSchema(
+                                    "struct",
+                                    listOf(
+                                            ConnectSchemaField(
+                                                    "string",
+                                                    false,
+                                                    "machine_id"
+                                            ),
+                                            ConnectSchemaField(
+                                                    "string",
+                                                    false,
+                                                    "part_count"
+                                            ),
+                                            ConnectSchemaField(
+                                                    "string",
+                                                    false,
+                                                    "program_comment"
+                                            ),
+                                            ConnectSchemaField(
+                                                    "string",
+                                                    false,
+                                                    "program_comment_timestamp"
+                                            )
+                                    ),
+                                    false,
+                                    "machine_part_count_program_comment"
+                            ),
+                            mapOf(
+                                    "machine_id" to machineID,
+                                    "part_count" to partCount,
+                                    "program_comment" to it.value,
+                                    "program_comment_timestamp" to stringifyTimestamp(it.timestamp)
+                            )
                     )))
                 }
             }
@@ -350,10 +343,10 @@ fun main() {
                             "part_count_comment"
                     ),
                     mapOf(
-                        "part_count" to value1.value,
-                        "timestamp" to stringifyTimestamp(value1.timestamp),
-                        "comment" to value2?.value,
-                        "comment_timestamp" to if (value2 != null) stringifyTimestamp(value2.timestamp) else null
+                            "part_count" to value1.value,
+                            "timestamp" to stringifyTimestamp(value1.timestamp),
+                            "comment" to value2?.value,
+                            "comment_timestamp" to if (value2 != null) stringifyTimestamp(value2.timestamp) else null
                     )
             ))
         }, Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleValue.parser()), sampleValueSerde))
@@ -362,49 +355,49 @@ fun main() {
         tabled.toStream().map { k, v ->
         KeyValue(
             gson.toJson(ConnectSchemaAndPayload(
-                ConnectSchema(
-                        "struct",
-                        listOf(
-                                ConnectSchemaField(
-                                        "string",
-                                        false,
-                                        "machine_id"
-                                ),
-                                ConnectSchemaField(
-                                        "string",
-                                        false,
-                                        "property"
-                                ),
-                                ConnectSchemaField(
-                                        "int64",
-                                false,
-                                    "offset"
-                                )
-                        ),
-                false,
-                        "machine_state_key"
-                ),
-                mapOf("machine_id" to k.machineID, "property" to k.property, "offset" to v.offset)
+                    ConnectSchema(
+                            "struct",
+                            listOf(
+                                    ConnectSchemaField(
+                                            "string",
+                                            false,
+                                            "machine_id"
+                                    ),
+                                    ConnectSchemaField(
+                                            "string",
+                                            false,
+                                            "property"
+                                    ),
+                                    ConnectSchemaField(
+                                            "int64",
+                                            false,
+                                            "offset"
+                                    )
+                            ),
+                            false,
+                            "machine_state_key"
+                    ),
+                    mapOf("machine_id" to k.machineID, "property" to k.property, "offset" to v.offset)
             )),
             gson.toJson(ConnectSchemaAndPayload(
-                ConnectSchema(
-                    "struct",
-                        listOf(
-                                ConnectSchemaField(
-                                        "string",
-                                        true,
-                                        "value"
-                                ),
-                                ConnectSchemaField(
-                                        "string",
-                                        true,
-                                        "timestamp"
-                                )
-                        ),
-                        false,
-                        "machine_state_value"
-                ),
-                mapOf("value" to v.value, "timestamp" to stringifyTimestamp(v.timestamp))
+                    ConnectSchema(
+                            "struct",
+                            listOf(
+                                    ConnectSchemaField(
+                                            "string",
+                                            true,
+                                            "value"
+                                    ),
+                                    ConnectSchemaField(
+                                            "string",
+                                            true,
+                                            "timestamp"
+                                    )
+                            ),
+                            false,
+                            "machine_state_value"
+                    ),
+                    mapOf("value" to v.value, "timestamp" to stringifyTimestamp(v.timestamp))
             ))
         )
     }.to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
@@ -432,7 +425,7 @@ fun main() {
 }
 
 // convert List<String> to List<[String, String]> to List<SplitSample>
-class SampleTransformer : Transformer<String, ByteArray, Iterable<KeyValue<String, ByteArray>>> {
+class SampleTransformer : Transformer<String, String, Iterable<KeyValue<String, ByteArray>>> {
     private lateinit var context: ProcessorContext
 
     override fun init(context: ProcessorContext) {
@@ -441,11 +434,12 @@ class SampleTransformer : Transformer<String, ByteArray, Iterable<KeyValue<Strin
 
     override fun transform(
             key: String?,
-            bytes: ByteArray
+            value: String
     ): Iterable<KeyValue<String, ByteArray>> {
-        val value = SerialMonitoring.Sample.parseFrom(bytes)
+        // val value = SerialMonitoring.Sample.parseFrom(bytes)
         val offset = context.offset()
-        val values = value.valuesList
+        val values = value.split(Regex("(?<!\\\\)[|]")).toMutableList()
+        val ts = OffsetDateTime.parse(values.removeAt(0)).toInstant()
         val stringValues =
                 if (values[0] == "message") listOf(listOf(values[0], values[2])) else values.chunked(2)
         val eachKey = key ?: "unknown"
@@ -453,7 +447,7 @@ class SampleTransformer : Transformer<String, ByteArray, Iterable<KeyValue<Strin
                 .filter { it[0] != "" }
                 .map {
                     val eachValue = SerialMonitoring.SplitSample.newBuilder()
-                            .setTimestamp(value.timestamp)
+                            .setTimestamp(ts.toProtoTimestamp())
                             .setOffset(offset)
                             .setKey(it[0])
                             .setValue(it[1])
@@ -466,47 +460,12 @@ class SampleTransformer : Transformer<String, ByteArray, Iterable<KeyValue<Strin
     }
 }
 
-class ProtoMessageSerde<T : Message>(private val parser: Parser<T>) : Serde<T> {
-
-    override fun serializer(): Serializer<T> {
-        return Serializer<T> { _, data -> data.toByteArray() }
-    }
-
-    override fun deserializer(): Deserializer<T> {
-        return Deserializer<T> { _, data: ByteArray ->
-            try {
-                parser.parseFrom(data)
-            } catch (e: InvalidProtocolBufferException) {
-                throw SerializationException("Error deserializing from Protobuf message", e)
-            }
-        }
-    }
-}
-
 fun stringifyTimestamp(timestamp: Timestamp): String {
     return ZonedDateTime.ofInstant(
             Instant.ofEpochSecond(timestamp.seconds, timestamp.nanos.toLong()),
             ZoneId.of("UTC")
     ).toOffsetDateTime().toString()
 }
-
-data class ConnectSchemaField(
-        val type: String,
-        val optional: Boolean,
-        val field: String
-)
-
-data class ConnectSchema(
-        val type: String,
-        val fields: List<ConnectSchemaField>,
-        val optional: Boolean,
-        val name: String
-)
-
-data class ConnectSchemaAndPayload(
-        val schema: ConnectSchema,
-        val payload: Any
-)
 
 data class ExecutionSample(
         val timestamp: String,

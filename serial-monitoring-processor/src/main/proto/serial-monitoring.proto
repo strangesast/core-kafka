@@ -23,6 +23,13 @@ message SampleValue {
   uint64 offset = 3;
 }
 
+message SampleValueWithExecution {
+  google.protobuf.Timestamp timestamp = 1;
+  string value = 2;
+  uint64 offset = 3;
+  uint64 execution = 4;
+}
+
 message SampleValueArray {
   repeated SampleValue samples = 1;
 }
