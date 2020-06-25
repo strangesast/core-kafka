@@ -61,6 +61,7 @@ import { CameraViewerComponent } from './camera-viewer/camera-viewer.component';
 import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
 import { CameraListComponent } from './camera-list/camera-list.component';
 import { TimecardComponent } from './timecard/timecard.component';
+import { MachineStatusGridComponent } from './machine-status-grid/machine-status-grid.component';
 
 
 @NgModule({
@@ -114,7 +115,8 @@ import { TimecardComponent } from './timecard/timecard.component';
     CameraViewerComponent,
     CameraViewerPageComponent,
     CameraListComponent,
-    TimecardComponent
+    TimecardComponent,
+    MachineStatusGridComponent
   ],
   imports: [
     BrowserModule,

@@ -23,23 +23,29 @@ services:
 #      - kafka_data:/kafka
 
 #  # connect kafka to postgres
-#  connect:
-#    image: strangesast/core_connect
-#    build:
-#      context: .
-#      dockerfile: docker/kafka-connect/Dockerfile
-#
+  connect:
+    image: strangesast/core_connect
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: docker/kafka-connect/Dockerfile
+
 #  # facilitate timeclock polling
 #  celery:
 #    image: python:3
 #
-#  # read machine data
-#  serial-monitoring-processor:
-#    image: strangesast/core_serial-monitoring-processor
-#    build:
-#      context: .
-#      dockerfile: docker/serial-monitoring-processor/Dockerfile
-#
+
+  # read machine data
+  kafka-streams:
+    image: strangesast/core_kafka-streams
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: docker/kafka-streams/Dockerfile
+    environment:
+      - KAFKA_HOSTS=kafka:9092
+      - STREAMS_APPLICATION_ID=streams-monitoring
+
 #  connector0:
 #    image: strangesast/core_connector
 #    build:

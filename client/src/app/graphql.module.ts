@@ -1,7 +1,11 @@
 import { NgModule } from '@angular/core';
+import { HttpHeaders } from '@angular/common/http';
 import { ApolloModule, APOLLO_OPTIONS } from 'apollo-angular';
-import { ApolloLink } from 'apollo-link';
+import { split, ApolloLink } from 'apollo-link';
+import { WebSocketLink } from 'apollo-link-ws';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
+import { getMainDefinition } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { setContext } from 'apollo-link-context';
 import gql from 'graphql-tag';
@@ -44,25 +48,26 @@ const schema = makeExecutableSchema({
 const uri = '/v1/graphql';
 
 export function createApollo(httpLink: HttpLink) {
-  const basic = setContext((operation, context) => ({
-    headers: {
-      Accept: 'charset=utf-8'
-    }
-  }));
 
-  const auth = setContext((operation, context) => {
-    const token = localStorage.getItem('token');
-    if (token == null) {
-      return {};
-    }
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      }
-    };
-  });
+  const headers = new HttpHeaders();
+  headers.append('Accept', 'charset=utf-8');
+  const token = localStorage.getItem('token');
+  const authorization = token ? `Bearer ${token}` : null;
+  headers.append('Authorization', authorization);
 
-  const link = ApolloLink.from([basic, auth, httpLink.create({ uri })]);
+  const http = httpLink.create({ uri, headers });
+
+  const client = new SubscriptionClient(`ws://${window.location.host}${uri}`, { reconnect: true });
+  const ws = new WebSocketLink(client);
+
+  const link = split(
+    ({query}) => {
+      const def = getMainDefinition(query);
+      return def.kind === 'OperationDefinition' && def.operation === 'subscription';
+    },
+    ws,
+    http
+  );
   const cache = new InMemoryCache();
 
   return { link, cache };

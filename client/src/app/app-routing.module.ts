@@ -30,6 +30,7 @@ import { SettingsPageComponent } from './settings-page/settings-page.component';
 import { UserListPageComponent } from './user-list-page/user-list-page.component';
 import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full-page.component';
 import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
+import { MachineStatusGridComponent } from './machine-status-grid/machine-status-grid.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -92,6 +93,7 @@ const routes: Routes = [
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
     {path: '**', component: NoopComponent},
   ]},
+  {path: 'machine-status', component: MachineStatusGridComponent},
   {path: 'timeclock/full', component: TimeclockFullPageComponent},
   {path: 'forbidden', component: ForbiddenPageComponent},
   {path: 'not-found', component: NotFoundPageComponent},

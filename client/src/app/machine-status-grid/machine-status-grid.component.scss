@@ -1,0 +1,23 @@
+:host {
+  display: grid;
+  height: 100%;
+
+  & > div {
+    &.active {
+      background-color: green;
+    }
+    &.ready {
+      background-color: yellow;
+    }
+    &.stopped {
+      background-color: red;
+    }
+    &.interrupted {
+      background-color: blue;
+      color: white;
+    }
+    &.unavailable {
+      background-color: lightgrey;
+    }
+  }
+}

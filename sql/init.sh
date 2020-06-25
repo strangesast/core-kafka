@@ -146,6 +146,44 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
     description  text
   );
 
+  create table machine_state (
+    value      text,
+    property   text,
+    timestamp  bigint,
+    machine_id text,
+    "offset"   bigint,
+    PRIMARY KEY (machine_id,property,"offset")
+  );
+
+  create view machine_execution_state as select
+  	machine_id,
+  	value,
+  	timestamp,
+  	lead(timestamp, 1) over (partition by machine_id order by timestamp asc) as next_timestamp,
+    "offset"
+  from (
+  	select
+  		machine_id,
+  		property,
+  		value,
+  		to_timestamp(timestamp/1000) as timestamp,
+      "offset"
+  	from machine_state
+  ) t
+  where property = 'execution';
+
+  CREATE TABLE "machine_values" (
+    "__connect_topic"     text not null,
+    "__connect_partition" int not null,
+    "__connect_offset"    bigint not null,
+    "machine_id"          text not null,
+    "property"            text not null,
+    "timestamp"           bigint not null,
+    "value"               text not null,
+    "offset"              bigint not null,
+    PRIMARY KEY("__connect_topic","__connect_partition","__connect_offset")
+  );
+
   CREATE UNIQUE INDEX timeclock_shift_groups_pk
     ON timeclock_shift_groups (employee_id, shift_num);
 
@@ -194,14 +232,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
     read            boolean,
     read_on         timestamp,
   	PRIMARY KEY (user_id, notification_id),
-  	FOREIGN KEY (user_id) REFERENCES users (id)
-    FOREIGN KEY (notification_id) REFERENCES notifications (id),
-  );
-
-  CREATE TABLE machine_data (
-    date timestamp,
-    sequence integer,
-    data json
+  	FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (notification_id) REFERENCES notifications (id)
   );
 
   DO \$\$DECLARE lastid integer;
