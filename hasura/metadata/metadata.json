@@ -1,0 +1,606 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "employees"
+      },
+      "object_relationships": [
+        {
+          "name": "user",
+          "using": {
+            "foreign_key_constraint_on": "user_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "timeclock_shifts",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "employee_id",
+              "table": {
+                "schema": "public",
+                "name": "timeclock_shifts"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "code",
+              "first_name",
+              "last_name",
+              "middle_name",
+              "hire_date",
+              "user_id",
+              "color",
+              "compensation_type",
+              "last_modified"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "machine_execution_state"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "machine_id",
+              "value",
+              "timestamp",
+              "next_timestamp",
+              "offset"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "machine_state"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "value",
+              "property",
+              "timestamp",
+              "machine_id",
+              "offset"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "machine_values"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "machine_id",
+              "offset",
+              "property",
+              "timestamp",
+              "value"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "machines"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "name",
+              "type",
+              "manufacturer",
+              "capabilities",
+              "description"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "notifications"
+      },
+      "array_relationships": [
+        {
+          "name": "user_notifications",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "notification_id",
+              "table": {
+                "schema": "public",
+                "name": "user_notifications"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "deleted",
+              "deleted_on",
+              "title",
+              "description",
+              "concerning_shifts"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "roles"
+      },
+      "array_relationships": [
+        {
+          "name": "user_roles",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "role_id",
+              "table": {
+                "schema": "public",
+                "name": "user_roles"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "name",
+              "description"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "schedule"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "col",
+              "part",
+              "customer",
+              "date",
+              "qty",
+              "qty_note",
+              "sos",
+              "description",
+              "readystate",
+              "hardware_kit",
+              "seal_kit",
+              "body_assy",
+              "body_assy_body",
+              "body_assy_collar",
+              "body_assy_end_cap",
+              "body_assy_base_mount",
+              "rod_assy",
+              "rod_assy_rod",
+              "rod_assy_rod_mount",
+              "gland",
+              "piston",
+              "stroke_limiter",
+              "misc_1",
+              "misc_2",
+              "misc_3"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "shipping"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "ship_date",
+              "part",
+              "qty_order",
+              "order_id",
+              "customer",
+              "part_customer",
+              "description",
+              "po",
+              "qty_ship",
+              "rem",
+              "price",
+              "vend",
+              "meta"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_polls"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "date"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_shift_groups"
+      },
+      "object_relationships": [
+        {
+          "name": "employee",
+          "using": {
+            "manual_configuration": {
+              "remote_table": {
+                "schema": "public",
+                "name": "employees"
+              },
+              "column_mapping": {
+                "employee_id": "id"
+              }
+            }
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "shifts",
+          "using": {
+            "manual_configuration": {
+              "remote_table": {
+                "schema": "public",
+                "name": "timeclock_shifts_view"
+              },
+              "column_mapping": {
+                "employee_id": "employee_id",
+                "shift_num": "shift_num"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "shift_num",
+              "employee_id",
+              "date",
+              "date_start",
+              "date_stop"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_shifts"
+      },
+      "object_relationships": [
+        {
+          "name": "employee",
+          "using": {
+            "foreign_key_constraint_on": "employee_id"
+          }
+        },
+        {
+          "name": "timeclock_sync",
+          "using": {
+            "foreign_key_constraint_on": "sync_id"
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "employee_id",
+              "date",
+              "date_start",
+              "date_stop",
+              "duration",
+              "punch_start",
+              "punch_stop",
+              "is_manual",
+              "last_modified",
+              "sync_id"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_shifts_view"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "employee_id",
+              "date_start",
+              "date_stop",
+              "shift_num"
+            ],
+            "filter": {},
+            "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_sync"
+      },
+      "object_relationships": [
+        {
+          "name": "user",
+          "using": {
+            "foreign_key_constraint_on": "user_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "timeclock_shifts",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "sync_id",
+              "table": {
+                "schema": "public",
+                "name": "timeclock_shifts"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "id",
+              "start_date",
+              "complete_date",
+              "job_status",
+              "is_manual",
+              "user_id",
+              "update_count",
+              "note"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "user_notifications"
+      },
+      "object_relationships": [
+        {
+          "name": "notification",
+          "using": {
+            "foreign_key_constraint_on": "notification_id"
+          }
+        },
+        {
+          "name": "user",
+          "using": {
+            "foreign_key_constraint_on": "user_id"
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "user_id",
+              "notification_id",
+              "read",
+              "read_on"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "user_roles"
+      },
+      "object_relationships": [
+        {
+          "name": "role",
+          "using": {
+            "foreign_key_constraint_on": "role_id"
+          }
+        },
+        {
+          "name": "user",
+          "using": {
+            "foreign_key_constraint_on": "user_id"
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "user_id",
+              "role_id"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "users"
+      },
+      "array_relationships": [
+        {
+          "name": "employees",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "user_id",
+              "table": {
+                "schema": "public",
+                "name": "employees"
+              }
+            }
+          }
+        },
+        {
+          "name": "timeclock_syncs",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "user_id",
+              "table": {
+                "schema": "public",
+                "name": "timeclock_sync"
+              }
+            }
+          }
+        },
+        {
+          "name": "user_notifications",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "user_id",
+              "table": {
+                "schema": "public",
+                "name": "user_notifications"
+              }
+            }
+          }
+        },
+        {
+          "name": "user_roles",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "user_id",
+              "table": {
+                "schema": "public",
+                "name": "user_roles"
+              }
+            }
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "active",
+              "color",
+              "email",
+              "employee_id",
+              "id",
+              "last_modified",
+              "username"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -121,6 +121,9 @@ services:
   # graphql server
   graphql-engine:
     image: hasura/graphql-engine
+    volumes:
+      - ./hasura/migrations:/hasura-migrations
+      - ./hasura/metadata:/hasura-metadata
     ports:
     - "8080:8080"
     depends_on:
@@ -131,6 +134,7 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup, http-log, webhook-log, websocket-log, query-log"
+      HASURA_GRAPHQL_ENABLED_APIS: "metadata, graphql, pgdump"
       HASURA_GRAPHQL_ADMIN_SECRET: secretSECRETsecretSECRETsecretSECRET
       HASURA_GRAPHQL_JWT_SECRET: '{"type": "HS256", "key": "secretSECRETsecretSECRETsecretSECRET"}'
 

@@ -159,7 +159,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   	machine_id,
   	value,
   	timestamp,
-  	lead(timestamp, 1) over (partition by machine_id order by timestamp asc) as next_timestamp,
+  	lead(timestamp, 1) over (partition by machine_id order by "timestamp", "offset") as next_timestamp,
     "offset"
   from (
   	select
