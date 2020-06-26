@@ -150,6 +150,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   insert into machines (id,name,type,manufacturer) values ('doosan-gt2100m', 'Doosan GT2100M', 'lathe', 'doosan');
   insert into machines (id,name,type,manufacturer) values ('hardinge-gx1600', 'Hardinge GX1600', 'mill', 'hardinge');
   insert into machines (id,name,type,manufacturer) values ('samsung-sl45', 'Samsung SL45', 'lathe', 'samsung');
+  insert into machines (id,name,type,manufacturer) values ('samsung-mcv50', 'Samsung MCV50', 'mill', 'samsung');
 
   create table machine_state (
     value      text,

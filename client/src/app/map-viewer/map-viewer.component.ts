@@ -227,6 +227,7 @@ export class MapViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
         s.select('path').attr('stroke-width', null);
       })
       .on('click', d => {
+        console.log(d);
         if (this.lastClicked === d[0]) {
           this.dirty = false;
           this.lastClicked = '';

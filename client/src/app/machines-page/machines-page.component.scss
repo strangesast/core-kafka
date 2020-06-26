@@ -36,7 +36,7 @@
       &.stopped, &.interrupted {
         background-color: red;
       }
-      &.unknown {
+      &.unknown, &.unavailable {
         background-color: lightgrey;
       }
     }

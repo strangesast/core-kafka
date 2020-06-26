@@ -12,7 +12,12 @@ import { AppComponent } from './app.component';
 import { MainComponent } from './main/main.component';
 import { SummaryPageComponent } from './summary-page/summary-page.component';
 import { TimeclockPageComponent } from './timeclock-page/timeclock-page.component';
-import { MachinesPageComponent } from './machines-page/machines-page.component';
+import {
+  MachinesPageComponent,
+  MachinesListComponent,
+  MachinesGridComponent,
+  MachinesMapComponent,
+} from './machines-page/machines-page.component';
 import { ActivityCountPreviewComponent } from './activity-count-preview/activity-count-preview.component';
 import { MachinePageComponent } from './machine-page/machine-page.component';
 import { MapViewerComponent } from './map-viewer/map-viewer.component';
@@ -65,6 +70,7 @@ import { MachineStatusGridComponent } from './machine-status-grid/machine-status
 import { MachineActivityGraphComponent } from './machine-activity-graph/machine-activity-graph.component';
 import { BaseGraphComponent } from './base-graph/base-graph.component';
 import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
+import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 
 
 @NgModule({
@@ -74,6 +80,9 @@ import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-gra
     SummaryPageComponent,
     TimeclockPageComponent,
     MachinesPageComponent,
+    MachinesGridComponent,
+    MachinesListComponent,
+    MachinesMapComponent,
     ActivityCountPreviewComponent,
     MachinePageComponent,
     MapViewerComponent,
@@ -122,7 +131,8 @@ import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-gra
     MachineStatusGridComponent,
     MachineActivityGraphComponent,
     BaseGraphComponent,
-    MachineCycleAnalysisGraphComponent
+    MachineCycleAnalysisGraphComponent,
+    MachineLiveGraphComponent
   ],
   imports: [
     BrowserModule,

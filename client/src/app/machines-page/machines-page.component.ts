@@ -1,5 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ViewChild, Injectable, Input, Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRouteSnapshot, RouterStateSnapshot, Resolve, ActivatedRoute } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { Subject, ReplaySubject } from 'rxjs';
@@ -7,11 +9,19 @@ import { multicast, refCount, pluck, tap, map, takeUntil } from 'rxjs/operators'
 
 
 const query = gql`
-  query MyQuery {
-    machine_execution_state(distinct_on: machine_id, order_by: {machine_id: asc, timestamp: desc}) {
-      machine_id
-      timestamp
-      value
+  subscription {
+    machines {
+      state(limit: 1, order_by: {machine_id: asc, timestamp: desc}) {
+        value
+        timestamp
+        offset
+      }
+      name
+      manufacturer
+      id
+      description
+      capabilities
+      type
     }
   }
 `;
@@ -38,104 +48,108 @@ interface Record {
   </app-page-title>
   <header>
     <h1>3+ Machines Active</h1>
-    <p>4% Utilization this Week</p>
+    <p>4% Utilization this Week <a [routerLink]="['/machine-status']">Status Page</a></p>
   </header>
   <div class="controls">
     <span class="flex-spacer"></span>
-    <mat-button-toggle-group [(ngModel)]="activeView">
-      <mat-button-toggle value="map" aria-label="Shop Map">
+    <mat-button-toggle-group>
+      <mat-button-toggle value="map" [routerLink]="['./map']" aria-label="Shop Map">
         <mat-icon>map</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="list" aria-label="List">
+      <mat-button-toggle value="list" [routerLink]="['./list']" aria-label="List">
         <mat-icon>list</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="grid" aria-label="Grid">
+      <mat-button-toggle value="grid" [routerLink]="['./grid']" aria-label="Grid">
         <mat-icon>view_module</mat-icon>
-      </mat-button-toggle>
-      <mat-button-toggle value="big-list" aria-label="Large List">
-        <mat-icon>view_agenda</mat-icon>
       </mat-button-toggle>
     </mat-button-toggle-group>
   </div>
-  <ng-container [ngSwitch]="activeView">
-    <mat-table [dataSource]="dataSource" matSort *ngSwitchCase="'list'">
-      <ng-container matColumnDef="name">
-        <mat-cell *matCellDef="let cell"><a [routerLink]="['/machines', cell.id]"> {{cell.name}} </a></mat-cell>
-      </ng-container>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
-    <app-map-viewer *ngSwitchCase="'map'" [machines]="data$ | async"></app-map-viewer>
-    <ng-container *ngSwitchCase="'grid'">
-      <div class="grid">
-        <a *ngFor="let each of data$ | async" [routerLink]="['/machines', each.machine_id]">
-          <span class="status" [ngClass]="each.value">{{printMachineStatus(each.value)}}</span>
-          <span class="title">{{each.name}}</span>
-        </a>
-      </div>
-    </ng-container>
-    <ng-container *ngSwitchCase="'big-list'">
-    </ng-container>
-
-    <!--<mat-paginator [hidePageSize]="true"></mat-paginator>-->
-  </ng-container>
+  <router-outlet></router-outlet>
   `,
   styleUrls: ['../base.scss', './machines-page.component.scss'],
 })
-export class MachinesPageComponent implements OnInit, OnDestroy {
-  activeView = 'map';
-  displayedColumns: string[] = ['name'];
+export class MachinesPageComponent {}
 
+
+@Component({
+  selector: 'app-machines-base',
+  template: ``,
+})
+class MachinesBaseComponent implements OnDestroy {
   destroyed$ = new Subject();
-  dataSource = new MatTableDataSource();
 
-  /*
-  machines = [
-    { id: 'doosan-2600sy',     name: 'Doosan 2600SY', status: MachineStatus.Unknown },
-    { id: 'doosan-gt2100m',    name: 'Doosan GT2100M' , status: MachineStatus.Unknown},
-    { id: 'hardinge-cobra-42', name: 'Hardinge Cobra 42', status: MachineStatus.Unknown},
-    { id: 'hardinge-cobra-65', name: 'Hardinge Cobra 65', status: MachineStatus.Unknown},
-    { id: 'hardinge-gx1600',   name: 'Hardinge Cobra GX1600', status: MachineStatus.Unknown},
-    { id: 'samsung-mcv50',     name: 'Samsung MCV50', status: MachineStatus.Unknown},
-    { id: 'samsung-mcv660',    name: 'Samsung MCV660', status: MachineStatus.Unknown},
-    { id: 'samsung-sl45',      name: 'Samsung SL45', status: MachineStatus.Unknown},
-  ];
-  */
-
-  data$ = this.apollo.watchQuery({query}).valueChanges.pipe(
-    pluck('data', 'machine_execution_state'),
-    map((arr: any[]) => arr.map(({machine_id, timestamp, value}) =>
-      ({
-        name: 'Unknown',
-        machine_id,
-        timestamp: new Date(timestamp),
-        value: value.toLowerCase(),
-      }))
-    ),
+  data$ = this.apollo.subscribe({query}).pipe(
+    pluck('data', 'machines'),
+    takeUntil(this.destroyed$),
     multicast(new ReplaySubject(1)),
     refCount(),
   );
-
-  constructor(public apollo: Apollo) {}
-
-  ngOnInit() {
-    this.data$.pipe(takeUntil(this.destroyed$))
-      .subscribe(data => this.dataSource.data = data);
-  }
 
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
   }
 
-  printMachineStatus(status: MachineStatus) {
-    switch (status) {
-      case MachineStatus.Active: return 'Active';
-      case MachineStatus.Unavailable: return 'Unavailable';
-      case MachineStatus.Stopped: return 'Stopped';
-      case MachineStatus.Interrupted: return 'Interrupted';
-      default:
-        return 'Unknown';
-    }
-  }
-
+  constructor(public route: ActivatedRoute, public apollo: Apollo) {}
 }
+
+
+@Component({
+  selector: 'app-machines-map',
+  template: `<app-map-viewer [machines]=""></app-map-viewer>`,
+})
+export class MachinesMapComponent extends MachinesBaseComponent {}
+
+@Component({
+  selector: 'app-machines-list',
+  template: `
+  <mat-table [dataSource]="dataSource" matSort>
+    <ng-container matColumnDef="name">
+      <mat-cell *matCellDef="let cell">
+        <a [routerLink]="['/machines', cell.id]"> {{cell.name}} </a>
+      </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="manufacturer">
+      <mat-cell *matCellDef="let cell"> {{cell.manufacturer}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="description">
+      <mat-cell *matCellDef="let cell"> {{cell.description}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="type">
+      <mat-cell *matCellDef="let cell"> {{cell.type}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="state">
+      <mat-cell *matCellDef="let cell"> {{cell.state.length > 0 ? cell.state[0].value : null}} </mat-cell>
+    </ng-container>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+  <!--<mat-paginator [hidePageSize]="true"></mat-paginator>-->
+  `,
+})
+export class MachinesListComponent extends MachinesBaseComponent implements OnInit {
+  displayedColumns: string[] = ['name', 'description', 'manufacturer', 'type', 'state'];
+
+  @ViewChild(MatSort)
+  sort: MatSort;
+
+  dataSource = new MatTableDataSource();
+
+  ngOnInit() {
+    this.data$.subscribe((data: any[]) => {
+      this.dataSource.data = data;
+    });
+  }
+}
+
+@Component({
+  selector: 'app-machines-grid',
+  template: `
+  <div class="grid">
+    <a *ngFor="let each of data$ | async" [routerLink]="['/machines', each.machine_id]">
+      <span class="status" [ngClass]="(each.state.length > 0 ? each.state[0].value : 'unknown').toLowerCase()">{{each.state.length > 0 ? each.state[0].value : 'unknown'}}</span>
+      <span class="title">{{each.name}}</span>
+    </a>
+  </div>
+  `,
+})
+export class MachinesGridComponent extends MachinesBaseComponent {}

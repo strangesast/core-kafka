@@ -4,7 +4,12 @@ import { Routes, RouterModule } from '@angular/router';
 // components
 import { MainComponent } from './main/main.component';
 import { SummaryPageComponent } from './summary-page/summary-page.component';
-import { MachinesPageComponent } from './machines-page/machines-page.component';
+import {
+  MachinesPageComponent,
+  MachinesGridComponent,
+  MachinesMapComponent,
+  MachinesListComponent,
+} from './machines-page/machines-page.component';
 import { MachinePageComponent } from './machine-page/machine-page.component';
 import { TimeclockPageComponent } from './timeclock-page/timeclock-page.component';
 import { PersonPageComponent } from './person-page/person-page.component';
@@ -33,6 +38,7 @@ import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-pa
 import { MachineStatusGridComponent } from './machine-status-grid/machine-status-grid.component';
 import { MachineActivityGraphComponent } from './machine-activity-graph/machine-activity-graph.component';
 import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
+import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -44,7 +50,12 @@ const routes: Routes = [
   {path: '', canActivate: [InitGuard], component: MainComponent, children: [
     {path:  '', component: SummaryPageComponent},
     {path: 'timeclock', component: TimeclockPageComponent},
-    {path: 'machines', component: MachinesPageComponent},
+    {path: 'machines', component: MachinesPageComponent, children: [
+      {path: '', pathMatch: 'full', redirectTo: 'map'},
+      {path: 'map', component: MachinesMapComponent},
+      {path: 'list', component: MachinesListComponent},
+      {path: 'grid', component: MachinesGridComponent},
+    ]},
     {path: 'machines/:id', component: MachinePageComponent},
     {path: 'orders', component: ActiveOrdersPageComponent},
     {path: 'orders/historical', component: OrderListPageComponent},
@@ -95,6 +106,7 @@ const routes: Routes = [
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
     {path: 'machines/activity', component: MachineActivityGraphComponent },
     {path: 'machines/cycles', component: MachineCycleAnalysisGraphComponent },
+    {path: 'machines/live', component: MachineLiveGraphComponent },
     {path: '**', component: NoopComponent},
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},

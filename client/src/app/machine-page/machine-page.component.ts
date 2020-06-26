@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { combineLatest, ReplaySubject, of } from 'rxjs';
-import { startWith, map, pluck, switchMap } from 'rxjs/operators';
+import { startWith, tap, map, pluck, switchMap } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import * as d3 from 'd3';
@@ -11,7 +11,7 @@ import { Selection } from 'd3';
 
 
 const query = gql`
-  query ExecutionState($machineID: String = "unknown", $minDate: String!, $maxDate: String!) {
+  query ExecutionState($machineID: String, $minDate: timestampz, $maxDate: timestampz) {
     executions: machine_execution_state(where: {_and: {machine_id: {_eq: $machineID}, timestamp: {_gte: $minDate, _lt: $maxDate}}}, order_by: {timestamp: asc}) {
       value
       timestamp
@@ -24,7 +24,7 @@ const query = gql`
 `;
 
 const allQuery = gql`
-  query ExecutionState($machineID: String = "unknown") {
+  query ExecutionState($machineID: String) {
     executions: machine_execution_state(where: {machine_id: {_eq: $machineID}}, order_by: {timestamp: asc}) {
       value
       timestamp
@@ -130,7 +130,7 @@ export class MachinePageComponent implements OnInit, AfterViewInit {
     (a, b) => ({...a, ...b}),
   ).pipe(
     switchMap(({machineID, range}) => this.apollo.query(range != null ?
-      ({ query, variables: { machineID, minDate: range[0], maxDate: range[1] }}) :
+      ({ query, variables: { machineID, minDate: range[0].toISOString(), maxDate: range[1].toISOString() }}) :
       ({ query: allQuery, variables: { machineID }}))
     ),
     pluck('data'),
