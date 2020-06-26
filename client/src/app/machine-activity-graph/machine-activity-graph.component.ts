@@ -7,6 +7,8 @@ import { withLatestFrom, switchMap, pluck, tap, map, takeUntil } from 'rxjs/oper
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 
+import { BaseGraphComponent } from '../base-graph/base-graph.component';
+
 
 const machinesQuery = gql`
   query {
@@ -40,26 +42,11 @@ const query = gql`
 
 @Component({
   selector: 'app-machine-activity-graph',
-  template: `
-  <svg #svg></svg>
-  `,
-  styles: [
-    `
-    :host, svg {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    `
-  ],
+  template: `<svg #svg></svg>`,
+  styleUrls: ['../base-graph/base-graph.component.scss'],
 })
-export class MachineActivityGraphComponent implements OnInit, OnDestroy, AfterViewInit {
+export class MachineActivityGraphComponent extends BaseGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('svg') el: ElementRef;
-
-  destroyed$ = new Subject();
-
-
-
   range$ = new ReplaySubject(1);
 
   variables$ = this.range$.pipe(map(([fromDate, toDate]) => ({from: fromDate.toISOString(), to: toDate.toISOString()})));
@@ -97,7 +84,9 @@ export class MachineActivityGraphComponent implements OnInit, OnDestroy, AfterVi
     lastValue: value,
   }))));
 
-  constructor(public apollo: Apollo) {}
+  constructor(public apollo: Apollo) {
+    super();
+  }
 
   ngOnInit(): void {
     const now = new Date();
@@ -107,37 +96,36 @@ export class MachineActivityGraphComponent implements OnInit, OnDestroy, AfterVi
   }
 
   ngAfterViewInit() {
-    const svg = d3.select(this.el.nativeElement);
-
+    super.ngAfterViewInit();
     const margin = {top: 40, left: 40, right: 40, bottom: 40};
     const { width, height } = this.el.nativeElement.getBoundingClientRect();
     const xScale = d3.scaleTime().range([margin.left, width - margin.right]);
     const xAxis = d3.axisBottom(xScale);
 
-    const gx = svg.append('g');
+    const gx = this.svg.append('g');
 
-    const g = svg.append('g');
+    const g = this.svg.append('g');
 
     this.data$.pipe(withLatestFrom(this.range$), takeUntil(this.destroyed$)).subscribe(([data, range]: [any[], any]) => {
       xScale.domain(range);
       gx.attr('transform', `translate(0,${data.length * 70 + margin.top})`).call(xAxis);
-      console.log(data);
 
       g.selectAll('g').data(data).join(
         s => s.append('g').call(ss => {
           ss.append('g').classed('values', true).attr('transform', `translate(0,${20})`);
           ss.append('g').classed('text', true).attr('transform', `translate(${margin.left},0)`).call(sss => sss.append('text'));
-        })
-      ).attr('transform', (d, i) => `translate(0,${margin.top + i * 70})`)
+        }),
+      )
+        .attr('transform', (d, i) => `translate(0,${margin.top + i * 70})`)
         .call(s => s.select('.text').select('text')
           .attr('alignment-baseline', 'hanging')
           .text(d => d.machine_id)
         )
-        .select('g.values').selectAll('g').data(d => [
-          /*{...d.data[0], timestamp: range[0], next_timestamp: d.data[0].timestamp},*/ ...d.data
-        ]).join(s => s.append('g').call(ss => {
-          ss.append('rect').attr('height', 40);
-        }))
+        .select('g.values').selectAll('g').data(d => d.data).join(
+          s => s.append('g').call(ss => {
+            ss.append('rect').attr('height', 40);
+          })
+        )
         .attr('transform', (d: any) => `translate(${xScale(d.timestamp)},0)`)
         .select('rect')
           .attr('width', (d: any) => xScale(d.next_timestamp) - xScale(d.timestamp))
@@ -157,10 +145,4 @@ export class MachineActivityGraphComponent implements OnInit, OnDestroy, AfterVi
           });
     });
   }
-
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
-  }
-
 }

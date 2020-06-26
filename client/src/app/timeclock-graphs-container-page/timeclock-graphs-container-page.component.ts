@@ -14,7 +14,7 @@ import { Component, OnInit } from '@angular/core';
     <mat-sidenav mode="side" opened #snav>
       <mat-nav-list>
         <a mat-list-item [routerLink]="['./machines', 'activity']">Machine Activity</a>
-        <a mat-list-item [routerLink]="['./timeclock', '2']">Timeclock Graph 2</a>
+        <a mat-list-item [routerLink]="['./machines', 'cycles']">Cycles</a>
         <a mat-list-item [routerLink]="['./timeclock', '3']">Timeclock Graph 3</a>
         <a mat-list-item [routerLink]="['./timeclock', '4']">Timeclock Graph 4</a>
         <a mat-list-item [routerLink]="['./timeclock', '5']">Timeclock Graph 5</a>

@@ -32,6 +32,7 @@ import { TimeclockFullPageComponent } from './timeclock-full-page/timeclock-full
 import { CameraViewerPageComponent } from './camera-viewer-page/camera-viewer-page.component';
 import { MachineStatusGridComponent } from './machine-status-grid/machine-status-grid.component';
 import { MachineActivityGraphComponent } from './machine-activity-graph/machine-activity-graph.component';
+import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -93,6 +94,7 @@ const routes: Routes = [
   ]},
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
     {path: 'machines/activity', component: MachineActivityGraphComponent },
+    {path: 'machines/cycles', component: MachineCycleAnalysisGraphComponent },
     {path: '**', component: NoopComponent},
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},

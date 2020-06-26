@@ -155,6 +155,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
     PRIMARY KEY (machine_id,property,"offset")
   );
 
+  create view machine_state_view as select
+    machine_id,
+    property,
+    value,
+    to_timestamp("timestamp"/1000) as timestamp,
+    "offset"
+  from machine_state;
+
   create view machine_execution_state as select
   	machine_id,
   	value,
@@ -172,16 +180,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   ) t
   where property = 'execution';
 
-  CREATE TABLE "machine_values" (
-    "__connect_topic"     text not null,
-    "__connect_partition" int not null,
-    "__connect_offset"    bigint not null,
-    "machine_id"          text not null,
-    "property"            text not null,
-    "timestamp"           bigint not null,
-    "value"               text not null,
-    "offset"              bigint not null,
-    PRIMARY KEY("__connect_topic","__connect_partition","__connect_offset")
+  CREATE TABLE machine_values (
+    "machine_id" text not null,
+    "property"   text not null,
+    "timestamp"  bigint not null,
+    "value"      text not null,
+    "offset"     bigint not null
   );
 
   CREATE UNIQUE INDEX timeclock_shift_groups_pk

@@ -63,6 +63,8 @@ import { CameraListComponent } from './camera-list/camera-list.component';
 import { TimecardComponent } from './timecard/timecard.component';
 import { MachineStatusGridComponent } from './machine-status-grid/machine-status-grid.component';
 import { MachineActivityGraphComponent } from './machine-activity-graph/machine-activity-graph.component';
+import { BaseGraphComponent } from './base-graph/base-graph.component';
+import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
 
 
 @NgModule({
@@ -118,7 +120,9 @@ import { MachineActivityGraphComponent } from './machine-activity-graph/machine-
     CameraListComponent,
     TimecardComponent,
     MachineStatusGridComponent,
-    MachineActivityGraphComponent
+    MachineActivityGraphComponent,
+    BaseGraphComponent,
+    MachineCycleAnalysisGraphComponent
   ],
   imports: [
     BrowserModule,

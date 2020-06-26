@@ -98,16 +98,16 @@ services:
 #    depends_on:
 #      - 'kafka'
 #
-  # authentication & authorization server
-  server:
-    image: strangesast/core_server
-    build:
-      context: .
-      dockerfile: docker/server/Dockerfile
-    ports:
-      - "3001:80"
-    environment:
-      NODE_CONFIG: '{"secret":"secretSECRETsecretSECRETsecretSECRET", "port": 80, "postgres": {"connectionString": "postgres://postgres:password@postgres:5432/development"}}'
+## authentication & authorization server
+#  server:
+#    image: strangesast/core_server
+#    build:
+#      context: .
+#      dockerfile: docker/server/Dockerfile
+#    ports:
+#      - "3001:80"
+#    environment:
+#      NODE_CONFIG: '{"secret":"secretSECRETsecretSECRETsecretSECRET", "port": 80, "postgres": {"connectionString": "postgres://postgres:password@postgres:5432/development"}}'
 #
 #  # main angular application
 #  client:
@@ -161,5 +161,9 @@ services:
 
 volumes:
   db_data:
+    external: true
+    name: core_db_data
   kafka_data:
+    external: true
+    name: core_kafka_data
   pgadmin_data:
