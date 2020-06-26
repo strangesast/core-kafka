@@ -146,6 +146,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
     description  text
   );
 
+  insert into machines (id,name,type,manufacturer) values ('doosan-2600sy', 'Doosan 2600SY', 'lathe', 'doosan');
+  insert into machines (id,name,type,manufacturer) values ('doosan-gt2100m', 'Doosan GT2100M', 'lathe', 'doosan');
+  insert into machines (id,name,type,manufacturer) values ('hardinge-gx1600', 'Hardinge GX1600', 'mill', 'hardinge');
+  insert into machines (id,name,type,manufacturer) values ('samsung-sl45', 'Samsung SL45', 'lathe', 'samsung');
+
   create table machine_state (
     value      text,
     property   text,
@@ -179,6 +184,25 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   	from machine_state
   ) t
   where property = 'execution';
+
+  select
+    machine_id,
+    property,
+    value,
+    "timestamp",
+    "offset",
+    r
+  from (
+    select
+      machine_id,
+      property,
+      value::integer as value,
+      "timestamp",
+      "offset",
+      dense_rank() over (partition by machine_id order by "timestamp") as r
+    from machine_state_view
+    where property = 'part_count'::text and value <> 'unavailable'::text) t
+  order by "timestamp" desc; 
 
   CREATE TABLE machine_values (
     "machine_id" text not null,

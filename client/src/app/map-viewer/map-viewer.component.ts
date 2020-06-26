@@ -1,11 +1,40 @@
-import { OnChanges, SimpleChanges, Input, ChangeDetectorRef, HostListener, ViewChild, Component, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  Input,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { group } from 'd3-array';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
-import { combineLatest, BehaviorSubject, ReplaySubject } from 'rxjs';
-import { filter, multicast, refCount } from 'rxjs/operators';
+import { Apollo } from 'apollo-angular';
+import gql from 'graphql-tag';
+import { combineLatest, BehaviorSubject, Subject, ReplaySubject } from 'rxjs';
+import { map, takeUntil, pluck, filter, multicast, refCount } from 'rxjs/operators';
 import { animate, trigger, transition, state, style } from '@angular/animations';
+
+
+const query = gql`
+  subscription {
+    machines {
+      state(limit: 1, order_by: {timestamp: desc, value: asc}) {
+        offset
+        timestamp
+        value
+      }
+      id
+      manufacturer
+      name
+    }
+  }
+`;
 
 @Component({
   selector: 'app-map-viewer',
@@ -46,7 +75,7 @@ import { animate, trigger, transition, state, style } from '@angular/animations'
   ],
   styleUrls: ['./map-viewer.component.scss']
 })
-export class MapViewerComponent implements AfterViewInit, OnChanges {
+export class MapViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input()
   machines: any[];
 
@@ -59,19 +88,19 @@ export class MapViewerComponent implements AfterViewInit, OnChanges {
   path;
   width: number;
   height: number;
-  zoom = d3.zoom()
-    .scaleExtent([.01, 2]);
-
   assets$ = this.http.get('/assets/df_building.json').pipe(
     multicast(new BehaviorSubject(null)),
     refCount(),
   );
-
   dirty = false;
-
+  destroyed$ = new Subject();
   lastClicked = '';
+  reset = () => null;
 
-  constructor(public changes: ChangeDetectorRef, public http: HttpClient) {}
+  constructor(
+    public apollo: Apollo,
+    public http: HttpClient,
+  ) {}
 
   @HostListener('window:resize', ['$event'])
   onResize(event) {
@@ -86,33 +115,55 @@ export class MapViewerComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  ngOnDestroy() {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
   ngAfterViewInit(): void {
     const svg = d3.select(this.el.nativeElement);
     this.svg = svg;
+
     const path = d3.geoPath().projection(d3.geoIdentity().reflectY(true));
-    this.path = path;
 
     let first = true;
     const g = svg.append('g');
 
-    const zoomed = () => {
-      g.attr('transform', d3.event.transform);
-    };
+    const zoom = d3.zoom()
+      .scaleExtent([.4, 2])
+      .on('start', () => {
+        if (first) {
+          first = false;
+        } else if (this.dirty === false) {
+          this.dirty = true;
+        }
+      })
+      .on('zoom', () => {
+        g.attr('transform', d3.event.transform);
+      });
 
-    this.zoom.on('start', () => {
-      if (first) {
-        first = false;
-      } else if (this.dirty === false) {
-        this.dirty = true;
-        this.changes.detectChanges();
-      }
-    }).on('zoom', zoomed);
-
-    svg.call(this.zoom);
+    svg.call(zoom);
 
     const gBuilding = g.append('g').classed('building', true).call(s => s.append('path'));
 
     const assets$ = this.assets$.pipe(filter(assets => assets != null));
+
+    const calcZoom = (feature, scale = true) => {
+      const [[x0, y0], [x1, y1]] = path.bounds(feature);
+
+      let z = d3.zoomIdentity.translate(this.width / 2, this.height / 2);
+      if (scale) {
+        z = z.scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)));
+      }
+      z = z.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+
+      return z;
+    };
+
+    this.apollo.subscribe({query}).pipe(
+      takeUntil(this.destroyed$),
+      pluck('data', 'machines'),
+    ).subscribe(data => console.log(data));
 
     combineLatest(assets$, this.machines$.pipe(filter(arr => arr != null))).subscribe(([json, machines]: [any, any]) => {
       /* nav changes element size slightly after render, so calculate a bit late */
@@ -123,39 +174,38 @@ export class MapViewerComponent implements AfterViewInit, OnChanges {
       const machinesMap = machines.reduce((acc, value) => ({...acc, [value.machine_id]: value}), {});
 
       const center = d3.geoCentroid(json);
-      const offset: [number, number] = [this.width / 2, this.height / 2];
-
       const buildingFeature = topojson.feature(json, json.objects.building);
 
-      const buildingZoom = this.calculateZoomTransform(buildingFeature);
+      gBuilding.datum(buildingFeature).select('path')
+        .attr('fill', 'none')
+        .attr('stroke', 'black')
+        .attr('d', path);
 
-      gBuilding.datum(buildingFeature).select('path').attr('fill', 'none').attr('stroke', 'black').attr('d', path);
+      this.reset = () => {
+        this.svg.transition().call(zoom.transform, calcZoom(buildingFeature));
+        setTimeout(() => this.dirty = false, 500);
+      };
 
-      g.selectAll('g.object').data(
-        Object.entries(json.objects).filter(d => d[0] !== 'cameras' && d[0] !== 'building'),
-        d => d[0],
-      ).join(
-        s => s.append('g').classed('object', true)
-          .call(ss => {
-            ss.append('path')
-              .attr('fill', 'none')
-              .attr('stroke', 'black');
-            ss.append('rect').attr('fill', 'transparent');
-            ss.append('circle').attr('fill', 'green');
-          })
+      const data = Object.entries(json.objects).filter(d => d[0] !== 'cameras' && d[0] !== 'building');
+
+      g.selectAll('g.object').data(data, d => d[0]).join(
+        s => s.append('g').classed('object', true).call(ss => {
+          ss.append('path')
+            .attr('fill', 'none')
+            .attr('stroke', 'black');
+          ss.append('rect').attr('fill', 'transparent');
+          ss.append('circle').attr('fill', 'green');
+        })
       )
       .each(function([machineId, geometry]: any, i: number) {
-
         const s = d3.select(this);
+
         const f = topojson.feature(json, geometry);
         const [[x, y], [x1, y1]] = path.bounds(f);
         const [w, h] = [x1 - x, y1 - y];
-
-        const [cx, cy] = path.centroid(f);
-
         const color = getColor(machines, machineId);
 
-        s.select('path').datum(f).attr('d', (dd: any) => path(dd));
+        s.select('path').attr('d', path(f));
         s.select('circle')
           .attr('cx', x + w / 2)
           .attr('cy', y + h / 2)
@@ -178,41 +228,19 @@ export class MapViewerComponent implements AfterViewInit, OnChanges {
       })
       .on('click', d => {
         if (this.lastClicked === d[0]) {
-          // this.dirty$.next(false);
           this.dirty = false;
-          this.changes.detectChanges();
           this.lastClicked = '';
-          svg.transition().call(this.zoom.transform, this.calculateZoomTransform(buildingFeature));
+          svg.transition().call(zoom.transform, calcZoom(buildingFeature));
         } else {
           this.dirty = true;
-          this.changes.detectChanges();
           this.lastClicked = d[0];
-          svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, d[1]), false));
+          svg.transition().call(zoom.transform, calcZoom(topojson.feature(json, d[1]), false));
         }
       });
 
-      svg.call(this.zoom.transform, buildingZoom);
+      svg.call(zoom.transform, calcZoom(buildingFeature));
     });
   }
-
-  reset() {
-    const json = (this.assets$.source as any).getSubject().getValue();
-    this.svg.transition().call(this.zoom.transform, this.calculateZoomTransform(topojson.feature(json, json.objects.building), true));
-    setTimeout(() => this.dirty = false, 500);
-  }
-
-  calculateZoomTransform(feature, scale = true) {
-    const [[x0, y0], [x1, y1]] = this.path.bounds(feature);
-
-    let z = d3.zoomIdentity.translate(this.width / 2, this.height / 2);
-    if (scale) {
-      z = z.scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)));
-    }
-    z = z.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
-
-    return z;
-  }
-
 }
 
 function getColor(machinesMap, id) {

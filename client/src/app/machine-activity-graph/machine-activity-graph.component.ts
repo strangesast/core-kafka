@@ -121,7 +121,7 @@ export class MachineActivityGraphComponent extends BaseGraphComponent implements
           .attr('alignment-baseline', 'hanging')
           .text(d => d.machine_id)
         )
-        .select('g.values').selectAll('g').data(d => d.data).join(
+        .select('g.values').selectAll('g').data(d => d.data || []).join(
           s => s.append('g').call(ss => {
             ss.append('rect').attr('height', 40);
           })

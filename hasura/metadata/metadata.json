@@ -97,6 +97,12 @@
     {
       "table": {
         "schema": "public",
+        "name": "machine_state_view"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
         "name": "machine_values"
       },
       "select_permissions": [
@@ -121,6 +127,22 @@
         "schema": "public",
         "name": "machines"
       },
+      "array_relationships": [
+        {
+          "name": "state",
+          "using": {
+            "manual_configuration": {
+              "remote_table": {
+                "schema": "public",
+                "name": "machine_state_view"
+              },
+              "column_mapping": {
+                "id": "machine_id"
+              }
+            }
+          }
+        }
+      ],
       "select_permissions": [
         {
           "role": "anonymous",
