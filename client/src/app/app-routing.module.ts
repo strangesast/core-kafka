@@ -40,6 +40,7 @@ import { MachineActivityGraphComponent } from './machine-activity-graph/machine-
 import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
 import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calendar-graph.component';
+import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-graph.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -105,11 +106,12 @@ const routes: Routes = [
     {path: 'new', component: CreateAccountPageComponent},
   ]},
   {path: 'graphs', component: TimeclockGraphsContainerPageComponent, children: [
+    {path: '', pathMatch: 'full', redirectTo: 'machines/activity'},
     {path: 'machines/activity', component: MachineActivityGraphComponent },
     {path: 'machines/cycles', component: MachineCycleAnalysisGraphComponent },
     {path: 'machines/live', component: MachineLiveGraphComponent },
     {path: 'timeclock/shift-calendar', component: ShiftCalendarGraphComponent },
-    {path: '**', component: NoopComponent},
+    {path: 'timeclock/weekly', component: WeeklyShiftGraphComponent },
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},
   {path: 'timeclock/full', component: TimeclockFullPageComponent},

@@ -72,6 +72,7 @@ import { BaseGraphComponent } from './base-graph/base-graph.component';
 import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
 import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calendar-graph.component';
+import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-graph.component';
 
 
 @NgModule({
@@ -134,7 +135,8 @@ import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calend
     BaseGraphComponent,
     MachineCycleAnalysisGraphComponent,
     MachineLiveGraphComponent,
-    ShiftCalendarGraphComponent
+    ShiftCalendarGraphComponent,
+    WeeklyShiftGraphComponent
   ],
   imports: [
     BrowserModule,

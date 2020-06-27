@@ -9,6 +9,13 @@ const query = gql`
       machine_id
       timestamp
       value
+      machine {
+        description
+        name
+        type
+        manufacturer
+        capabilities
+      }
     }
   }
 `;
@@ -18,7 +25,8 @@ const query = gql`
   selector: 'app-machine-status-grid',
   template: `
   <div *ngFor="let each of data$ | async" [ngClass]="each.value.toLowerCase()">
-    <h1>{{each.machine_id}}</h1>
+    <h1><a [routerLink]="['/machines', each.machine_id]">{{each.machine.name}}</a></h1>
+    <h4>{{each.value}}</h4>
     <p>Since {{each.timestamp | date:'short'}}</p>
   </div>
   `,
@@ -28,8 +36,9 @@ export class MachineStatusGridComponent implements OnInit {
 
   data$ = this.apollo.subscribe({query}).pipe(
     pluck('data', 'machine_execution_state'),
-    map((arr: any[]) => arr.map(({machine_id, timestamp, value}) => ({
+    map((arr: any[]) => arr.map(({machine, machine_id, timestamp, value}) => ({
       value,
+      machine,
       machine_id,
       timestamp: new Date(timestamp.endsWith('+00:00') ? timestamp.slice(0, -6) + 'Z' : timestamp),
     }))),

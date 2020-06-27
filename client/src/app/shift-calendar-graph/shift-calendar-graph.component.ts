@@ -1,4 +1,5 @@
 import { Component, AfterViewInit, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
@@ -56,6 +57,7 @@ const employeesQuery = gql`
         </mat-option>
       </mat-select>
     </mat-form-field>
+    <a *ngIf="form.get('employeeId').value as employeeId" [routerLink]="['/people', employeeId]">Employee Page</a>
   </form>
   <svg #svg></svg>
   `,
@@ -69,6 +71,9 @@ const employeesQuery = gql`
     flex: auto 1 1;
     display: block;
   }
+  form {
+    padding: 20px;
+  }
   `]
 })
 export class ShiftCalendarGraphComponent extends BaseGraphComponent implements OnInit, AfterViewInit {
@@ -80,7 +85,7 @@ export class ShiftCalendarGraphComponent extends BaseGraphComponent implements O
     pluck('data', 'employees'),
     tap((employees: any) => {
       if (employees.length > 0) {
-        const employeeId = employees[employees.length - 2].id;
+        const employeeId = employees[0].id;
         this.form.patchValue({employeeId});
       }
     }),
@@ -103,8 +108,8 @@ export class ShiftCalendarGraphComponent extends BaseGraphComponent implements O
       const arr = timeclock_shifts_daily.map(({employee_id, date, date_start, date_stop, duration, shifts}) => ({
         employee_id,
         date: new Date(...(date.split('-').map(s => parseInt(s, 10)).map((f, i) => i === 1 ? f - 1 : f)) as [number, number, number]),
-        date_start: date_start && new Date(date_start + 'Z'),
-        date_stop: date_stop && new Date(date_stop + 'Z'),
+        date_start: date_start && new Date((date_start.endsWith('+00:00') ? date_start.slice(0, -6) : date_start) + 'Z'),
+        date_stop: date_stop && new Date((date_stop.endsWith('+00:00') ? date_stop.slice(0, -6) : date_stop) + 'Z'),
         duration,
         shifts,
       }));
@@ -115,7 +120,12 @@ export class ShiftCalendarGraphComponent extends BaseGraphComponent implements O
     }),
   );
 
-  constructor(public apollo: Apollo, public fb: FormBuilder) {
+  constructor(
+    public apollo: Apollo,
+    public fb: FormBuilder,
+    public router: Router,
+    public route: ActivatedRoute,
+  ) {
     super();
   }
 
@@ -142,21 +152,8 @@ export class ShiftCalendarGraphComponent extends BaseGraphComponent implements O
             .attr('y', -20)
             .text(d => d[0]);
           ss.append('g').attr('transform', `translate(${80 + 0.5},0)`).classed('data', true);
-          const months = ss.append('g').selectAll('g')
-            .data(d => d3.timeMonth.range(d3.timeMonth(d[1][0].date), d[1][d[1].length - 1].date))
-            .join('g');
-          months.filter((d, i) => i !== 0).append('path')
-            .attr('fill', 'none')
-            .attr('stroke', 'lightgrey')
-            .attr('stroke-width', 3)
-            .attr('d', d => pathMonth(d, hi));
-          months.append('text')
-            .attr('x', (d: any) => {
-              return d3.timeWeek.count(d3.timeYear(d), d3.timeWeek.ceil(d)) * hi + 2 + 80;
-            })
-            .attr('y', -20)
-            .text(d => d.toLocaleDateString('en-us', {month: 'short'}));
-          ss.append('g').selectAll('text').data(d => {
+          ss.append('g').attr('transform', `translate(${80 + 0.5},0)`).classed('months', true);
+          ss.append('g').classed('days', true).selectAll('text').data(d => {
             const fd = new Date(d[0], 0, 1).getDay();
             return d3.range(7).map(i => new Date(d[0], 0, i - fd + 1));
           })
@@ -168,34 +165,50 @@ export class ShiftCalendarGraphComponent extends BaseGraphComponent implements O
             .text(d => d.toLocaleDateString('en-us', {weekday: 'short'}));
         }),
         s => s,
-        s => {
-          console.log('exit');
-          return s.remove();
-        },
+        s => s.remove(),
       )
-        .attr('transform', (d, i) => `translate(0,${h * i + p * (i + 1)})`)
-        .select('g.data')
-        .selectAll('g.datum').data(d => d[1], (d: any) => d.id).join(
-          s => s.append('g').classed('datum', true).call(ss => {
-            ss.append('rect')
-              .attr('width', hi - 1)
-              .attr('height', hi - 1)
-              .attr('x', d => d3.utcSunday.count(d3.utcYear(d.date_start), d.date_start) * hi + 0.5)
-              .attr('y', d => d.date.getDay() * hi + 0.5);
-            ss.append('title').text(d => `${formatDate(d.date)}: ${(d.duration / 3.6e6).toFixed(2)} hours`);
-          }),
-          s => s,
-          s => s.remove(),
-        ).attr('fill', d => color(Math.min(1, d.duration / +maxDuration)));
+      .call(s => s.select('.months').selectAll('g').data(d => d3.timeMonth.range(d3.timeMonth(d[1][0].date), d[1][d[1].length - 1].date))
+        .join(ss => ss.append('g').call(sss => {
+          sss.filter((d, i) => i !== 0).append('path').attr('fill', 'none').attr('stroke', '#fafafa').attr('stroke-width', 3);
+          sss.append('text').attr('y', -20);
+        }))
+        .call(ss => {
+          ss.select('path').attr('d', d => pathMonth(d, hi));
+        })
+        .call(ss => ss.select('text')
+          .attr('x', (d: any) => d3.timeWeek.count(d3.timeYear(d), d3.timeWeek.ceil(d)) * hi + 2)
+          .text(d => d.toLocaleDateString('en-us', {month: 'short'}))
+        )
+      )
+      .attr('transform', (d, i) => `translate(0,${h * i + p * (i + 1)})`)
+      .select('g.data')
+      .selectAll('g.datum').data(d => d[1], (d: any) => d.id).join(
+        s => s.append('g').classed('datum', true).call(ss => {
+          ss.append('rect')
+            .attr('width', hi - 1)
+            .attr('height', hi - 1)
+            .attr('x', d => d3.utcSunday.count(d3.utcYear(d.date_start), d.date_start) * hi + 0.5)
+            .attr('y', d => d.date.getDay() * hi + 0.5);
+          ss.append('title').text(d => `${formatDate(d.date)}: ${(d.duration / 3.6e6).toFixed(2)} hours`);
+        }),
+        s => s,
+        s => s.remove(),
+      )
+      .attr('fill', d => color(Math.min(1, d.duration / +maxDuration)))
+      .on('click', d => this.navigateTo(d));
     });
   }
 
+  navigateTo({date}: {date: Date}) {
+    const s = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+    this.router.navigate(['/timeclock'], {queryParams: {date: s}});
+  }
 }
 
 
 function pathMonth(t, size) {
   const d = Math.max(0, Math.min(7, t.getDay()));
-  const w = d3.timeSunday.count(d3.utcYear(t), t);
+  const w = d3.timeSunday.count(d3.timeYear(t), t);
   return `${d === 0 ? `M${w * size},0`
       : d === 7 ? `M${(w + 1) * size},0`
       : `M${(w + 1) * size},0V${d * size}H${w * size}`}V${7 * size}`;

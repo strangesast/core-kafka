@@ -55,6 +55,22 @@
         "schema": "public",
         "name": "machine_execution_state"
       },
+      "object_relationships": [
+        {
+          "name": "machine",
+          "using": {
+            "manual_configuration": {
+              "remote_table": {
+                "schema": "public",
+                "name": "machines"
+              },
+              "column_mapping": {
+                "machine_id": "id"
+              }
+            }
+          }
+        }
+      ],
       "select_permissions": [
         {
           "role": "anonymous",

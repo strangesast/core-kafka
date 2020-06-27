@@ -3,6 +3,12 @@
   height: 100%;
 
   & > div {
+    h1 a {
+      color: inherit;
+    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     &.active {
       background-color: green;
     }
@@ -19,5 +25,6 @@
     &.unavailable {
       background-color: lightgrey;
     }
+    padding: 16px;
   }
 }
