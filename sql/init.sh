@@ -137,6 +137,33 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "development" <<-EO
   ) t
   ORDER BY (t.dates_start[1]) DESC;
 
+  create view timeclock_shifts_daily as select t.employee_id,
+    t.date,
+    array_agg(t.id) as shifts,
+    min(t.date_start) as date_start,
+    max(t.date_stop) as date_stop,
+    sum(t.duration) as duration
+  from (
+    select t_1.id,
+      t_1.employee_id,
+      t_1.date,
+      t_1.date_start,
+      t_1.date_stop,
+      extract('epoch' from (t_1.date_stop - t_1.date_start::timestamp with time zone)) * 1000 as duration
+    from (
+      select timeclock_shifts.id,
+        timeclock_shifts.employee_id,
+        timeclock_shifts.date,
+        timeclock_shifts.date_start,
+        case
+            when timeclock_shifts.date_stop is null then now()
+            else timeclock_shifts.date_stop::timestamp with time zone
+        end as date_stop
+      from timeclock_shifts
+    ) t_1
+  ) t
+  group by t.employee_id, t.date;
+
   create table machines (
     id           text primary key,
     name         text,

@@ -75,6 +75,12 @@
     {
       "table": {
         "schema": "public",
+        "name": "machine_part_count"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
         "name": "machine_state"
       },
       "select_permissions": [
@@ -134,7 +140,7 @@
             "manual_configuration": {
               "remote_table": {
                 "schema": "public",
-                "name": "machine_state_view"
+                "name": "machine_execution_state"
               },
               "column_mapping": {
                 "id": "machine_id"
@@ -413,6 +419,28 @@
             ],
             "filter": {},
             "allow_aggregations": true
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "timeclock_shifts_daily"
+      },
+      "select_permissions": [
+        {
+          "role": "anonymous",
+          "permission": {
+            "columns": [
+              "employee_id",
+              "date",
+              "shifts",
+              "date_start",
+              "date_stop",
+              "duration"
+            ],
+            "filter": {}
           }
         }
       ]

@@ -16,7 +16,7 @@ import { Component, OnInit } from '@angular/core';
         <a mat-list-item [routerLink]="['./machines', 'activity']">Machine Activity</a>
         <a mat-list-item [routerLink]="['./machines', 'cycles']">Cycles</a>
         <a mat-list-item [routerLink]="['./machines', 'live']">Live</a>
-        <a mat-list-item [routerLink]="['./timeclock', '4']">Timeclock Graph 4</a>
+        <a mat-list-item [routerLink]="['./timeclock', 'shift-calendar']">Shift Calendar</a>
         <a mat-list-item [routerLink]="['./timeclock', '5']">Timeclock Graph 5</a>
         <a mat-list-item [routerLink]="['./timeclock', '6']">Timeclock Graph 6</a>
       </mat-nav-list>

@@ -39,6 +39,7 @@ import { MachineStatusGridComponent } from './machine-status-grid/machine-status
 import { MachineActivityGraphComponent } from './machine-activity-graph/machine-activity-graph.component';
 import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-graph/machine-cycle-analysis-graph.component';
 import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
+import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calendar-graph.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -107,6 +108,7 @@ const routes: Routes = [
     {path: 'machines/activity', component: MachineActivityGraphComponent },
     {path: 'machines/cycles', component: MachineCycleAnalysisGraphComponent },
     {path: 'machines/live', component: MachineLiveGraphComponent },
+    {path: 'timeclock/shift-calendar', component: ShiftCalendarGraphComponent },
     {path: '**', component: NoopComponent},
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},
