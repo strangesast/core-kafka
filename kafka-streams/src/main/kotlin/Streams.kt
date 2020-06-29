@@ -45,58 +45,39 @@ fun main() {
                     .filter { it.first != "" }
             pairs.map { Pair(ts, it) }
         }
-
-    val sampleKeySerde = ProtoMessageSerde(SerialMonitoring.SampleKey.parser())
-    val sampleValueSerde = ProtoMessageSerde(SerialMonitoring.SampleValue.parser())
-
-    // val paired = sparse.map { key, value -> KeyValue(
-    //         SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.second.first).build(),
-    //         SerialMonitoring.SampleValue.newBuilder().setTimestamp(value.first.toProtoTimestamp()).setValue(value.second.second).build())
-    //     }
-    sparse.map { key, value ->
-            KeyValue("${key}.${value.second.first}",
-                gson.toJson(ConnectSchemaAndPayload(
-                    ConnectSchema(
-                        "struct",
-                        listOf(
-                                ConnectSchemaField(
-                                        "string",
-                                        false,
-                                        "machine_id"
-                                ),
-                                ConnectSchemaField(
-                                        "string",
-                                        false,
-                                        "property"
-                                ),
-                                ConnectSchemaField(
-                                        "int64",
-                                        false,
-                                        "timestamp"
-                                ),
-                                ConnectSchemaField(
-                                        "string",
-                                        false,
-                                        "value"
-                                )
-                        ),
-                        false,
-                        "key-value"
-                    ),
-                    mapOf<String, Any>(
-                        "machine_id" to key,
-                        "property" to value.second.first,
-                        "timestamp" to value.first.toEpochMilli(),
-                        "value" to value.second.second
-                    )
-                ))
-            )
+        .mapValues { value ->
+            SerialMonitoring.SampleKeyValue.newBuilder()
+                    .setTimestamp(value.first.toProtoTimestamp())
+                    .setKey(value.second.first)
+                    .setValue(value.second.second)
+                    .build()
         }
-        .to("machine_state_execution", Produced.with(Serdes.String(), Serdes.String()))
 
+    val sampleValueSerde = ProtoMessageSerde(SerialMonitoring.SampleValue.parser())
+    val table = sparse
+            .filter { _, value -> value.key == "execution" }
+            .groupByKey() // group by machine_id
+            .aggregate(
+                    { SerialMonitoring.SampleValue.newBuilder().setOffset(0).build() },
+                    { _, value, agg ->
+                        SerialMonitoring.SampleValue.newBuilder()
+                                .setOffset(agg.offset + 1)
+                                .setValue(value.value)
+                                .setTimestamp(value.timestamp)
+                                .build()
+                    },
+                    Materialized.with(Serdes.String(), sampleValueSerde)
+            )
 
-
-    sparse.foreach { key, value ->
+    sparse
+        .join(
+            table,
+            { value1, value2 ->
+                gson.toJson(listOf(value1.key, value1.value, "execution: ${value2.value}", value2.offset))
+            },
+            Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleKeyValue.parser()), sampleValueSerde)
+        )
+        .foreach { key, value ->
             logger.info("key: $key, value: $value")
         }
 
