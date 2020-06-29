@@ -41,6 +41,8 @@ import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-gra
 import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calendar-graph.component';
 import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-graph.component';
+import { SchedulePageComponent } from './schedule-page/schedule-page.component';
+import { PartActivityGraphComponent } from './part-activity-graph/part-activity-graph.component';
 
 // guards
 import { InitGuard } from './init.guard';
@@ -59,6 +61,7 @@ const routes: Routes = [
       {path: 'grid', component: MachinesGridComponent},
     ]},
     {path: 'machines/:id', component: MachinePageComponent},
+    {path: 'schedule', component: SchedulePageComponent},
     {path: 'orders', component: ActiveOrdersPageComponent},
     {path: 'orders/historical', component: OrderListPageComponent},
     {path: 'orders/:id', component: OrderPageComponent},
@@ -112,6 +115,7 @@ const routes: Routes = [
     {path: 'machines/live', component: MachineLiveGraphComponent },
     {path: 'timeclock/shift-calendar', component: ShiftCalendarGraphComponent },
     {path: 'timeclock/weekly', component: WeeklyShiftGraphComponent },
+    {path: 'machines/part-count-activity', component: PartActivityGraphComponent },
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},
   {path: 'timeclock/full', component: TimeclockFullPageComponent},

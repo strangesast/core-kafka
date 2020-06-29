@@ -73,6 +73,8 @@ import { MachineCycleAnalysisGraphComponent } from './machine-cycle-analysis-gra
 import { MachineLiveGraphComponent } from './machine-live-graph/machine-live-graph.component';
 import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calendar-graph.component';
 import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-graph.component';
+import { SchedulePageComponent } from './schedule-page/schedule-page.component';
+import { PartActivityGraphComponent } from './part-activity-graph/part-activity-graph.component';
 
 
 @NgModule({
@@ -136,7 +138,9 @@ import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-gra
     MachineCycleAnalysisGraphComponent,
     MachineLiveGraphComponent,
     ShiftCalendarGraphComponent,
-    WeeklyShiftGraphComponent
+    WeeklyShiftGraphComponent,
+    SchedulePageComponent,
+    PartActivityGraphComponent
   ],
   imports: [
     BrowserModule,

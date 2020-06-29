@@ -18,6 +18,7 @@ import { Component, OnInit } from '@angular/core';
         <a mat-list-item [routerLink]="['./machines', 'activity']">Machine Activity</a>
         <a mat-list-item [routerLink]="['./machines', 'cycles']">Cycles</a>
         <a mat-list-item [routerLink]="['./machines', 'live']">Live</a>
+        <a mat-list-item [routerLink]="['./machines', 'part-count-activity']">Part Count Activity</a>
         <mat-divider></mat-divider>
         <div mat-subheader>Timeclock</div>
         <a mat-list-item [routerLink]="['./timeclock', 'shift-calendar']">Shift Calendar</a>

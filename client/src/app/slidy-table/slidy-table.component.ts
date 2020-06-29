@@ -21,6 +21,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { group } from 'd3-array';
+import * as d3 from 'd3';
 import { Observable, of, Subject, interval, ReplaySubject } from 'rxjs';
 import {
   delay,
@@ -280,11 +281,11 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   getDays(ofDate, employeeId) {
-    const weekNo = getWeekNumber(ofDate);
-    const n = (weekNo + 1) % 2 * 7 + ofDate.getDay();
+    const weekNo = d3.timeSunday.count(d3.timeYear(ofDate), ofDate);
 
     const minDate = new Date(ofDate);
-    minDate.setDate(minDate.getDate() - n);
+
+    minDate.setDate(minDate.getDate() - minDate.getDay() - ((weekNo + 1) % 2) * 7);
 
     const maxDate = new Date(minDate);
     maxDate.setDate(maxDate.getDate() + 14);

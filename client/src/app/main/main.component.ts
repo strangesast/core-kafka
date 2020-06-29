@@ -22,6 +22,7 @@ import { UserService } from '../user.service';
         <div>
           <a mat-list-item [routerLink]="['/timeclock']">Timeclock</a>
           <a mat-list-item [routerLink]="['/machines']">Machines</a>
+          <a mat-list-item [routerLink]="['/schedule']">Schedule</a>
           <a mat-list-item [routerLink]="['/orders']">Orders</a>
           <a mat-list-item [routerLink]="['/inventory']">Inventory</a>
           <a mat-list-item [routerLink]="['/parts']">Parts</a>

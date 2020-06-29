@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
+import * as d3 from 'd3';
 import { Observable, of, interval } from 'rxjs';
 import { first, skip, withLatestFrom, startWith, switchMap, map, tap, pluck } from 'rxjs/operators';
 import { group } from 'd3-array';
@@ -20,7 +21,7 @@ import { MatPaginator } from '@angular/material/paginator';
   <header>
     <ng-container *ngIf="active$ | async as active">
       <h1>{{active.list.length}} Clocked In</h1>
-      <p>As of <span *ngIf="isToday(active.asof); else old">{{active.asof | date:'mediumTime'}}</span><ng-template #old>{{active.asof | date:'medium'}}</ng-template>, 34 Total Hours Today, <a mat-stroked-button [routerLink]="['/graphs/timeclock']">Graphs</a></p>
+      <p>As of <span *ngIf="isToday(active.asof); else old">{{active.asof | date:'mediumTime'}}</span><ng-template #old>{{active.asof | date:'medium'}}</ng-template>, 34 Total Hours Today, <a [routerLink]="['/graphs']">Graphs</a></p>
     </ng-container>
   </header>
   <div class="controls">

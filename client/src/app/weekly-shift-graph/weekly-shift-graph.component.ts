@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import * as d3 from 'd3';
 import { group } from 'd3-array';
 import { of, ReplaySubject } from 'rxjs';
-import { withLatestFrom, switchMap, takeUntil } from 'rxjs/operators';
+import { debounceTime, withLatestFrom, switchMap, takeUntil } from 'rxjs/operators';
 
 import { BaseGraphComponent } from '../base-graph/base-graph.component';
 
@@ -19,7 +19,11 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
   data$ = this.range$.pipe(
     switchMap(arg => {
       const [fromDate, toDate] = arg.map(d => d.toISOString());
-      return this.http.get(`/api/data/weekly`, {params: {fromDate, toDate}});
+      return this.http.get(`/api/data/weekly`, {params: {
+        fromDate,
+        toDate,
+        bucketSize: '30',
+      }});
     }),
     takeUntil(this.destroyed$),
   );
@@ -29,8 +33,8 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
   }
 
   ngOnInit() {
-    const toDate = d3.timeWeek.ceil(new Date());
-    const fromDate = d3.timeWeek.offset(toDate, -10);
+    const toDate = new Date();
+    const fromDate = d3.timeSunday.offset(d3.timeSunday.floor(toDate), -10);
     this.range$.next([fromDate, toDate]);
   }
 
@@ -39,11 +43,11 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
     const weekRowHeight = 80;
     const weekRowStep = 100;
 
-    const {width, height} = this.el.nativeElement.getBoundingClientRect();
+    let {width, height} = this.el.nativeElement.getBoundingClientRect();
     const margin = {top: 40, right: 40, bottom: 40, left: 40};
 
     const now = new Date();
-    const week = d3.timeWeek.floor(now);
+    const week = d3.timeSunday.floor(now);
     const weekRows = 10;
 
     const totalHeight = weekRowStep * weekRows;
@@ -54,6 +58,14 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
 
     };
     const bisector = d3.bisector((d: any) => d.date).left;
+    const fmt = '%Y-%m-%d';
+    const serialize = d3.timeFormat(fmt);
+    const deserialize = d3.timeParse(fmt);
+
+    const yScale = d3.scaleTime()
+      .range([margin.top, totalHeight + margin.bottom]);
+
+    const line = d3.line().curve(d3.curveStep);
 
     this.data$.pipe(withLatestFrom(this.range$)).subscribe(([data, range]: any) => {
       const xScale = d3.scaleLinear().domain([0, 10]).range([weekRowHeight, 0]);
@@ -66,36 +78,41 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
         return b && (date - a.date > b.date - date) ? b : a;
       };
 
+      yScale.domain(range);
+      line.y((d: any) => xScale(d.shifts.length));
 
-      const yScale = d3.scaleTime()
-        .range([margin.top, totalHeight + margin.bottom])
-        .domain(range);
-
-      const line = d3.line().curve(d3.curveStep).y((d: any) => xScale(d.shifts.length));
-
-      g.selectAll('g').data(Array.from(group(
+      g.selectAll('g.week').data(Array.from(group(
         data.map(({date, ...r}) => ({ ...r, date: new Date(date) })),
-        (d: any) => stringifyDate(d3.timeWeek.floor(d.date))
-      )), d => d[0]).join(
-        enter => enter.append('g').call(s => s.append('path')
+        (d: any) => serialize(d3.timeSunday.floor(d.date)))).map(([key, value]) => {
+          if (value.length > 0) {
+            value.unshift({...value[0], shifts: []});
+            value.push({...value[value.length - 1], shifts: []});
+          }
+          return [key, value];
+        }), d => d[0])
+      .join(s => s.append('g').classed('week', true).call(ss => {
+        ss.append('path')
           .attr('fill', 'lightgrey')
-          .attr('stroke', 'black')
-        )
-      )
-      .each(function(d) {
-        const date = unstringifyDate(d[0]);
+          .attr('stroke', 'black');
+        ss.append('g').classed('scale', true);
+      }))
+      .each(function(d: [string, any[]]) {
+        // TODO: fix this
+        const date = deserialize(d[0]);
         const s = d3.select(this)
           .attr('transform', `translate(0,${yScale(date)})`);
 
-        const domain = [date, d3.timeWeek.offset(date, 1)];
+        const domain = [date, d3.timeSunday.offset(date, 1)];
         const scale = d3.scaleTime()
           .domain(domain)
           .range([margin.left, width - margin.right]);
 
-        d[1].unshift({...d[1][0], shifts: []});
-        d[1].push({...d[1][d[1].length - 1], shifts: []});
         s.select('path').attr('d', line.x((dd: any) => scale(dd.date))(d[1]));
-      }).sort((a, b) => d3.ascending(a[0], b[0]));
+
+        s.select('.scale').attr('transform', `translate(0,${weekRowHeight})`).call(d3.axisBottom(scale));
+      })
+      .sort((a: any, b: any) => d3.ascending(a[0], b[0]))
+      .on('mouseenter', d => console.log(d));
 
       g.on('touchmove mousemove', function() {
         const {date, value} = bisect(d3.mouse(this)[0]);
@@ -105,6 +122,23 @@ export class WeeklyShiftGraphComponent extends BaseGraphComponent implements Aft
         });
       });
 
+    this.resized$.pipe(debounceTime(500)).subscribe(() => {
+      ({width, height} = this.el.nativeElement.getBoundingClientRect());
+      g.selectAll('g.week').each(function(d) {
+        const date = deserialize(d[0]);
+        const s = d3.select(this)
+          .attr('transform', `translate(0,${yScale(date)})`);
+
+        const domain = [date, d3.timeSunday.offset(date, 1)];
+        const scale = d3.scaleTime()
+          .domain(domain)
+          .range([margin.left, width - margin.right]);
+
+        s.select('path').attr('d', line.x((dd: any) => scale(dd.date))(d[1]));
+        s.select('.scale').attr('transform', `translate(0,${weekRowHeight})`).call(d3.axisBottom(scale));
+
+      });
+    });
   }
 
 }
