@@ -1,0 +1,10 @@
+{
+    "type": "record",
+    "name": "SplitSample",
+    "fields": [
+        {"name": "timestamp", "type": "long"},
+        {"name": "offset",  "type": "long"},
+        {"name": "key",  "type": "string"},
+        {"name": "value",  "type": "string"}
+    ]
+}

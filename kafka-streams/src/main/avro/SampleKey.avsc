@@ -1,0 +1,8 @@
+{
+    "type": "record",
+    "name": "SampleKey",
+    "fields": [
+        {"name": "machineID", "type": "string"},
+        {"name": "property",  "type": "string"}
+    ]
+}
