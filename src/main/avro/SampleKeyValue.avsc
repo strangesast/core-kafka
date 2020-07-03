@@ -1,0 +1,9 @@
+{
+    "type": "record",
+    "name": "SampleKeyValue",
+    "fields": [
+        {"name": "timestamp", "type": "long"},
+        {"name": "key",  "type": "string"},
+        {"name": "value",  "type": "string"}
+    ]
+}

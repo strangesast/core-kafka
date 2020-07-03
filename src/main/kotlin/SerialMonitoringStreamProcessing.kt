@@ -1,7 +1,8 @@
 package main
 
+import SampleKey
+import SplitSample
 import com.google.gson.Gson
-import com.google.protobuf.Timestamp
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -11,14 +12,9 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.processor.ProcessorContext
 import org.slf4j.LoggerFactory
-import proto.SerialMonitoring
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.CountDownLatch
-// import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
 
@@ -27,7 +23,7 @@ fun main() {
     val logger = LoggerFactory.getLogger("streams")
 
     val props = Properties()
-    props[StreamsConfig.APPLICATION_ID_CONFIG] = System.getenv("STREAMS_APPLICATION_ID") ?: "streams-monitoring"
+    props[StreamsConfig.APPLICATION_ID_CONFIG] = System.getenv("STREAMS_APPLICATION_ID") ?: "alt-streams-monitoring"
     props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = System.getenv("KAFKA_HOSTS") ?: "kafka:9092"
     props[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.ByteArray().javaClass
     props[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = Serdes.ByteArray().javaClass
@@ -66,33 +62,35 @@ fun main() {
 }
 
 fun buildStreamsTopology(raw: KStream<String, String>) {
-    val input = raw.flatTransform(TransformerSupplier { SampleTransformer() })
+    val splitSamples = raw.flatTransform(TransformerSupplier { SampleTransformer() })
 
-    val splitSamples = input.mapValues { bytes -> SerialMonitoring.SplitSample.parseFrom(bytes) }
+    // val splitSampleSerde = AvroMessageSerde(SplitSample.getEncoder(), SplitSample.getDecoder())
+    val sampleKeySerde = AvroMessageSerde(SampleKey.getEncoder(), SampleKey.getDecoder())
+    val sampleValueSerde = AvroMessageSerde(SampleValue.getEncoder(), SampleValue.getDecoder())
 
     val (tabledStream, streamed) = splitSamples.branch(
-            Predicate { _, sample -> sample.key in setOf("execution", "part_count", "avail", "estop", "mode", "active_axis", "tool_id", "program", "program_comment",
+            Predicate { _, sample -> sample.getKey() in setOf("execution", "part_count", "avail", "estop", "mode", "active_axis", "tool_id", "program", "program_comment",
                     "line", "block" /* ehhhh */, "Fovr", "message", "servo", "comms", "logic", "motion", "system", "Xtravel",
                     "Xoverheat", "Xservo", "Ztravel", "Zoverheat", "Zservo", "Ctravel", "Coverheat", "Cservo", "S1servo", "S2servo") },
-            Predicate { _, sample -> sample.key in setOf("Xload", "Zload", "Cload", "S1load", "S2load", "Zact", "Xact", "Cact", "S2speed", "S1speed", "path_position", "path_feedrate") }
+            Predicate { _, sample -> sample.getKey() in setOf("Xload", "Zload", "Cload", "S1load", "S2load", "Zact", "Xact", "Cact", "S2speed", "S1speed", "path_position", "path_feedrate") }
     )
-
-    val sampleValueSerde = ProtoMessageSerde(SerialMonitoring.SampleValue.parser())
 
     val tabled = tabledStream
         .map { key, value ->
             KeyValue(
-                    SerialMonitoring.SampleKey.newBuilder().setMachineID(key).setProperty(value.key).build(),
-                    SerialMonitoring.SampleValue.newBuilder().setValue(value.value).setOffset(value.offset).setTimestamp(value.timestamp).build()
+                    SampleKey.newBuilder().setMachineID(key).setProperty(value.getKey()).build(),
+                    SampleValue.newBuilder().setValue(value.getValue()).setOffset(value.getOffset()).setTimestamp(value.getTimestamp()).build()
             )
         }
-        .toTable(Materialized.with(ProtoMessageSerde(SerialMonitoring.SampleKey.parser()), sampleValueSerde))
+        .toTable(Materialized.with(sampleKeySerde, sampleValueSerde))
 
+    /*
     val (executionState, partCountState, programCommentState) = tabled.toStream().branch(
-            Predicate { key, _ -> key.property == "execution" },
-            Predicate { key, _ -> key.property == "part_count" },
-            Predicate { key, _ -> key.property == "program_comment"}
+            Predicate { key, _ -> key.getProperty() == "execution" },
+            Predicate { key, _ -> key.getProperty() == "part_count" },
+            Predicate { key, _ -> key.getProperty() == "program_comment"}
     )
+     */
 
     val gson = Gson()
 
@@ -125,7 +123,7 @@ fun buildStreamsTopology(raw: KStream<String, String>) {
                     false,
                     "machine_state_key"
                 ),
-                mapOf("machine_id" to k.machineID, "property" to k.property, "offset" to v.offset)
+                mapOf("machine_id" to k.getMachineID(), "property" to k.getProperty(), "offset" to v.getOffset())
             )),
             gson.toJson(ConnectSchemaAndPayload(
                 ConnectSchema(
@@ -145,13 +143,13 @@ fun buildStreamsTopology(raw: KStream<String, String>) {
                     false,
                     "machine_state_value"
                 ),
-                mapOf("value" to v.value, "timestamp" to v.timestamp.toInstant().toEpochMilli())
+                mapOf("value" to v.getValue(), "timestamp" to v.getTimestamp())
             ))
         )
     }.to("machine_state", Produced.with(Serdes.String(), Serdes.String()))
 
     streamed.map { machineId, record ->
-        KeyValue("$machineId-${record.key}", gson.toJson(ConnectSchemaAndPayload(
+        KeyValue("$machineId-${record.getKey()}", gson.toJson(ConnectSchemaAndPayload(
                 ConnectSchema(
                         "struct",
                         listOf(
@@ -186,17 +184,17 @@ fun buildStreamsTopology(raw: KStream<String, String>) {
                 ),
                 mapOf(
                         "machine_id" to machineId,
-                        "property" to record.key,
-                        "timestamp" to record.timestamp.toInstant().toEpochMilli(),
-                        "value" to record.value,
-                        "offset" to record.offset
+                        "property" to record.getKey(),
+                        "timestamp" to record.getTimestamp(),
+                        "value" to record.getValue(),
+                        "offset" to record.getOffset()
                 )
         )))
     }.to("machine_values", Produced.with(Serdes.String(), Serdes.String()))
 }
 
 // convert List<String> to List<[String, String]> to List<SplitSample>
-class SampleTransformer : Transformer<String, String, Iterable<KeyValue<String, ByteArray>>> {
+class SampleTransformer : Transformer<String, String, Iterable<KeyValue<String, SplitSample>>> {
     private lateinit var context: ProcessorContext
 
     override fun init(context: ProcessorContext) {
@@ -206,7 +204,7 @@ class SampleTransformer : Transformer<String, String, Iterable<KeyValue<String, 
     override fun transform(
             key: String?,
             value: String
-    ): Iterable<KeyValue<String, ByteArray>> {
+    ): Iterable<KeyValue<String, SplitSample>> {
         // val value = SerialMonitoring.Sample.parseFrom(bytes)
         val offset = context.offset()
         val values = value.split(Regex("(?<!\\\\)[|]")).toMutableList()
@@ -217,23 +215,16 @@ class SampleTransformer : Transformer<String, String, Iterable<KeyValue<String, 
         return stringValues
                 .filter { it[0] != "" }
                 .map {
-                    val eachValue = SerialMonitoring.SplitSample.newBuilder()
-                            .setTimestamp(ts.toProtoTimestamp())
+                    val eachValue = SplitSample.newBuilder()
+                            .setTimestamp(ts.toEpochMilli())
                             .setOffset(offset)
                             .setKey(it[0])
                             .setValue(it[1])
-                            .build().toByteArray()
+                            .build()
                     KeyValue(eachKey, eachValue)
                 }
     }
 
     override fun close() {
     }
-}
-
-fun stringifyTimestamp(timestamp: Timestamp): String {
-    return ZonedDateTime.ofInstant(
-            Instant.ofEpochSecond(timestamp.seconds, timestamp.nanos.toLong()),
-            ZoneId.of("UTC")
-    ).toOffsetDateTime().toString()
 }

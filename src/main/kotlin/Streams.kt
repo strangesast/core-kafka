@@ -1,20 +1,14 @@
 package main
 
 import com.google.gson.Gson
-import com.google.protobuf.Timestamp
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
-import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.*
 import org.slf4j.LoggerFactory
-import proto.SerialMonitoring
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -45,25 +39,24 @@ fun main() {
                     .filter { it.first != "" }
             pairs.map { Pair(ts, it) }
         }
-        .mapValues { value ->
-            SerialMonitoring.SampleKeyValue.newBuilder()
-                    .setTimestamp(value.first.toProtoTimestamp())
-                    .setKey(value.second.first)
-                    .setValue(value.second.second)
-                    .build()
+        .mapValues { value -> SampleKeyValue.newBuilder()
+            .setTimestamp(value.first.toEpochMilli())
+            .setKey(value.second.first)
+            .setValue(value.second.second)
+            .build()
         }
 
-    val sampleValueSerde = ProtoMessageSerde(SerialMonitoring.SampleValue.parser())
+    val sampleValueSerde = AvroMessageSerde(SampleValue.getEncoder(), SampleValue.getDecoder())
     val table = sparse
-            .filter { _, value -> value.key == "execution" }
+            .filter { _, value -> value.getKey() == "execution" }
             .groupByKey() // group by machine_id
             .aggregate(
-                    { SerialMonitoring.SampleValue.newBuilder().setOffset(0).build() },
+                    { SampleValue.newBuilder().setOffset(0).build() },
                     { _, value, agg ->
-                        SerialMonitoring.SampleValue.newBuilder()
-                                .setOffset(agg.offset + 1)
-                                .setValue(value.value)
-                                .setTimestamp(value.timestamp)
+                        SampleValue.newBuilder()
+                                .setOffset(agg.getOffset() + 1)
+                                .setValue(value.getValue())
+                                .setTimestamp(value.getTimestamp())
                                 .build()
                     },
                     Materialized.with(Serdes.String(), sampleValueSerde)
@@ -73,9 +66,9 @@ fun main() {
         .join(
             table,
             { value1, value2 ->
-                gson.toJson(listOf(value1.key, value1.value, "execution: ${value2.value}", value2.offset))
+                gson.toJson(listOf(value1.getKey(), value1.getValue(), "execution: ${value2.getValue()}", value2.getOffset()))
             },
-            Joined.with(Serdes.String(), ProtoMessageSerde(SerialMonitoring.SampleKeyValue.parser()), sampleValueSerde)
+            Joined.with(Serdes.String(), AvroMessageSerde(SampleKeyValue.getEncoder(), SampleKeyValue.getDecoder()), sampleValueSerde)
         )
         .foreach { key, value ->
             logger.info("key: $key, value: $value")
@@ -102,6 +95,3 @@ fun main() {
     exitProcess(0)
 }
 
-fun Timestamp.toInstant(): Instant = Instant.ofEpochSecond(seconds, nanos.toLong())
-fun Instant.toProtoTimestamp(): Timestamp = Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()
-fun Timestamp.toISOString(): String = ZonedDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos.toLong()), ZoneId.of("UTC")).toOffsetDateTime().toString()
