@@ -11,6 +11,7 @@ import { setContext } from 'apollo-link-context';
 import gql from 'graphql-tag';
 import { GraphQLScalarType, Kind } from 'graphql';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { DateResolver } from 'graphql-scalars';
 
 
 
@@ -18,15 +19,16 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 const typeDefs = gql`
   type timeclock_shifts_view {
     id: Int!
-    date_start: date
-    date_stop: date
+    date_start: timestamp
+    date_stop: timestamp
   }
-  scalar date
+  scalar Date
+  scalar timestamp
 `;
 
 const resolvers = {
   // example of scalar type, which will parse the string into a custom class CustomDate which receives a Date object
-  date: new GraphQLScalarType({
+  timestamp: new GraphQLScalarType({
     name: 'timestamp',
     serialize: (parsed: Date | null) => parsed && parsed.toISOString(),
     parseValue: (raw: any) => raw && new Date(raw),
@@ -36,8 +38,16 @@ const resolvers = {
       }
       return null;
     }
-  })
+  }),
+  Date: DateResolver
 };
+
+/*
+const resolvers = {
+  Date: DateResolver,
+};
+*/
+
 
 // GraphQL Schema, required to use the link
 const schema = makeExecutableSchema({
@@ -70,7 +80,7 @@ export function createApollo(httpLink: HttpLink) {
   );
   const cache = new InMemoryCache();
 
-  return { link, cache };
+  return { link, cache, resolvers, typeDefs };
 }
 
 @NgModule({

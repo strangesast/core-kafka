@@ -75,6 +75,7 @@ import { ShiftCalendarGraphComponent } from './shift-calendar-graph/shift-calend
 import { WeeklyShiftGraphComponent } from './weekly-shift-graph/weekly-shift-graph.component';
 import { SchedulePageComponent } from './schedule-page/schedule-page.component';
 import { PartActivityGraphComponent } from './part-activity-graph/part-activity-graph.component';
+import { ShiftsGraphComponent } from './shifts-graph/shifts-graph.component';
 
 
 @NgModule({
@@ -140,7 +141,8 @@ import { PartActivityGraphComponent } from './part-activity-graph/part-activity-
     ShiftCalendarGraphComponent,
     WeeklyShiftGraphComponent,
     SchedulePageComponent,
-    PartActivityGraphComponent
+    PartActivityGraphComponent,
+    ShiftsGraphComponent
   ],
   imports: [
     BrowserModule,

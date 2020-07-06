@@ -8,7 +8,7 @@ import { Selection } from 'd3';
 @Component({ template: `<svg #svg></svg>` })
 export class BaseGraphComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('svg') el: ElementRef;
-  svg: Selection<any, any, any, any>;
+  svg: Selection<any, SVGElement, any, any>;
 
   destroyed$ = new Subject();
 

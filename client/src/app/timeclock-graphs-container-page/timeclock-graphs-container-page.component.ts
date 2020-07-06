@@ -23,6 +23,7 @@ import { Component, OnInit } from '@angular/core';
         <div mat-subheader>Timeclock</div>
         <a mat-list-item [routerLink]="['./timeclock', 'shift-calendar']">Shift Calendar</a>
         <a mat-list-item [routerLink]="['./timeclock', 'weekly']">Weekly</a>
+        <a mat-list-item [routerLink]="['./timeclock', 'shifts']">Shifts</a>
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content>

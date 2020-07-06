@@ -4,10 +4,10 @@ import { Component, OnInit } from '@angular/core';
   selector: 'app-brand',
   template: `
   <a routerLink="/" class="brand">
-    <!--
     <span>CORE</span>
-    -->
+    <!--
     <svg><use href="/assets/logo.svg#logo"/></svg>
+    -->
   </a>
   `,
   styles: [`

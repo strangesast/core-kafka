@@ -25,7 +25,6 @@ import { NotificationsPageComponent } from './notifications-page/notifications-p
 import { CreateAccountPageComponent } from './create-account-page/create-account-page.component';
 import { LoginBasePageComponent } from './login-base-page/login-base-page.component';
 import { TimeclockGraphsContainerPageComponent } from './timeclock-graphs-container-page/timeclock-graphs-container-page.component';
-import { NoopComponent } from './noop/noop.component';
 import { ActiveOrdersPageComponent } from './active-orders-page/active-orders-page.component';
 import { CustomerPageComponent } from './customer-page/customer-page.component';
 import { TimesheetPageComponent } from './timesheet-page/timesheet-page.component';
@@ -48,6 +47,7 @@ import { PartActivityGraphComponent } from './part-activity-graph/part-activity-
 import { InitGuard } from './init.guard';
 import { RolesGuard } from './roles.guard';
 import { PersonPageGuard } from './person-page.guard';
+import { ShiftsGraphComponent } from './shifts-graph/shifts-graph.component';
 
 
 const routes: Routes = [
@@ -116,6 +116,7 @@ const routes: Routes = [
     {path: 'timeclock/shift-calendar', component: ShiftCalendarGraphComponent },
     {path: 'timeclock/weekly', component: WeeklyShiftGraphComponent },
     {path: 'machines/part-count-activity', component: PartActivityGraphComponent },
+    {path: 'timeclock/shifts', component: ShiftsGraphComponent },
   ]},
   {path: 'machine-status', component: MachineStatusGridComponent},
   {path: 'timeclock/full', component: TimeclockFullPageComponent},

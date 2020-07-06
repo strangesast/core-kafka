@@ -128,7 +128,6 @@ services:
     - "8080:8080"
     depends_on:
     - "postgres"
-    restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: "postgres://postgres:password@postgres:5432/development"
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"

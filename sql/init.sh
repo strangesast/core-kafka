@@ -164,6 +164,36 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DATABASE_NAME" <<
   ) t
   group by t.employee_id, t.date;
 
+  create view timeclock_shifts_count as select
+  	id,
+  	employee_id,
+  	date,
+  	date_start,
+  	date_stop,
+  	duration,
+  	sum(CASE WHEN nearby = true THEN 0 ELSE 1 END) OVER (PARTITION BY employee_id ORDER BY num) AS shift_num
+  from (
+  	select *,
+  		row_number() OVER (PARTITION BY employee_id ORDER BY date_start) AS num,
+  		CASE
+  			WHEN prev_stop IS NULL THEN false
+  			ELSE (date_start - prev_stop) < '06:00:00'::interval
+  		END AS nearby
+  	from (
+  		select
+  			id,
+  			employee_id,
+  			date,
+  			date_start,
+  			date_stop,
+  			(case when date_stop is null then now() else date_stop end - date_start) as duration,
+  			lag(date_stop, 1) OVER (PARTITION BY employee_id ORDER BY date_start) AS prev_stop
+  		from timeclock_shifts
+  	) t
+  	where duration < interval '13 hour'
+  ) t
+  order by date_stop desc nulls first, date_start desc;
+
   create table machines (
     id           text primary key,
     name         text,

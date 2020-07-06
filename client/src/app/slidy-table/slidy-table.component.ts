@@ -312,10 +312,10 @@ export class SlidyTableComponent implements OnInit, OnChanges, AfterViewInit, On
         date_start: new Date(date_start + 'Z'),
         date_stop: new Date(date_stop + 'Z'),
       }))),
-      map(arr => {
+      map((arr: any[]) => {
         const vals = [];
         let total = 0;
-        for (const [key, value] of group(arr, d => d.date)) {
+        for (const [key, value] of Array.from(group(arr, d => d.date))) {
           const i = days.indexOf(key);
           const val = value.reduce((acc, shift) => acc + (+shift.date_stop - +shift.date_start), 0) / 3.6e6;
           total += val;

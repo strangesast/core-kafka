@@ -1,0 +1,15 @@
+:host {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+}
+svg {
+    flex: auto 1 1;
+}
+
+.circle {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+}
