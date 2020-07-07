@@ -1,3 +1,14 @@
 :host {
   display: block;
 }
+
+.container.grid {
+  padding: 24px 12px;
+  display: grid;
+  grid-gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+
+  .grid-item {
+    padding: 12px;
+  }
+}

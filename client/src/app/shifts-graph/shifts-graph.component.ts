@@ -29,7 +29,7 @@ export class ShiftsGraphComponent extends BaseGraphComponent implements OnInit, 
         date_stop: new Date(date_stop),
         ...props,
       }))),
-    ).subscribe(v => {
+    ).subscribe((v: any[]) => {
       const data = Array.from(group(v, d => d.shift_num));
       console.log(data);
     });

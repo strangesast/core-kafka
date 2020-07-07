@@ -27,6 +27,7 @@ import {
 import { BaseGraphComponent } from '../base-graph/base-graph.component';
 import { ReplaySubject, Observable, range } from 'rxjs';
 import { MachinesGridComponent } from '../machines-page/machines-page.component';
+import { accessSync } from 'fs';
 
 interface Employee {
   code: string;
@@ -84,6 +85,10 @@ const initQuery = gql`
 
 const machineStateQuery = gql`
   query($fields: [String!], $minDate: bigint, $maxDate: bigint) {
+    machines: machine_state(distinct_on: machine_id, order_by: {machine_id: asc, timestamp: desc}) {
+      timestamp
+      machine_id
+    }
     machine_state(
       where: {
         _and: {
@@ -106,7 +111,7 @@ const machineStateQuery = gql`
   // changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div>
-      Available data: {{ minDate.value | date }} - {{ maxDate.value | date }}
+      Available data: {{ absMinDate | date }} - {{ absMaxDate | date }}
     </div>
     <div>
       <button mat-stroked-button [matMenuTriggerFor]="menu">
@@ -214,7 +219,7 @@ export class PartActivityGraphComponent extends BaseGraphComponent
 
     const g = this.svg.append('g');
     const bg = g.append('rect').attr('fill', 'transparent');
-    const x = this.svg.append('g');
+    const gx = this.svg.append('g');
 
     const DEFAULT_EXCLUDE = ['block'];
     this.init$
@@ -291,19 +296,26 @@ export class PartActivityGraphComponent extends BaseGraphComponent
               return variables;
             }),
             switchMap((variables) =>
-              this.apollo.query<{ machine_state: Sample[] }>({
+              this.apollo.query<{ machines: any[], machine_state: Sample[] }>({
                 query: machineStateQuery,
                 variables,
               })
             ),
-            pluck('data', 'machine_state')
+            pluck('data'),
           )
         ),
-        map((values) => values.map(parseValue)),
+        map(({machine_state, machines}) => ({
+          machine_state: machine_state.map(parseValue),
+          machines: machines.map(({machine_id, timestamp}) => ({
+            timestamp: new Date(timestamp),
+            machine_id,
+          })),
+        })),
         withLatestFrom(range$, fields$)
       )
       .subscribe(([values, range, fields]) => {
-        const byMachine = Array.from(group(values, (d) => d.machine_id));
+        const machineIds = values.machines.map(v => v.machine_id);
+        const machinesById = values.machines.reduce((acc, val) => ({...acc, [val.machine_id]: val}));
 
         const { width, height } = this.svg.node().getBoundingClientRect();
         bg.attr('width', width).attr('height', height);
@@ -312,15 +324,10 @@ export class PartActivityGraphComponent extends BaseGraphComponent
 
         x.call(xAxis).attr(
           'transform',
-          `translate(0,${byMachine.length * 80})`
+          `translate(0,${machineIds.length * 80})`
         );
 
-        const groups = g
-          .selectAll('g')
-          .data(byMachine, (d) => d[0])
-          .join('g')
-          .attr('transform', (d, i) => `translate(0,${i * 80})`);
-
+        g.selectAll('circle').data(values.machine_state).join('circle').attr('cx', d => x(d.timestamp)).attr('cy', y(d.machine_id))
         groups
           .selectAll('g')
           .data((d) => d[1])
