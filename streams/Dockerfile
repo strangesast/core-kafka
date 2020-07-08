@@ -1,7 +1,8 @@
-from arm32v7/gradle as build
+#from arm32v7/gradle as build
+from gradle as build
 
 workdir /home/gradle/src
-copy --chown=gradle:gradle kafka-streams /home/gradle/src
+copy --chown=gradle:gradle . /home/gradle/src
 run gradle build --no-daemon
 
 
