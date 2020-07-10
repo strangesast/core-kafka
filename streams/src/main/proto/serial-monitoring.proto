@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = ".;proto";
+
+// import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+
+message Sample {
+  google.protobuf.Timestamp timestamp = 1;
+  repeated string values = 2;
+}
+
+message SampleKey {
+  string machineID = 1;
+  string property = 2;
+}
+message SampleValue {
+  google.protobuf.Timestamp timestamp = 1;
+  string value = 2;
+  uint64 offset = 3;
+}
+
+message SampleKeyValue {
+  google.protobuf.Timestamp timestamp = 1;
+  string key = 2;
+  string value = 3;
+}
+
+message SampleValueWithExecution {
+  google.protobuf.Timestamp timestamp = 1;
+  string value = 2;
+  uint64 offset = 3;
+  uint64 execution = 4;
+}
+
+message SampleValueArray {
+  repeated SampleValue samples = 1;
+}
+
+message SplitSample {
+  google.protobuf.Timestamp timestamp = 1;
+  uint64 offset = 2;
+  string key = 3;
+  string value = 4;
+  int64 duration = 5;
+}
+
+message SplitSamplePair {
+  SplitSample first = 1;
+  SplitSample second = 2;
+}
+
+message MachineState {
+  map<string,string> properties = 4;
+}
+
+message StringPair {
+  string first = 1;
+  string second = 2;
+}
+
+message SampleValuePair {
+  SampleValue first = 1;
+  SampleValue second = 2;
+}
+
+message ProgramComment {
+  string num = 1;
+  repeated string notes = 2;
+  string originalText = 10;
+  google.protobuf.Timestamp timestamp = 11;
+}
